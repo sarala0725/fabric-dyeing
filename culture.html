@@ -1,0 +1,503 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>藍染的故事｜島宇染坊</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* 版面概念：單欄閱讀，左側窄欄放年代與標記，像一本染坊手記。 */
+:root {
+  --bg: #13213f; --surface: #1b2c53; --ink: #eef1f7; --muted: #a8b4d2; --line: #34497c;
+  --indigo: #f1efe6; --vat: #b4c257; --ph: #1b2c53;
+  --font-display: "LXGW WenKai TC", "Kaiti TC", "BiauKai", "DFKai-SB", serif;
+  --font-body: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 17px; line-height: 1.85; }
+a { color: var(--indigo); }
+:focus-visible { outline: 3px solid var(--indigo); outline-offset: 2px; }
+.wrap { max-width: 860px; margin: 0 auto; padding-inline: 20px; padding-block: 0 64px; }
+.top { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px 20px; padding-block: 28px 8px; font-size: 15px; }
+.top a { text-decoration: none; border-bottom: 1px solid currentColor; font-weight: 500; }
+.top .site { font-family: var(--font-display); font-weight: 700; font-size: 20px; color: var(--ink); border: 0; }
+
+.hero { padding-block: 36px 28px; border-bottom: 1px solid var(--line); }
+.hero h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(36px, 7vw, 60px); line-height: 1.2; margin: 0 0 14px; letter-spacing: .04em; text-wrap: balance; }
+.hero p { margin: 0; max-width: 34em; color: var(--muted); font-size: 18px; }
+.vat-strip { display: flex; height: 14px; margin-top: 26px; border-radius: 3px; overflow: hidden; max-width: 520px; }
+.vat-strip span { flex: 1; }
+.vat-cap { font-size: 13px; color: var(--muted); margin: 6px 0 0; font-family: var(--font-data); }
+
+section.ch { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 8px 28px; padding-block: 36px; border-bottom: 1px solid var(--line); }
+@media (max-width: 640px) { section.ch { grid-template-columns: minmax(0, 1fr); } }
+.mark { font-family: var(--font-data); font-size: 14px; color: var(--muted); letter-spacing: .04em; padding-top: 8px; }
+.ch h2 { font-family: var(--font-display); font-size: 30px; line-height: 1.35; margin: 0 0 12px; text-wrap: balance; }
+.ch p { margin: 0 0 14px; max-width: 36em; }
+.ch ul { margin: 0 0 14px; padding-left: 1.2em; max-width: 36em; }
+.ch li { margin-bottom: 6px; }
+.term { font-family: var(--font-display); font-weight: 700; }
+sup a { text-decoration: none; font-family: var(--font-data); font-size: 12px; }
+
+.timeline { list-style: none; padding: 0; margin: 6px 0 14px; display: grid; gap: 0; max-width: 36em; }
+.timeline li { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 14px; padding: 10px 0; border-top: 1px dashed var(--line); margin: 0; }
+.timeline .y { font-family: var(--font-data); font-variant-numeric: tabular-nums; color: #9fc0ff; font-weight: 500; }
+
+.ph { background: var(--ph); border: 1px dashed var(--muted); border-radius: 8px; aspect-ratio: 16 / 9; max-width: 100%; display: grid; place-items: center; color: var(--muted); font-size: 14px; margin: 8px 0 18px; text-align: center; padding: 12px; }
+
+.techs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 6px 0 14px; }
+@media (max-width: 520px) { .techs { grid-template-columns: minmax(0, 1fr); } }
+.techs div { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; }
+.techs b { font-family: var(--font-display); font-size: 20px; display: block; }
+.techs span { font-size: 15px; color: var(--muted); line-height: 1.6; display: block; }
+
+.cta { padding-block: 40px 8px; display: flex; flex-wrap: wrap; gap: 14px 24px; align-items: center; }
+.cta p { margin: 0; font-family: var(--font-display); font-size: 24px; }
+.btn { display: inline-block; font-weight: 700; padding: 11px 22px; border-radius: 999px; background: var(--indigo); color: var(--bg); text-decoration: none; }
+
+.refs { padding-top: 36px; font-size: 14px; color: var(--muted); line-height: 1.7; }
+.refs h2 { font-family: var(--font-display); font-size: 22px; color: var(--ink); margin: 0 0 10px; }
+.refs ol { padding-left: 1.5em; margin: 0 0 12px; }
+.refs li { margin-bottom: 6px; overflow-wrap: anywhere; }
+</style>
+</head>
+<body>
+
+
+<!-- 載入動畫：每次打開網站播放；網站內換頁時改播一朵暈開的花 -->
+<div id="loader" role="status" aria-label="島宇染坊載入中">
+  <canvas id="loaderCv" aria-hidden="true"></canvas>
+  <div class="ld-bar" aria-hidden="true"><span class="ld-fill" id="ldFill"></span></div>
+  <p class="ld-pct" id="ldPct">準備中 0%</p>
+</div>
+<div id="navFade" aria-hidden="true"></div>
+<style>
+#loader { position: fixed; inset: 0; z-index: 50; background: #f1f0ea; transition: opacity .6s, background-color .4s; }
+#loader.flooded { background: #13213f; }
+#loader.reveal { background: transparent; cursor: default; }
+#loader.reveal .ld-bar, #loader.reveal .ld-pct { opacity: 0; transition: opacity .3s; }
+#loader.ready { cursor: pointer; }
+#loader.out { opacity: 0; pointer-events: none; }
+#loaderCv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.ld-bar { position: absolute; left: 50%; bottom: calc(64px + env(safe-area-inset-bottom, 0px)); width: min(64vw, 420px); height: 10px; transform: translateX(-50%);
+  background: repeating-linear-gradient(90deg, rgba(0,0,0,.05) 0 1px, transparent 1px 4px), #e6e3da; border-radius: 2px; overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,.12); }
+.ld-fill { position: absolute; inset: 0 auto 0 0; width: 0; background: linear-gradient(90deg, #16244a, #24396f 70%, rgba(43,76,134,.85)); transition: width .25s;
+  -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 14px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 14px), transparent); }
+.ld-pct { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(30px + env(safe-area-inset-bottom, 0px)); margin: 0; text-align: center; white-space: nowrap; background: rgba(241,240,234,.9); padding: 2px 12px; border-radius: 999px; font: 500 13px "IBM Plex Mono", ui-monospace, monospace; letter-spacing: .08em; color: #3d5285; font-variant-numeric: tabular-nums; }
+#navFade { position: fixed; inset: 0; z-index: 49; background: #13213f; opacity: 0; pointer-events: none; transition: opacity .2s ease; }
+#navFade.on { opacity: 1; pointer-events: auto; }
+#loader.flooded .ld-pct { color: #eef1f7; background: rgba(255,255,255,.08); }
+#loader.flooded .ld-bar { background: rgba(255,255,255,.14); box-shadow: none; }
+#loader.flooded .ld-fill { background: linear-gradient(90deg, #f1efe6, #f1efe6 80%, rgba(241,239,230,.8)); }
+.ld-pct, .ld-bar, .ld-fill { transition: color .5s, background-color .5s, background .5s, width .25s; }
+</style>
+<script>
+(function () {
+  "use strict";
+  const REDUCE = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let fromNav = false;
+  try { fromNav = sessionStorage.getItem("jl-nav") === "1"; sessionStorage.removeItem("jl-nav"); } catch (e) { /* 瀏覽器不允許暫存就照常播放 */ }
+  const loader = document.getElementById("loader"), cv = document.getElementById("loaderCv"), c = cv.getContext("2d"), mainCtx = c;
+  const fill = document.getElementById("ldFill"), pctEl = document.getElementById("ldPct");
+  const clamp = (v, a = 0, b = 1) => v < a ? a : v > b ? b : v;
+  const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a)); return t * t * (3 - 2 * t); };
+  function rnd(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  // 簡單的雜訊（讓邊緣像水彩一樣不規則）
+  function noise2(seed) {
+    const r = rnd(seed), g = new Float32Array(256 * 256);
+    for (let i = 0; i < g.length; i++) g[i] = r();
+    return (x, y) => {
+      const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi, u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf);
+      const at = (a, b) => g[((b & 255) << 8) | (a & 255)];
+      const p = at(xi, yi), q = at(xi + 1, yi), s = at(xi, yi + 1), t = at(xi + 1, yi + 1);
+      return p + (q - p) * u + (s - p) * v + (p - q - s + t) * u * v;
+    };
+  }
+  const NZ = noise2(77);
+  const fbm = (x, y) => (NZ(x, y) * 0.55 + NZ(x * 2.1 + 9, y * 2.1) * 0.3 + NZ(x * 4.3, y * 4.3 + 5) * 0.15);
+  const tri = t => { const m = ((t % 2) + 2) % 2; return 1 - Math.abs(m - 1); };
+
+  // 一朵暈染：依綁法算出花樣，再依「暈開的順序」慢慢顯現
+  function makeBloom(type, px, seed) {
+    const r = rnd(seed), N = px, dye = new Float32Array(N * N), order = new Float32Array(N * N), base = new Float32Array(N * N), keep = new Float32Array(N * N);
+    const ph = r() * 50, k = 6 + r() * 5, ang = r() * Math.PI, ca = Math.cos(ang), sa = Math.sin(ang), cells = 2 + Math.floor(r() * 2);
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+      const u = x / N * 2 - 1, v = y / N * 2 - 1, d = Math.hypot(u, v), i = y * N + x;
+      const n = fbm(u * 3 + ph, v * 3 - ph);
+      const edge = 1 - smooth(0.72, 1.0, d + (n - 0.5) * 0.16);
+      base[i] = 1 - smooth(0.93, 1.0, d + (n - 0.5) * 0.16);   // 花樣底下那塊白布（實心）
+      if (edge <= 0) { dye[i] = 0; order[i] = 9; continue; }
+      let resist = 0, ord = d * 0.9 + (n - 0.5) * 0.15;   // ord：這一點什麼時候染出來（依染法各自不同）
+      if (type === "kumo") {
+        const a = Math.atan2(v, u), ray = NZ(Math.cos(a) * k + ph, Math.sin(a) * k + d * 2);
+        for (const pj of [0.3, 0.55]) { const z = (d - pj + (ray - 0.5) * 0.03) / 0.03; resist = Math.max(resist, Math.exp(-z * z) * 0.95); }
+        resist = Math.max(resist, d < 0.12 ? (1 - d / 0.12) * 0.9 : 0);
+        // 紮染：像綁線一圈圈拆開，由內往外一圈圈長出來（每圈還沒長完，下一圈就開始）
+        ord = d * 0.3 + (smooth(0.12, 0.28, d) + smooth(0.34, 0.5, d) + smooth(0.6, 0.76, d)) * 0.21 + (n - 0.5) * 0.05;
+      } else if (type === "itajime") {
+        const P = 1 / 2, cu = tri((u + 1) / P) - 0.5, cv2 = tri((v + 1) / P) - 0.5;
+        const sh = 1 - smooth(0.22, 0.26, Math.hypot(cu, cv2));
+        const ed = Math.min(0.5 - Math.abs(cu), 0.5 - Math.abs(cv2));
+        resist = Math.max(sh * 0.95, 0.15 * smooth(0.02, 0.3, ed));
+        // 夾染：像摺好的布一層層打開，斜向依序展開，每格再從格子中心往外暈
+        const gx = (u + 1) * 2, gy = (v + 1) * 2, fx = gx - Math.floor(gx) - 0.5, fy = gy - Math.floor(gy) - 0.5;
+        ord = (u + v + 2) / 4 * 0.62 + Math.hypot(fx, fy) * 0.2 + (n - 0.5) * 0.06;
+      } else if (type === "nui") {
+        const t = u * ca + v * sa, q = -u * sa + v * ca + Math.sin(t * 3 + ph) * 0.06;
+        const l = Math.abs(((q / 0.28) % 1 + 1) % 1 - 0.5) * 0.28;
+        const pleat = 0.5 + 0.5 * Math.sin(t * 90 + NZ(t * 10, q * 10) * 5);
+        resist = Math.exp(-((l / 0.014) ** 2)) * (0.6 + 0.35 * pleat);
+        // 縫染：像把縫線抽出來，沿著線的方向推進
+        ord = (t + 1) / 2 * 0.76 + 0.05 * (0.5 + 0.5 * Math.sin(q * 9 + ph)) + (n - 0.5) * 0.06;
+      } else {
+        const q = -u * sa + v * ca, l = Math.abs(((q / 0.1) % 1 + 1) % 1 - 0.5);
+        resist = (1 - smooth(0.05, 0.12, l)) * 0.85;
+        // 嵐染：像布從棍子上捲開，順著斜線方向一路掃過去
+        ord = (u * ca + v * sa + 1) / 2 * 0.92 + (n - 0.5) * 0.06;
+      }
+      dye[i] = (1 - resist) * edge * (0.85 + 0.15 * n);
+      keep[i] = resist * (1 - smooth(0.78, 0.98, d + (n - 0.5) * 0.16));   // 藍色漫過後仍留白的紋路，越靠外緣越淡
+      order[i] = REDUCE ? d * 0.9 + (n - 0.5) * 0.15 : ord;
+    }
+    const can = document.createElement("canvas"); can.width = can.height = N;
+    const cx = can.getContext("2d"), img = cx.createImageData(N, N);
+    const col = [[178, 203, 226], [84, 124, 172], [33, 56, 104], [20, 32, 66]];
+    return {
+      can, last: -1, lastF: -1,
+      // p：花樣展開進度；fl：外面的藍色漫過這朵花的程度（0～1）
+      paint(p, fl = 0) {
+        if (p === this.last && fl === this.lastF) return;   // 每一幀都重畫，只有完全沒變時才略過
+        this.last = p; this.lastF = fl;
+        const ep = 1 - Math.pow(1 - p, 2.2), px2 = img.data, front = ep * 1.38 - 0.1;   // 先快後慢，像染料滲開後慢慢停住
+        for (let i = 0; i < N * N; i++) {
+          const a = dye[i] * clamp((front - order[i]) / 0.28), j = i * 4;
+          // 花樣連同底下的白布一起畫，完全不透明，不讓後面漫開的藍色透出來
+          let r0 = 241, g0 = 240, b0 = 234;
+          if (a > 0) {
+            const ci = a < 0.33 ? 0 : a < 0.66 ? 1 : 2, f = (a - ci * 0.33) / 0.33, c0 = col[ci], c1 = col[ci + 1];
+            const da = Math.min(1, a * 1.3);   // 從 0 開始平滑加深，前緣不會有一圈硬邊
+            r0 += (c0[0] + (c1[0] - c0[0]) * f - r0) * da; g0 += (c0[1] + (c1[1] - c0[1]) * f - g0) * da; b0 += (c0[2] + (c1[2] - c0[2]) * f - b0) * da;
+          }
+          // 藍色漫過來時，把白布底一起染成背景藍，只留紋路的白，看不出圓形邊界
+          const ov = fl * (1 - keep[i]);
+          if (ov > 0) { r0 += (22 - r0) * ov; g0 += (36 - g0) * ov; b0 += (74 - b0) * ov; }
+          px2[j] = r0; px2[j + 1] = g0; px2[j + 2] = b0; px2[j + 3] = 255 * base[i];
+        }
+        cx.putImageData(img, 0, 0);
+      }
+    };
+  }
+
+  /* ---------- 換頁：淡出到深靛藍，再淡入新頁面 ---------- */
+  const fade = document.getElementById("navFade");
+  document.addEventListener("click", e => {
+    const a = e.target.closest && e.target.closest("a[href]");
+    if (!a || a.target === "_blank" || e.metaKey || e.ctrlKey || e.shiftKey) return;
+    const href = a.getAttribute("href");
+    if (!/^[\w-]+\.html(#[\w.~-]*)?$/.test(href)) return;
+    e.preventDefault();
+    try { sessionStorage.setItem("jl-nav", "1"); } catch (err) { /* 略過 */ }
+    fade.style.transition = REDUCE ? "none" : ""; fade.classList.add("on");
+    setTimeout(() => { location.href = href; }, REDUCE ? 0 : 210);
+  });
+  if (fromNav) {
+    loader.remove();
+    fade.style.transition = "none"; fade.classList.add("on");
+    window.__loaderProgress = () => {};
+    window.__startLoader = () => { requestAnimationFrame(() => { fade.style.transition = ""; fade.classList.remove("on"); }); };
+    return;
+  }
+
+  /* ---------- 載入動畫 ---------- */
+  let W = 0, H = 0, DPR = 1, weave = null;
+  // 文字只畫在藍色已經漫到的地方：tlT 先疊好字和光暈，tlC 是藍色範圍
+  const tlC = document.createElement("canvas"), tlT = document.createElement("canvas");
+  function size() {
+    DPR = Math.min(2, window.devicePixelRatio || 1); W = window.innerWidth; H = window.innerHeight;
+    cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR); c.setTransform(DPR, 0, 0, DPR, 0, 0);
+    tlC.width = tlT.width = cv.width; tlC.height = tlT.height = cv.height;
+    const t = document.createElement("canvas"); t.width = t.height = 8; const w = t.getContext("2d");
+    w.fillStyle = "#f1f0ea"; w.fillRect(0, 0, 8, 8); w.fillStyle = "rgba(0,0,0,0.04)"; w.fillRect(0, 0, 8, 1); w.fillRect(0, 4, 8, 1); w.fillRect(0, 0, 1, 8); w.fillRect(4, 0, 1, 8);
+    weave = c.createPattern(t, "repeat");
+  }
+  size();
+  // 花樣的位置：散在四周，避開中央的文字
+  const types = ["kumo", "itajime", "nui", "storm"];
+  const R = rnd(31), blooms = [];
+  const portrait = H > W;
+  const spots = portrait ? [[0.2, 0.17], [0.82, 0.3], [0.2, 0.72], [0.8, 0.84]] : [[0.17, 0.26], [0.84, 0.22], [0.2, 0.8], [0.82, 0.76]];
+  spots.forEach(([fx, fy], i) => {
+    const sz = Math.min(W, H) * (0.46 + R() * 0.08);
+    blooms.push({ b: null, type: types[i], x: fx * W, y: fy * H, sz, start: 0.02 + i * 0.06, dur: 0.3, rot: (R() - 0.5) * 0.6, seed: 101 + i * 37 });
+  });
+  // 島宇染坊：藍色交會時，字的位置留白
+  const title = document.createElement("canvas");
+  let dotX = 0, dotY = 0;   // 「染」字三點水最上面那一點（最後從這裡暈開進入網站）
+  function makeTitle() {
+    const fs = Math.max(42, Math.min(W * 0.11, 96)), txt = "島 宇 染 坊";
+    title.width = Math.round(fs * 6.4 * DPR); title.height = Math.round(fs * 1.7 * DPR);
+    const t = title.getContext("2d"); t.scale(DPR, DPR);
+    t.font = `700 ${fs}px "LXGW WenKai TC", "Kaiti TC", "BiauKai", serif`; t.textBaseline = "middle";
+    const tw = t.measureText(txt).width, x0 = title.width / DPR / 2 - tw / 2;
+    t.fillStyle = "#f1f0ea"; t.fillText(txt, x0, title.height / DPR / 2);
+    const ranX = x0 + t.measureText("島 宇 ").width, cw = t.measureText("染").width;
+    dotX = W / 2 - title.width / DPR / 2 + ranX + cw * 0.17;
+    dotY = H / 2 - fs * 0.3;
+  }
+  makeTitle();
+  const TW = [0, 3, 8].map(bl => { const k = document.createElement("canvas"); k.width = title.width + 60 * DPR; k.height = title.height + 60 * DPR; const x = k.getContext("2d"); x.filter = `blur(${bl * DPR}px)`; x.drawImage(title, 30 * DPR, 30 * DPR); return k; });
+  let progress = 0, shown = 0, done = false, ready = false, revealAt = 0, t0 = 0, resolveDone;
+  window.__loaderDone = new Promise(r => { resolveDone = r; });
+  window.__loaderProgress = p => { progress = Math.max(progress, p); };
+  const end = () => { if (done) return; done = true; loader.remove(); resolveDone(); };
+  // 點一下：直接跳到最後的暈開
+  loader.addEventListener("click", () => { if (ready && !revealAt) revealAt = performance.now(); });
+  const DUR = 3000, REVEAL = 900;
+  const wobPath = (cx, cy, r, k, c = mainCtx) => { c.beginPath(); for (let i = 0; i <= 96; i++) { const a = i / 96 * Math.PI * 2, rr = r * (1 + 0.06 * Math.sin(a * 5 + k) + 0.035 * Math.sin(a * 11 + k * 1.7) + 0.02 * Math.sin(a * 23 + k)); i ? c.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr) : c.moveTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr); } c.closePath(); };
+  function scene(t) {
+    c.globalCompositeOperation = "source-over";
+    c.fillStyle = weave; c.fillRect(0, 0, W, H);
+    // 1. 四處花樣的藍色繼續往外擴散，交會到中間
+    const sp = smooth(0.34, 0.78, t);
+    if (sp > 0) {
+      for (let i = 0; i < blooms.length; i++) {
+        const bl = blooms[i], far = Math.hypot(Math.max(bl.x, W - bl.x), Math.max(bl.y, H - bl.y));
+        const r0 = bl.sz * 0.42, r = r0 + (far * 1.05 - r0) * sp; bl.rr = r;
+        // 實心、不透明的藍色漫開：外圈稍淺、內圈深藍，邊緣保留水彩的不規則線
+        c.fillStyle = "#1c2f5e"; wobPath(bl.x, bl.y, r + 30, i * 2.3); c.fill();
+        c.fillStyle = "#16244a"; wobPath(bl.x, bl.y, Math.max(0, r - 60), i * 2.3 + 0.5); c.fill();
+      }
+    }
+    // 花樣在最上層、全程不透明；藍色漫過時白布底跟著染藍
+    const fl = smooth(0, 0.75, sp);
+    for (const bl of blooms) {
+      const p = clamp((t - bl.start) / bl.dur); if (p <= 0) continue;
+      if (!bl.b) bl.b = makeBloom(bl.type, 220, bl.seed);
+      bl.b.paint(p, fl);
+      c.save(); c.translate(bl.x, bl.y); c.rotate(bl.rot); c.globalAlpha = 1; c.imageSmoothingQuality = "high";
+      c.drawImage(bl.b.can, -bl.sz / 2, -bl.sz / 2, bl.sz, bl.sz); c.restore();
+    }
+    // 2. 字和白布同色：只畫在藍色漫到的地方，藍色包圍後白字留下來，填滿後維持白色
+    const tw = title.width / DPR, th = title.height / DPR, x = W / 2 - tw / 2 - 30, y = H / 2 - th / 2 - 30;
+    if (sp > 0) {
+      const gl = smooth(0.3, 0.9, sp), tt = tlT.getContext("2d"), m = tlC.getContext("2d");
+      tt.setTransform(1, 0, 0, 1, 0, 0); tt.globalAlpha = 1; tt.clearRect(0, 0, tlT.width, tlT.height); tt.setTransform(DPR, 0, 0, DPR, 0, 0);
+      tt.globalAlpha = 0.55 * gl; tt.drawImage(TW[2], x, y, tw + 60, th + 60);
+      tt.globalAlpha = 0.8 * gl; tt.drawImage(TW[1], x, y, tw + 60, th + 60);
+      tt.globalAlpha = 1; tt.drawImage(TW[0], x, y, tw + 60, th + 60);
+      m.setTransform(1, 0, 0, 1, 0, 0); m.globalCompositeOperation = "source-over"; m.clearRect(0, 0, tlC.width, tlC.height);
+      m.setTransform(DPR, 0, 0, DPR, 0, 0); m.fillStyle = "#000";
+      for (let i = 0; i < blooms.length; i++) { const bl = blooms[i]; wobPath(bl.x, bl.y, bl.rr + 30, i * 2.3, m); m.fill(); }
+      m.setTransform(1, 0, 0, 1, 0, 0); m.globalCompositeOperation = "source-in"; m.drawImage(tlT, 0, 0);
+      c.drawImage(tlC, 0, 0, W, H);
+    }
+  }
+  function frame(now) {
+    if (done) return;
+    const t = REDUCE ? 1 : clamp((now - t0) / DUR);
+    scene(t);
+    // 進度條：真實的準備進度
+    shown += (progress - shown) * 0.18; if (progress >= 100 && shown > 99.5) shown = 100;
+    fill.style.width = shown.toFixed(1) + "%";
+    if (sp2(t)) loader.classList.add("flooded");
+    if (shown >= 100) { if (!ready) { ready = true; loader.classList.add("ready"); } pctEl.textContent = t < 1 && !revealAt ? "準備好了・點一下進入" : "準備好了"; }
+    else pctEl.textContent = `準備中 ${Math.floor(shown)}%`;
+    if (!revealAt && t >= 1 && shown >= 100) revealAt = now;
+    // 3. 從「染」字的三點水暈開，露出網站
+    if (revealAt) {
+      const q = REDUCE ? 1 : clamp((now - revealAt) / REVEAL), e = 1 - Math.pow(1 - q, 2.4);
+      loader.classList.add("reveal");
+      const maxR = Math.hypot(Math.max(dotX, W - dotX), Math.max(dotY, H - dotY)) * 1.15, r = maxR * e;
+      c.globalCompositeOperation = "destination-out";
+      const g = c.createRadialGradient(dotX, dotY, Math.max(0, r * 0.7), dotX, dotY, r + 24);
+      g.addColorStop(0, "rgba(0,0,0,1)"); g.addColorStop(1, "rgba(0,0,0,0)");
+      c.fillStyle = g; wobPath(dotX, dotY, r + 24, 7.1); c.fill();
+      c.fillStyle = "#000"; wobPath(dotX, dotY, Math.max(0, r * 0.72), 3.3); c.fill();
+      c.globalCompositeOperation = "source-over";
+      if (q < 0.35) { c.strokeStyle = `rgba(241,240,234,${0.6 * (1 - q / 0.35)})`; c.lineWidth = 2; c.beginPath(); c.arc(dotX, dotY, 6 + q * 160, 0, Math.PI * 2); c.stroke(); }
+      if (q >= 1) { end(); return; }
+    }
+    requestAnimationFrame(frame);
+  }
+  const sp2 = t => t > 0.6;
+  t0 = performance.now();
+  requestAnimationFrame(frame);
+  window.__startLoader = () => { window.__loaderProgress(100); };
+})();
+</script>
+
+<div class="wrap">
+  <nav class="top">
+    <a class="site" href="index.html">島宇染坊</a>
+    <a href="index.html">← 回去染一塊布</a>
+  </nav>
+
+  <header class="hero">
+    <h1>一缸綠水，<br>染出一片藍</h1>
+    <p>藍染缸裡的液體是黃綠色的。布從缸裡拿出來也是黃綠色，抖開放在空氣中，幾秒內才慢慢轉成藍色。<sup><a href="#r1">[1]</a></sup></p>
+    <div class="vat-strip" aria-hidden="true">
+      <span style="background:#9aa63a"></span><span style="background:#7f9a5a"></span><span style="background:#5f8a86"></span><span style="background:#3f6f9e"></span><span style="background:#2b4c86"></span><span style="background:#1c2f5e"></span>
+    </div>
+    <p class="vat-cap">出缸 → 接觸空氣 → 氧化成藍</p>
+  </header>
+
+  <section class="ch" id="plant">
+    <div class="mark">染料</div>
+    <div>
+      <h2>大菁：藍色從一株植物來</h2>
+      <p>台灣傳統藍染常用的染料植物是<span class="term">馬藍</span>，又叫大菁、板藍、山藍，學名 <i>Strobilanthes cusia</i>，屬於爵床科。它原產於中國南部、西南部與印度、緬甸等地，清代引進台灣，現在多生長在中北部，台北郊山最常見。<sup><a href="#r2">[2]</a></sup></p>
+      <p>葉子要先做成<span class="term">藍靛</span>才能拿來染布，過程大致分三步：<sup><a href="#r2">[2]</a></sup></p>
+      <ul>
+        <li><b>浸泡</b>：大量馬藍葉放進大桶泡水，攪拌、靜置數天。</li>
+        <li><b>打靛</b>：加入新鮮莖葉和熟石灰，快速攪拌到起泡，再靜置一晚。</li>
+        <li><b>取靛</b>：倒掉上層的水，底下的沉澱物就是藍靛。</li>
+      </ul>
+      <div class="ph">待補圖：大菁（馬藍）植株</div>
+    </div>
+  </section>
+
+  <section class="ch" id="sanxia">
+    <div class="mark">產地</div>
+    <div>
+      <h2>三角湧的染坊</h2>
+      <p>三峽舊名三角湧。山區盛產大菁，溪水清澈、河運方便，溪畔因此發展出染布業。<sup><a href="#r3">[3]</a></sup>清同治、光緒年間最興盛，老街上曾有近十家染坊。<sup><a href="#r4">[4]</a></sup></p>
+      <ol class="timeline">
+        <li><span class="y">1830</span><span>道光十年，林茂興染坊創立，是三峽老街最早的染坊。<sup><a href="#r3">[3]</a></sup></span></li>
+        <li><span class="y">清光緒年間</span><span>歐洲合成染料引進台灣；日治中期以後西式服裝、和服流行，傳統染布業逐漸衰退。<sup><a href="#r3">[3]</a></sup></span></li>
+        <li><span class="y">1990</span><span>社區發起「尋找失落的三峽藍」。<sup><a href="#r3">[3]</a></sup></span></li>
+        <li><span class="y">1999</span><span>三角湧文化協進會展開藍染復原計畫，之後陸續有體驗課程、學校教學和年度藍染節。<sup><a href="#r3">[3]</a></sup></span></li>
+      </ol>
+      <div class="ph">待補圖：三峽老街染坊或晾布景象</div>
+    </div>
+  </section>
+
+  <section class="ch" id="people">
+    <div class="mark">族群</div>
+    <div>
+      <h2>藍染不只屬於一個族群</h2>
+      <p>現在常聽到「客家藍染」，不過從歷史紀錄來看，台灣的藍染是許多人一起走出來的：<sup><a href="#r5">[5]</a></sup></p>
+      <ul>
+        <li>荷蘭時期已有藍草種籽從中國福建、浙江與東南亞引進。</li>
+        <li>明鄭時期，漳州、泉州已有藍染產業，推測由漳、泉移民帶進台灣。</li>
+        <li>清代北部山區有泉州安溪人開墾種植馬藍，埔里、斗六、嘉義等地也有種植，藍靛經艋舺、鹿港、安平出口。</li>
+      </ul>
+      <p>種藍草的地方遍布陽明山、木柵、深坑、坪林、埔里、嘉義、花蓮等地，並不都是客家庄。<sup><a href="#r5">[5]</a></sup>藍染和客家文化的連結，最深的印記是下面這件衣服。</p>
+    </div>
+  </section>
+
+  <section class="ch" id="lanshan">
+    <div class="mark">藍衫</div>
+    <div>
+      <h2>客家藍衫</h2>
+      <p>藍衫又叫大襟衫或長衫，布料耐洗耐穿、結構簡單，適合開墾和農事勞動，是最具代表性的客家符碼之一。<sup><a href="#r4">[4]</a></sup></p>
+      <p>高雄美濃的<span class="term">錦興行</span>由謝景來在 1932 年創立，是著名的藍衫老店。依照店家的做法，一件藍衫有這些特徵：<sup><a href="#r6">[6]</a></sup></p>
+      <ul>
+        <li>衣長及膝，右開大襟。</li>
+        <li>布料用藍色或黑色棉布，要反覆曬乾、複染八遍。</li>
+        <li>立領用七層布純手工縫製；袖口反摺，形成「反袖口袋」。</li>
+        <li>布鈕取吉利的單數：常見五顆（五福臨門）、七顆、三顆。</li>
+      </ul>
+      <div class="ph">待補圖：客家藍衫</div>
+    </div>
+  </section>
+
+  <section class="ch" id="techs">
+    <div class="mark">手法</div>
+    <div>
+      <h2>綁住的地方，就是花紋</h2>
+      <p>染布出現圖案，靠的是「防染」：讓布的某些地方碰不到染液。常見做法有用繩子綁布的紮染，以及把布摺疊後用木板夾住、染出對稱幾何圖案的夾染。<sup><a href="#r1">[1]</a></sup>這個網站模擬了四種綁法：</p>
+      <div class="techs">
+        <div><b>捆紮</b><span>把布揪起一團團綁緊，拆開後是一圈圈放射紋。</span></div>
+        <div><b>夾染</b><span>摺成小方塊、用木板夾住，染出重複對稱的圖案。</span></div>
+        <div><b>縫紮</b><span>用線縫一排針腳再抽緊，皺褶處留下細密波紋。</span></div>
+        <div><b>揉皺</b><span>隨手揉成一團再綁住，紋路不規則，像雲也像石紋。</span></div>
+      </div>
+      <p>在網站上，你可以用紅筆標出要綁的位置，把不同綁法混在同一塊布上，每一處還能調整細節，也可以按「整塊隨機」讓程式幫你綁。圖案是程式依照這些原理模擬出來的，和實際手染的效果會有差異。</p>
+    </div>
+  </section>
+
+  <section class="ch" id="more">
+    <div class="mark">細節</div>
+    <div>
+      <h2>同一種綁法，還能變出很多花樣</h2>
+      <p>日本的絞染發展出許多有名稱的技法，可以對照網站裡的細部設定：</p>
+      <ul>
+        <li><b>嵐絞</b>：把布捲在長棍上、纏上線，再往前推擠壓縮後染色，染出像暴風雨天的細斜線。捲法、纏線和壓縮的方式不同，能變出上百種模樣。<sup><a href="#r8">[8]</a></sup><sup><a href="#r9">[9]</a></sup></li>
+        <li><b>杢目絞</b>：沿著線一排排平針縫，再把線抽緊，染出像木紋的不規則直皺。<sup><a href="#r8">[8]</a></sup></li>
+        <li><b>折縫絞</b>：把布摺起來再縫，抽緊縫線，能染出龜甲、麻葉一類的幾何紋。<sup><a href="#r8">[8]</a></sup></li>
+        <li><b>蜘蛛絞</b>：從中心把布勾起，像傘骨一樣抓出褶子再纏線，染出蜘蛛網般的放射紋。<sup><a href="#r8">[8]</a></sup></li>
+        <li><b>小帽子絞</b>：用芯材包住布，再蓋上竹皮或塑膠膜後綁緊。<sup><a href="#r10">[10]</a></sup></li>
+        <li><b>板締絞</b>：用型板或木板夾住摺好的布；<b>雪花絞</b>是把布摺成三角形，正反兩面用板子夾住再綁起來染。<sup><a href="#r8">[8]</a></sup><sup><a href="#r9">[9]</a></sup></li>
+      </ul>
+      <p>中國古代也有用木板夾布的<span class="term">夾纈</span>：兩塊木板雕刻同樣的花紋，把對折的布夾在中間，在雕空的地方染色，染出對稱的花紋。唐代以後非常普遍。<sup><a href="#r11">[11]</a></sup></p>
+      <p>網站裡的「冰裂紋、雲霧紋、大理石紋、閃電紋、木紋、水波紋」以及「捲針縫、抽褶縫」，是用來形容圖案或做法的名稱，不是特定的傳統技法名稱。用豆子、彈珠、硬幣、竹筷、小石頭包進布裡再綁，是網站模擬的做法。</p>
+      <p>手作綁染時，身邊的小東西也能派上用場：有染布工作者分享，文具裡的雁尾夾、隨手可得的免洗筷、小錢幣，都可以拿來當夾染的輔助工具，變化出不同的花樣。<sup><a href="#r14">[14]</a></sup></p>
+    </div>
+  </section>
+
+  <section class="ch" id="dyes">
+    <div class="mark">原料</div>
+    <div>
+      <h2>染料從哪裡來</h2>
+      <ul>
+        <li><b>大菁藍</b>：馬藍的葉子泡水數天，加入熟石灰打靛，取出沉澱的藍靛。<sup><a href="#r2">[2]</a></sup></li>
+        <li><b>薯榔</b>：用的是地下塊莖，切開後的莖肉是赭紅色。切塊、刨絲、搾出汁液，就能拿來染布、染漁網。南方澳過去用網具捕魚的船，每年都要用薯榔汁液把漁網浸染一次；薯榔富含膠質和丹寧，能讓漁網更強韌耐用。<sup><a href="#r12">[12]</a></sup></li>
+        <li><b>薑黃</b>：用的是根莖，切片後加水煮沸成染液，可以染出鮮黃色；染好後用明礬水浸泡固色。<sup><a href="#r13">[13]</a></sup></li>
+      </ul>
+      <div class="ph">待補圖：馬藍、薯榔、薑黃原料照片</div>
+    </div>
+  </section>
+
+  <section class="ch" id="overdye">
+    <div class="mark">套染</div>
+    <div>
+      <h2>一缸接一缸，疊出新的顏色</h2>
+      <p>植物染常把布先後放進不同的染缸，讓顏色疊在一起，叫做<span class="term">套染</span>。明代宋應星的《天工開物》就記載，綠色系可以用黃色染料打底、再用藍靛套染：例如「豆綠色」是先用黃蘗水染，再以藍靛套染；「大紅官綠色」是用槐花煮水染，再以藍靛套染。<sup><a href="#r7">[7]</a></sup></p>
+      <p>網站裡的「薑黃」是用來代表黃色染料的選項，古書中用的是槐花、黃蘗等植物。</p>
+    </div>
+  </section>
+
+  <section class="ch" id="visit">
+    <div class="mark">體驗</div>
+    <div>
+      <h2>想親手染一次</h2>
+      <p>新北市客家文化園區設有藍染戶外展示空間「藍金客」，復刻菁礐池、漂洗區和晾曬區，也有藍染 DIY 體驗。<sup><a href="#r4">[4]</a></sup>三峽一帶的社區與工坊也有體驗課程。<sup><a href="#r3">[3]</a></sup>開放時間與報名方式請以各單位公告為準。</p>
+    </div>
+  </section>
+
+  <div class="cta">
+    <p>讀完了，換你下缸。</p>
+    <a class="btn" href="index.html">去染一塊布</a>
+  </div>
+
+  <footer class="refs">
+    <h2>資料來源</h2>
+    <ol>
+      <li id="r1">來好 LAIHAO，〈一缸綠水染出「藍金」：台灣藍染歷史與三峽 DIY 全解析〉。<a href="https://www.laihao.com.tw/en/blog/posts/introdcution-of-taiwan-indigo-dyeing" rel="noopener" target="_blank">laihao.com.tw</a></li>
+      <li id="r2">台灣環境資訊協會，〈馬藍〉。<a href="https://teia.tw/archives/natural_valley_star/ph2021-12-01" rel="noopener" target="_blank">teia.tw</a></li>
+      <li id="r3">文化部國家文化記憶庫，〈三峽工藝藍染〉。<a href="https://tcmb.culture.tw/zh-tw/detail?indexCode=Culture_Invisible&amp;id=218457" rel="noopener" target="_blank">tcmb.culture.tw</a></li>
+      <li id="r4">遠見雜誌，〈安居樂業 新北最美藍天！復刻客家人的藍衫精神〉。<a href="https://www.gvm.com.tw/article/93597" rel="noopener" target="_blank">gvm.com.tw</a></li>
+      <li id="r5">國立雲林科技大學智能地域設計服務研究中心，〈探索臺灣藍染：藍染為客家人所有嗎？〉（2020）。<a href="https://ildsc.yuntech.edu.tw/17-nov-2020-%E6%8E%A2%E7%B4%A2%E8%87%BA%E7%81%A3%E8%97%8D%E6%9F%93-%E8%97%8D%E6%9F%93%E7%82%BA%E5%AE%A2%E5%AE%B6%E4%BA%BA%E6%89%80%E6%9C%89%E5%97%8E%EF%BC%9F/" rel="noopener" target="_blank">ildsc.yuntech.edu.tw</a></li>
+      <li id="r6">微笑台灣（天下雜誌），〈錦興行 剪出一片湛藍，客人一進門就知「工很細」！〉。<a href="https://smiletaiwan.cw.com.tw/article/1082" rel="noopener" target="_blank">smiletaiwan.cw.com.tw</a></li>
+      <li id="r7">大紀元，〈《天工開物》古傳各色染料秘方 自然美現代珍藏版〉（2017），引述宋應星《天工開物》。<a href="https://www.epochtimes.com/b5/17/7/13/n9386065.htm" rel="noopener" target="_blank">epochtimes.com</a></li>
+      <li id="r8">Pearltone，〈模様染めについて⑥ 絞り染の種類〉（日文）。<a href="https://www.pearltone.com/info/?p=994" rel="noopener" target="_blank">pearltone.com</a></li>
+      <li id="r9">大蔵，〈着物の絞りの見分け方を解説！主な技法や種類〉（日文）。<a href="https://www.wb-ookura.com/column/25998/" rel="noopener" target="_blank">wb-ookura.com</a></li>
+      <li id="r10">井筒，〈絞り染めの種類〉（日文）。<a href="https://izutsu-kyoto.jp/shibori/shibori_type/" rel="noopener" target="_blank">izutsu-kyoto.jp</a></li>
+      <li id="r11">萌典，「夾纈」。<a href="https://www.moedict.tw/%E5%A4%BE%E7%BA%88" rel="noopener" target="_blank">moedict.tw</a></li>
+      <li id="r12">文化部國家文化記憶庫，〈薯榔染〉。<a href="https://tcmb.culture.tw/zh-tw/detail?indexCode=Culture_Event&amp;id=284392" rel="noopener" target="_blank">tcmb.culture.tw</a></li>
+      <li id="r13">劉曉倩，〈植物染缸論化學〉，臺灣化學教育。<a href="http://chemed.chemistry.org.tw/?p=27044" rel="noopener" target="_blank">chemed.chemistry.org.tw</a></li>
+      <li id="r14">原染撒喇蜜，〈異材質與綁染的運用〉，痞客邦部落格。<a href="https://salamiz.pixnet.net/blog/post/7209256" rel="noopener" target="_blank">salamiz.pixnet.net</a></li>
+    </ol>
+    <p>資料查閱日期：2026 年 10 月 1 日。</p>
+  </footer>
+</div>
+
+<script>window.__startLoader && window.__startLoader();</script>
+
+</body>
+</html>

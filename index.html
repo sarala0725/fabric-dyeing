@@ -1,0 +1,2739 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>島宇染坊</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* 版面概念：染布畫面是主角，佔滿大部分視窗；右側（手機在下方）是一條窄工具欄，文字只做輔助。 */
+/* 單一深色設計：網站本身就是一塊深靛藍的染布，白布放上去才看得清楚 */
+:root {
+  --bg: #13213f;          /* 深靛：染了八遍的藍 */
+  --surface: #1b2c53;
+  --table: #22386a;       /* 工作台 */
+  --ink: #eef1f7;
+  --muted: #a8b4d2;
+  --line: #34497c;
+  --indigo: #f1efe6;      /* 強調色：未染的白布 */
+  --on-indigo: #13213f;
+  --pen: #ff7466;         /* 紅筆 */
+  --cap-bg: rgba(19, 33, 63, 0.84);
+  --focus: #ffd27a;
+  --bamboo: #b99258; --bamboo-dark: #7d5d30;
+  --font-display: "LXGW WenKai TC", "Kaiti TC", "BiauKai", "DFKai-SB", serif;
+  --font-body: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --radius: 10px;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.6; }
+a { color: var(--indigo); }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.wrap { max-width: 1440px; margin: 0 auto; padding-inline: 20px; padding-block: 0 28px; }
+
+.top { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 20px; padding-block: 14px 12px; }
+.top h1 { font-family: var(--font-display); font-weight: 700; font-size: 26px; line-height: 1.2; margin: 0; letter-spacing: .06em; }
+.top a { font-size: 14px; font-weight: 500; text-decoration: none; border-bottom: 1px solid currentColor; }
+
+/* 主畫面＋工具欄 */
+.app { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 24px; align-items: start; }
+@media (max-width: 900px) { .app { grid-template-columns: minmax(0, 1fr); gap: 14px; } }
+
+.stage {
+  position: relative; aspect-ratio: 1 / 1; width: 100%; max-width: 100%;
+  max-height: calc(100vh - 92px); max-height: calc(100dvh - 92px);
+  margin-left: auto; margin-right: 0; background: #62452d center / cover; border-radius: 14px; overflow: hidden;
+  padding: 4.5%; box-shadow: inset 0 0 0 1px rgba(0,0,0,.25), 0 10px 30px rgba(0,0,0,.35);
+}
+@supports (aspect-ratio: 1 / 1) { .stage { width: min(100%, calc(100vh - 92px)); width: min(100%, calc(100dvh - 92px)); } }
+@media (max-width: 900px) { .stage { width: 100%; max-height: none; margin-inline: 0; } }
+.stage canvas { display: block; width: 100%; height: 100%; touch-action: auto; filter: drop-shadow(0 8px 14px rgba(0,0,0,.4)); }
+.stage.drawing canvas { touch-action: none; cursor: crosshair; }
+.stage .card-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; padding: 5%; }
+.stage.vats canvas { cursor: pointer; }
+.cap {
+  position: absolute; left: 12px; bottom: 12px; max-width: calc(100% - 24px); margin: 0;
+  background: var(--cap-bg); color: var(--ink); font-size: 14px; padding: 5px 12px; border-radius: 999px;
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+}
+.cap:empty { display: none; }
+
+.rail { display: flex; flex-direction: column; gap: 16px; min-width: 0; position: sticky; top: calc(12px + env(safe-area-inset-top, 0px)); }
+@media (max-width: 900px) { .rail { position: static; } }
+
+.steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; list-style: none; margin: 0; padding: 0; }
+.steps button {
+  width: 100%; font: inherit; font-size: 13px; color: var(--muted); background: transparent; border: 0;
+  border-top: 3px solid var(--line); padding: 6px 0 0; text-align: left; cursor: default;
+}
+.steps button.done { color: var(--ink); border-top-color: var(--indigo); cursor: pointer; }
+.steps button.current { color: var(--ink); font-weight: 700; border-top-color: var(--indigo); }
+
+.step { display: flex; flex-direction: column; gap: 14px; }
+.label { font-size: 12px; color: var(--muted); letter-spacing: .08em; margin: 0 0 6px; }
+.tip { font-size: 13px; color: var(--muted); margin: 0; min-height: 1.6em; }
+
+/* 圖示選項 */
+.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.tiles.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.tile { position: relative; min-width: 0; }
+.tile input { position: absolute; opacity: 0; pointer-events: none; }
+.tile label {
+  display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 4px 6px;
+  border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); cursor: pointer;
+  font-size: 13px; text-align: center;
+}
+.tile .ic { width: 100%; max-width: 56px; aspect-ratio: 1 / 1; border-radius: 8px; background-size: cover; background-position: center; }
+.tile .ic.round { border-radius: 50%; max-width: 40px; margin-block: 8px; }
+.tile input:checked + label { border-color: var(--indigo); box-shadow: inset 0 0 0 1px var(--indigo); font-weight: 700; }
+.tile input:focus-visible + label { outline: 3px solid var(--focus); outline-offset: 2px; }
+.tile input:disabled + label { opacity: .45; cursor: not-allowed; }
+
+.seg { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); border: 1px solid var(--line); border-radius: 999px; padding: 3px; background: var(--surface); }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg label { display: block; text-align: center; padding: 5px 8px; border-radius: 999px; cursor: pointer; font-size: 14px; }
+.seg input:checked + label { background: var(--indigo); color: var(--on-indigo); font-weight: 700; }
+.seg input:focus-visible + label { outline: 3px solid var(--focus); outline-offset: 1px; }
+.seg span { position: relative; }
+
+.range { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--muted); }
+.range input { flex: 1; min-width: 0; accent-color: var(--pen); }
+.range.ruler { color: var(--w-ink, var(--ink)); font-weight: 700; font-size: 13px; }
+.range.ruler input { -webkit-appearance: none; appearance: none; height: 26px; border-radius: 3px; background:
+  repeating-linear-gradient(90deg, #3b2a17 0 1px, transparent 1px 10px) top / 100% 8px no-repeat,
+  repeating-linear-gradient(90deg, #3b2a17 0 1px, transparent 1px 50px) top / 100% 14px no-repeat, #ece6d6; }
+.range.ruler input::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 26px; background: var(--pen); clip-path: polygon(50% 40%, 100% 100%, 0 100%); border: 0; }
+.range.ruler input::-moz-range-thumb { width: 14px; height: 26px; background: var(--pen); border: 0; border-radius: 0; clip-path: polygon(50% 40%, 100% 100%, 0 100%); }
+
+.actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.btn {
+  font: inherit; font-weight: 700; font-size: 15px; padding: 9px 18px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--indigo); background: var(--indigo); color: var(--on-indigo);
+}
+.btn.ghost { background: transparent; color: var(--indigo); }
+.btn.small { font-size: 13px; padding: 5px 12px; font-weight: 500; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn.big { font-size: 18px; padding: 13px 26px; }
+.btn.wide { flex: 1; }
+
+.meter .row { display: flex; justify-content: space-between; align-items: baseline; }
+.meter .count { font-family: var(--font-data); font-size: 13px; font-variant-numeric: tabular-nums; }
+.meter .bar { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 3px; margin-top: 4px; }
+.meter .bar span { height: 12px; border-radius: 3px; background: var(--line); transition: background-color .6s; }
+
+.result-name { font-family: var(--font-display); font-weight: 700; font-size: 38px; line-height: 1.2; margin: 0; letter-spacing: .06em; min-height: 1.2em; }
+.result-name .ch { display: inline-block; opacity: 0; transform: translateY(8px); animation: rise .5s forwards; }
+@keyframes rise { to { opacity: 1; transform: none; } }
+.badge { align-self: flex-start; font-size: 12px; font-weight: 700; letter-spacing: .08em; padding: 2px 10px; border-radius: 999px; border: 1px solid var(--indigo); color: var(--indigo); }
+.serial { font-family: var(--font-data); font-size: 12px; color: var(--muted); margin: 0; }
+.facts { margin: 0; padding: 0; list-style: none; font-size: 13px; color: var(--muted); display: grid; gap: 2px; }
+.facts b { color: var(--ink); font-weight: 500; }
+
+.form { display: grid; gap: 12px; }
+.form label.t { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; letter-spacing: .06em; }
+.form input[type="text"], .form textarea { width: 100%; font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+.form textarea { resize: vertical; min-height: 64px; }
+.suggest { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.suggest button { font: inherit; font-size: 12px; color: var(--muted); background: transparent; border: 1px dashed var(--line); border-radius: 999px; padding: 2px 8px; cursor: pointer; }
+.suggest button:hover { color: var(--ink); border-color: var(--muted); }
+
+/* 實物介面：布架、工具盤 */
+.wood { --w-ink: #2a1c0e; --w-muted: #4e3820; background: linear-gradient(#c8a46e, #a07a45); border-radius: 14px; padding: 8px; box-shadow: 0 8px 20px rgba(0,0,0,.35); }
+.wood > .in { background: rgba(60,40,20,.28); border-radius: 10px; padding: 10px; display: grid; gap: 10px; }
+.wlabel { margin: 0; font-size: 13px; font-weight: 700; color: var(--w-ink); letter-spacing: .04em; }
+.wlabel small { font-weight: 500; color: var(--w-muted); margin-left: 8px; letter-spacing: 0; }
+.picks { display: flex; flex-wrap: wrap; gap: 6px; }
+.pick { position: relative; min-width: 0; }
+.pick input { position: absolute; opacity: 0; pointer-events: none; }
+.pick label { display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; border-radius: 8px; padding: 4px; color: var(--w-ink); font-size: 12px; text-align: center; background: rgba(255,240,210,.12); border: 2px solid transparent; transition: transform .2s, background-color .2s; }
+.pick label:hover { background: rgba(255,240,210,.24); }
+.pick input:checked + label { background: rgba(255,240,210,.38); border-color: #f6f1e4; font-weight: 700; }
+.pick input:focus-visible + label { outline: 3px solid var(--focus); outline-offset: 2px; }
+.pick input:disabled + label { opacity: .45; cursor: not-allowed; }
+.pick img { display: block; width: 100%; height: auto; }
+.pick.tool { flex: 1 1 calc(50% - 6px); } .pick.tool img { max-width: 76px; }
+.pick.dish, .pick.swatch, .pick.board { flex: 1 1 0; } .pick.dish img { max-width: 80px; } .pick.swatch img { max-width: 72px; } .pick.board img { max-width: 56px; border-radius: 6px; }
+.pick.ring label, .pick.peg label { padding: 2px; } .pick.ring img { width: 40px; } .pick.peg img { width: 44px; }
+.pick.ring input:checked + label, .pick.peg input:checked + label { border-color: transparent; background: rgba(255,240,210,.24); }
+/* 布架 */
+.shelf { position: relative; display: grid; gap: 14px; padding: 6px 14px 4px; border-left: 10px solid #7d5d30; border-right: 10px solid #7d5d30; border-radius: 4px; }
+.pick.bolt label { background: none; border: 0; color: var(--ink); font-size: 14px; padding: 0; position: relative; }
+.pick.bolt label span { margin-top: 2px; line-height: 22px; }
+.pick.bolt .boltwrap { position: relative; display: block; width: 100%; max-width: 300px; aspect-ratio: 360 / 170; }
+.pick.bolt .boltbox { position: absolute; inset: 0; z-index: 1; transition: transform .35s; }
+.pick.bolt .boltwrap::after { content: ""; position: absolute; left: -30px; right: -30px; top: calc(35.3% - 5px); height: 10px; background: linear-gradient(#c49a62, #8a6a3e 60%, #6b5030); border-radius: 5px; z-index: 0; box-shadow: 0 2px 3px rgba(0,0,0,.35); }
+.pick.bolt .roll { position: absolute; left: 0; top: 0; width: 100%; z-index: 2; }
+.pick.bolt .tail { position: absolute; left: 0; top: 50%; width: 100%; z-index: 1; transform: scaleY(0); transform-origin: 50% 0; transition: transform .4s ease; }
+.pick.bolt input:checked + label .tail { transform: scaleY(1); }
+@media (hover: hover) { .pick.bolt label:hover .tail { transform: scaleY(1); } }
+
+/* 布捲端面：捲紋與中心的洞，木軸從洞裡穿出來 */
+.pick.bolt .cap { position: absolute; left: 79.5%; top: 9.4%; width: 8.8%; height: 51.8%; z-index: 3; }
+.pick.bolt .squash { position: absolute; left: 50%; top: 0; height: 100%; aspect-ratio: 1 / 1; transform: translateX(-50%) scaleX(.36); }
+.pick.bolt .rot { display: block; width: 100%; height: 100%; }
+.pick.bolt .axle-front { position: absolute; left: 83.9%; right: -30px; top: calc(35.3% - 5px); height: 10px; z-index: 4; border-radius: 0 5px 5px 0;
+  background: linear-gradient(#c49a62, #8a6a3e 60%, #6b5030); box-shadow: -3px 0 4px rgba(0,0,0,.55), 0 2px 3px rgba(0,0,0,.35); }
+.pick.bolt .sheen { position: absolute; left: 11.1%; width: 72.8%; top: 9.4%; height: 51.8%; z-index: 2; pointer-events: none; opacity: 0;
+  background: repeating-linear-gradient(180deg, rgba(255,255,255,0) 0, rgba(255,255,255,.28) 12%, rgba(0,0,0,.08) 24%, rgba(255,255,255,0) 36%); background-size: 100% 200%; }
+@keyframes boltspin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
+@keyframes boltspin2 { from { transform: rotate(0); } to { transform: rotate(360deg); } }
+@keyframes sheen { 0% { opacity: 0; background-position: 0 0; } 20% { opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; background-position: 0 -200%; } }
+@keyframes sheen2 { 0% { opacity: 0; background-position: 0 0; } 20% { opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; background-position: 0 -200%; } }
+@media (hover: hover) {
+  .pick.bolt label:hover .rot { animation: boltspin .6s ease-in-out; }
+  .pick.bolt label:hover .sheen { animation: sheen .6s ease-in-out; }
+}
+.pick.bolt input:checked + label .rot { animation: boltspin2 .6s ease-in-out; }
+.pick.bolt input:checked + label .sheen { animation: sheen2 .6s ease-in-out; }
+@media (prefers-reduced-motion: reduce) { .pick.bolt .tail, .pick.bolt .boltbox { transition: none; } .pick.bolt .rot, .pick.bolt .sheen { animation: none !important; } }
+.pick.bolt input:checked + label { font-weight: 700; background: none; }
+.pick.bolt label span { color: var(--muted); } .pick.bolt input:checked + label span { color: var(--ink); }
+/* 染缸、杓子、布條 */
+.pick.chipv label { flex-direction: row; gap: 6px; padding: 4px 10px; font-size: 13px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 999px; }
+.pick.chipv input:checked + label { border-color: var(--indigo); background: var(--surface); }
+.pick.chipv i { width: 14px; height: 14px; border-radius: 50%; display: inline-block; }
+.pick.ladle { flex: 1 1 0; } .pick.ladle img { max-width: 76px; }
+.strips { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 5px; align-items: start; }
+.strip { position: relative; height: 64px; border-radius: 0 0 3px 3px; background: rgba(241,239,230,.16); border-top: 5px solid #a07a45; display: block; transition: background-color .6s; }
+.strip b { position: absolute; left: 0; right: 0; bottom: -18px; text-align: center; font: 500 11px var(--font-data); color: var(--muted); }
+.strip.prev { opacity: .6; }
+.strip.done { box-shadow: 0 3px 6px rgba(0,0,0,.3); }
+@media (max-width: 900px) {
+  /* 手機：三卷布縮小並排在同一根木條上，一眼看完，不用左右滑 */
+  .shelf { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-flow: row; gap: 10px; overflow: visible; border: 0; padding: 4px 6px 0; }
+  .pick.bolt .boltwrap { max-width: none; }
+  .pick.bolt .boltwrap::after { left: -6px; right: -6px; }
+  .pick.bolt .axle-front { right: -6px; }
+  .pick.bolt label { min-height: 44px; font-size: 13px; }
+  .pick.bolt label span { margin-top: 0; }
+  /* 選布這一步把布面預覽縮小，讓布架和按鈕在第一個畫面就看得到 */
+  .stage { transition: width .35s ease; }
+  .stage.pick1 { width: min(100%, 66vw); margin-inline: auto; }
+}
+@media (max-width: 900px) and (prefers-reduced-motion: reduce) { .stage { transition: none; } }
+
+.detail.cores .picks { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.prods .pick { flex: 1 1 0; }
+.pick.prod label { color: var(--ink); background: var(--surface); border: 1px solid var(--line); }
+.pick.prod input:checked + label { border-color: var(--indigo); background: var(--surface); }
+.pick.prod img { max-width: 56px; }
+#cardForm.notcard .card-only { display: none; }
+
+/* 綁法細部設定 */
+.opts { display: grid; gap: 10px; }
+.opts:empty { display: none; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips input { position: absolute; opacity: 0; pointer-events: none; }
+.chips span { position: relative; }
+.chips label { display: inline-block; padding: 4px 11px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; font-size: 13px; }
+.chips input:checked + label { background: var(--indigo); color: var(--on-indigo); border-color: var(--indigo); font-weight: 700; }
+.chips input:focus-visible + label { outline: 3px solid var(--focus); outline-offset: 2px; }
+.opts .label { margin-bottom: 4px; }
+/* 染料原料 */
+.raw { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 8px 10px 10px; }
+.raw canvas { display: block; width: 100%; height: auto; }
+.flow { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 2px; font-size: 13px; color: var(--muted); counter-reset: f; }
+.flow li { counter-increment: f; }
+.flow li::before { content: counter(f) "."; font-family: var(--font-data); margin-right: 6px; color: var(--ink); }
+
+/* 晾布架 */
+.rack-sec { margin-top: 26px; }
+.rack-choose { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-top: 10px; padding: 10px 14px; border-radius: 10px; background: var(--surface); border: 1px solid var(--indigo); }
+.rack-choose p { margin: 0; font-weight: 700; }
+.rack-sec.choosing .cloth:not(.empty) { animation: wobble 1.6s ease-in-out infinite; }
+.rack-sec.choosing .cloth:not(.empty):nth-child(2n) { animation-delay: -.8s; }
+.rack-sec.choosing .cloth:not(.empty):hover img { outline: 3px solid var(--pen); outline-offset: 2px; }
+@keyframes wobble { 0%, 100% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } }
+.cloth.drop { transition: transform .45s ease-in, opacity .45s ease-in !important; animation: none !important; transform: translateY(90px) rotate(10deg) !important; opacity: 0; }
+@media (prefers-reduced-motion: reduce) { .rack-sec.choosing .cloth:not(.empty) { animation: none; } }
+.rack-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.rack-head h2 { font-family: var(--font-display); font-size: 24px; margin: 0; letter-spacing: .06em; }
+.rack-head span { font-family: var(--font-data); font-size: 13px; color: var(--muted); }
+.rack { overflow-x: auto; padding-block: 6px 14px; margin-top: 6px; }
+.rack-inner { position: relative; min-width: 620px; padding-inline: 10px; }
+.pole { height: 14px; border-radius: 7px; background:
+  repeating-linear-gradient(90deg, transparent 0 118px, var(--bamboo-dark) 118px 122px),
+  linear-gradient(var(--bamboo), var(--bamboo-dark)); }
+.slots { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 14px; margin-top: -7px; padding-inline: 8px; }
+.cloth { position: relative; display: block; padding: 0; border: 0; background: none; cursor: pointer; transform-origin: 50% 0; transition: transform .3s; color: inherit; font: inherit; text-align: center; }
+.cloth img { display: block; width: 100%; aspect-ratio: 3 / 4; object-fit: cover; border-radius: 0 0 4px 4px; box-shadow: 0 8px 18px rgba(0, 0, 0, .35); }
+.cloth::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 16px; background: linear-gradient(rgba(0,0,0,.38), rgba(0,0,0,.08)); pointer-events: none; }
+.cloth::after { content: ""; position: absolute; top: -4px; left: 50%; width: 10px; height: 22px; margin-left: -5px; border-radius: 3px; background: var(--bamboo); box-shadow: 0 1px 2px rgba(0,0,0,.4); }
+.cloth .nm { display: block; font-size: 13px; margin-top: 8px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cloth:hover, .cloth:focus-visible { transform: rotate(1.2deg); }
+.cloth.current img { outline: 3px solid var(--indigo); outline-offset: 2px; }
+.cloth.empty { cursor: default; }
+.cloth.empty .ph { display: block; aspect-ratio: 3 / 4; border: 1px dashed var(--line); border-top: 0; border-radius: 0 0 4px 4px; }
+.cloth.empty::after { display: none; }
+.cloth.empty::before { display: none; }
+.cloth.new { animation: hang 1.6s ease-out; }
+@keyframes hang { 0% { transform: translateY(-30px) rotate(0); opacity: 0; } 30% { transform: translateY(0) rotate(5deg); opacity: 1; } 55% { transform: rotate(-3deg); } 75% { transform: rotate(1.5deg); } 100% { transform: rotate(0); } }
+@media (prefers-reduced-motion: reduce) { .cloth.new { animation: none; } .cloth { transition: none; } }
+
+.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 18px; border-radius: 999px; font-size: 14px; z-index: 10; max-width: calc(100% - 32px); text-align: center; }
+.foot { margin-top: 22px; color: var(--muted); font-size: 13px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 20px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .result-name .ch { animation: none; opacity: 1; transform: none; }
+  .meter .bar span { transition: none; }
+}
+</style>
+</head>
+<body>
+
+
+<!-- 載入動畫：每次打開網站播放；網站內換頁時改播一朵暈開的花 -->
+<div id="loader" role="status" aria-label="島宇染坊載入中">
+  <canvas id="loaderCv" aria-hidden="true"></canvas>
+  <div class="ld-bar" aria-hidden="true"><span class="ld-fill" id="ldFill"></span></div>
+  <p class="ld-pct" id="ldPct">準備中 0%</p>
+</div>
+<div id="navFade" aria-hidden="true"></div>
+<style>
+#loader { position: fixed; inset: 0; z-index: 50; background: #f1f0ea; transition: opacity .6s, background-color .4s; }
+#loader.flooded { background: #13213f; }
+#loader.reveal { background: transparent; cursor: default; }
+#loader.reveal .ld-bar, #loader.reveal .ld-pct { opacity: 0; transition: opacity .3s; }
+#loader.ready { cursor: pointer; }
+#loader.out { opacity: 0; pointer-events: none; }
+#loaderCv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.ld-bar { position: absolute; left: 50%; bottom: calc(64px + env(safe-area-inset-bottom, 0px)); width: min(64vw, 420px); height: 10px; transform: translateX(-50%);
+  background: repeating-linear-gradient(90deg, rgba(0,0,0,.05) 0 1px, transparent 1px 4px), #e6e3da; border-radius: 2px; overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,.12); }
+.ld-fill { position: absolute; inset: 0 auto 0 0; width: 0; background: linear-gradient(90deg, #16244a, #24396f 70%, rgba(43,76,134,.85)); transition: width .25s;
+  -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 14px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 14px), transparent); }
+.ld-pct { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(30px + env(safe-area-inset-bottom, 0px)); margin: 0; text-align: center; white-space: nowrap; background: rgba(241,240,234,.9); padding: 2px 12px; border-radius: 999px; font: 500 13px "IBM Plex Mono", ui-monospace, monospace; letter-spacing: .08em; color: #3d5285; font-variant-numeric: tabular-nums; }
+#navFade { position: fixed; inset: 0; z-index: 49; background: #13213f; opacity: 0; pointer-events: none; transition: opacity .2s ease; }
+#navFade.on { opacity: 1; pointer-events: auto; }
+#loader.flooded .ld-pct { color: #eef1f7; background: rgba(255,255,255,.08); }
+#loader.flooded .ld-bar { background: rgba(255,255,255,.14); box-shadow: none; }
+#loader.flooded .ld-fill { background: linear-gradient(90deg, #f1efe6, #f1efe6 80%, rgba(241,239,230,.8)); }
+.ld-pct, .ld-bar, .ld-fill { transition: color .5s, background-color .5s, background .5s, width .25s; }
+</style>
+<script>
+(function () {
+  "use strict";
+  const REDUCE = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let fromNav = false;
+  try { fromNav = sessionStorage.getItem("jl-nav") === "1"; sessionStorage.removeItem("jl-nav"); } catch (e) { /* 瀏覽器不允許暫存就照常播放 */ }
+  const loader = document.getElementById("loader"), cv = document.getElementById("loaderCv"), c = cv.getContext("2d"), mainCtx = c;
+  const fill = document.getElementById("ldFill"), pctEl = document.getElementById("ldPct");
+  const clamp = (v, a = 0, b = 1) => v < a ? a : v > b ? b : v;
+  const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a)); return t * t * (3 - 2 * t); };
+  function rnd(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  // 簡單的雜訊（讓邊緣像水彩一樣不規則）
+  function noise2(seed) {
+    const r = rnd(seed), g = new Float32Array(256 * 256);
+    for (let i = 0; i < g.length; i++) g[i] = r();
+    return (x, y) => {
+      const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi, u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf);
+      const at = (a, b) => g[((b & 255) << 8) | (a & 255)];
+      const p = at(xi, yi), q = at(xi + 1, yi), s = at(xi, yi + 1), t = at(xi + 1, yi + 1);
+      return p + (q - p) * u + (s - p) * v + (p - q - s + t) * u * v;
+    };
+  }
+  const NZ = noise2(77);
+  const fbm = (x, y) => (NZ(x, y) * 0.55 + NZ(x * 2.1 + 9, y * 2.1) * 0.3 + NZ(x * 4.3, y * 4.3 + 5) * 0.15);
+  const tri = t => { const m = ((t % 2) + 2) % 2; return 1 - Math.abs(m - 1); };
+
+  // 一朵暈染：依綁法算出花樣，再依「暈開的順序」慢慢顯現
+  function makeBloom(type, px, seed) {
+    const r = rnd(seed), N = px, dye = new Float32Array(N * N), order = new Float32Array(N * N), base = new Float32Array(N * N), keep = new Float32Array(N * N);
+    const ph = r() * 50, k = 6 + r() * 5, ang = r() * Math.PI, ca = Math.cos(ang), sa = Math.sin(ang), cells = 2 + Math.floor(r() * 2);
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+      const u = x / N * 2 - 1, v = y / N * 2 - 1, d = Math.hypot(u, v), i = y * N + x;
+      const n = fbm(u * 3 + ph, v * 3 - ph);
+      const edge = 1 - smooth(0.72, 1.0, d + (n - 0.5) * 0.16);
+      base[i] = 1 - smooth(0.93, 1.0, d + (n - 0.5) * 0.16);   // 花樣底下那塊白布（實心）
+      if (edge <= 0) { dye[i] = 0; order[i] = 9; continue; }
+      let resist = 0, ord = d * 0.9 + (n - 0.5) * 0.15;   // ord：這一點什麼時候染出來（依染法各自不同）
+      if (type === "kumo") {
+        const a = Math.atan2(v, u), ray = NZ(Math.cos(a) * k + ph, Math.sin(a) * k + d * 2);
+        for (const pj of [0.3, 0.55]) { const z = (d - pj + (ray - 0.5) * 0.03) / 0.03; resist = Math.max(resist, Math.exp(-z * z) * 0.95); }
+        resist = Math.max(resist, d < 0.12 ? (1 - d / 0.12) * 0.9 : 0);
+        // 紮染：像綁線一圈圈拆開，由內往外一圈圈長出來（每圈還沒長完，下一圈就開始）
+        ord = d * 0.3 + (smooth(0.12, 0.28, d) + smooth(0.34, 0.5, d) + smooth(0.6, 0.76, d)) * 0.21 + (n - 0.5) * 0.05;
+      } else if (type === "itajime") {
+        const P = 1 / 2, cu = tri((u + 1) / P) - 0.5, cv2 = tri((v + 1) / P) - 0.5;
+        const sh = 1 - smooth(0.22, 0.26, Math.hypot(cu, cv2));
+        const ed = Math.min(0.5 - Math.abs(cu), 0.5 - Math.abs(cv2));
+        resist = Math.max(sh * 0.95, 0.15 * smooth(0.02, 0.3, ed));
+        // 夾染：像摺好的布一層層打開，斜向依序展開，每格再從格子中心往外暈
+        const gx = (u + 1) * 2, gy = (v + 1) * 2, fx = gx - Math.floor(gx) - 0.5, fy = gy - Math.floor(gy) - 0.5;
+        ord = (u + v + 2) / 4 * 0.62 + Math.hypot(fx, fy) * 0.2 + (n - 0.5) * 0.06;
+      } else if (type === "nui") {
+        const t = u * ca + v * sa, q = -u * sa + v * ca + Math.sin(t * 3 + ph) * 0.06;
+        const l = Math.abs(((q / 0.28) % 1 + 1) % 1 - 0.5) * 0.28;
+        const pleat = 0.5 + 0.5 * Math.sin(t * 90 + NZ(t * 10, q * 10) * 5);
+        resist = Math.exp(-((l / 0.014) ** 2)) * (0.6 + 0.35 * pleat);
+        // 縫染：像把縫線抽出來，沿著線的方向推進
+        ord = (t + 1) / 2 * 0.76 + 0.05 * (0.5 + 0.5 * Math.sin(q * 9 + ph)) + (n - 0.5) * 0.06;
+      } else {
+        const q = -u * sa + v * ca, l = Math.abs(((q / 0.1) % 1 + 1) % 1 - 0.5);
+        resist = (1 - smooth(0.05, 0.12, l)) * 0.85;
+        // 嵐染：像布從棍子上捲開，順著斜線方向一路掃過去
+        ord = (u * ca + v * sa + 1) / 2 * 0.92 + (n - 0.5) * 0.06;
+      }
+      dye[i] = (1 - resist) * edge * (0.85 + 0.15 * n);
+      keep[i] = resist * (1 - smooth(0.78, 0.98, d + (n - 0.5) * 0.16));   // 藍色漫過後仍留白的紋路，越靠外緣越淡
+      order[i] = REDUCE ? d * 0.9 + (n - 0.5) * 0.15 : ord;
+    }
+    const can = document.createElement("canvas"); can.width = can.height = N;
+    const cx = can.getContext("2d"), img = cx.createImageData(N, N);
+    const col = [[178, 203, 226], [84, 124, 172], [33, 56, 104], [20, 32, 66]];
+    return {
+      can, last: -1, lastF: -1,
+      // p：花樣展開進度；fl：外面的藍色漫過這朵花的程度（0～1）
+      paint(p, fl = 0) {
+        if (p === this.last && fl === this.lastF) return;   // 每一幀都重畫，只有完全沒變時才略過
+        this.last = p; this.lastF = fl;
+        const ep = 1 - Math.pow(1 - p, 2.2), px2 = img.data, front = ep * 1.38 - 0.1;   // 先快後慢，像染料滲開後慢慢停住
+        for (let i = 0; i < N * N; i++) {
+          const a = dye[i] * clamp((front - order[i]) / 0.28), j = i * 4;
+          // 花樣連同底下的白布一起畫，完全不透明，不讓後面漫開的藍色透出來
+          let r0 = 241, g0 = 240, b0 = 234;
+          if (a > 0) {
+            const ci = a < 0.33 ? 0 : a < 0.66 ? 1 : 2, f = (a - ci * 0.33) / 0.33, c0 = col[ci], c1 = col[ci + 1];
+            const da = Math.min(1, a * 1.3);   // 從 0 開始平滑加深，前緣不會有一圈硬邊
+            r0 += (c0[0] + (c1[0] - c0[0]) * f - r0) * da; g0 += (c0[1] + (c1[1] - c0[1]) * f - g0) * da; b0 += (c0[2] + (c1[2] - c0[2]) * f - b0) * da;
+          }
+          // 藍色漫過來時，把白布底一起染成背景藍，只留紋路的白，看不出圓形邊界
+          const ov = fl * (1 - keep[i]);
+          if (ov > 0) { r0 += (22 - r0) * ov; g0 += (36 - g0) * ov; b0 += (74 - b0) * ov; }
+          px2[j] = r0; px2[j + 1] = g0; px2[j + 2] = b0; px2[j + 3] = 255 * base[i];
+        }
+        cx.putImageData(img, 0, 0);
+      }
+    };
+  }
+
+  /* ---------- 換頁：淡出到深靛藍，再淡入新頁面 ---------- */
+  const fade = document.getElementById("navFade");
+  document.addEventListener("click", e => {
+    const a = e.target.closest && e.target.closest("a[href]");
+    if (!a || a.target === "_blank" || e.metaKey || e.ctrlKey || e.shiftKey) return;
+    const href = a.getAttribute("href");
+    if (!/^[\w-]+\.html(#[\w.~-]*)?$/.test(href)) return;
+    e.preventDefault();
+    try { sessionStorage.setItem("jl-nav", "1"); } catch (err) { /* 略過 */ }
+    fade.style.transition = REDUCE ? "none" : ""; fade.classList.add("on");
+    setTimeout(() => { location.href = href; }, REDUCE ? 0 : 210);
+  });
+  if (fromNav) {
+    loader.remove();
+    fade.style.transition = "none"; fade.classList.add("on");
+    window.__loaderProgress = () => {};
+    window.__startLoader = () => { requestAnimationFrame(() => { fade.style.transition = ""; fade.classList.remove("on"); }); };
+    return;
+  }
+
+  /* ---------- 載入動畫 ---------- */
+  let W = 0, H = 0, DPR = 1, weave = null;
+  // 文字只畫在藍色已經漫到的地方：tlT 先疊好字和光暈，tlC 是藍色範圍
+  const tlC = document.createElement("canvas"), tlT = document.createElement("canvas");
+  function size() {
+    DPR = Math.min(2, window.devicePixelRatio || 1); W = window.innerWidth; H = window.innerHeight;
+    cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR); c.setTransform(DPR, 0, 0, DPR, 0, 0);
+    tlC.width = tlT.width = cv.width; tlC.height = tlT.height = cv.height;
+    const t = document.createElement("canvas"); t.width = t.height = 8; const w = t.getContext("2d");
+    w.fillStyle = "#f1f0ea"; w.fillRect(0, 0, 8, 8); w.fillStyle = "rgba(0,0,0,0.04)"; w.fillRect(0, 0, 8, 1); w.fillRect(0, 4, 8, 1); w.fillRect(0, 0, 1, 8); w.fillRect(4, 0, 1, 8);
+    weave = c.createPattern(t, "repeat");
+  }
+  size();
+  // 花樣的位置：散在四周，避開中央的文字
+  const types = ["kumo", "itajime", "nui", "storm"];
+  const R = rnd(31), blooms = [];
+  const portrait = H > W;
+  const spots = portrait ? [[0.2, 0.17], [0.82, 0.3], [0.2, 0.72], [0.8, 0.84]] : [[0.17, 0.26], [0.84, 0.22], [0.2, 0.8], [0.82, 0.76]];
+  spots.forEach(([fx, fy], i) => {
+    const sz = Math.min(W, H) * (0.46 + R() * 0.08);
+    blooms.push({ b: null, type: types[i], x: fx * W, y: fy * H, sz, start: 0.02 + i * 0.06, dur: 0.3, rot: (R() - 0.5) * 0.6, seed: 101 + i * 37 });
+  });
+  // 島宇染坊：藍色交會時，字的位置留白
+  const title = document.createElement("canvas");
+  let dotX = 0, dotY = 0;   // 「染」字三點水最上面那一點（最後從這裡暈開進入網站）
+  function makeTitle() {
+    const fs = Math.max(42, Math.min(W * 0.11, 96)), txt = "島 宇 染 坊";
+    title.width = Math.round(fs * 6.4 * DPR); title.height = Math.round(fs * 1.7 * DPR);
+    const t = title.getContext("2d"); t.scale(DPR, DPR);
+    t.font = `700 ${fs}px "LXGW WenKai TC", "Kaiti TC", "BiauKai", serif`; t.textBaseline = "middle";
+    const tw = t.measureText(txt).width, x0 = title.width / DPR / 2 - tw / 2;
+    t.fillStyle = "#f1f0ea"; t.fillText(txt, x0, title.height / DPR / 2);
+    const ranX = x0 + t.measureText("島 宇 ").width, cw = t.measureText("染").width;
+    dotX = W / 2 - title.width / DPR / 2 + ranX + cw * 0.17;
+    dotY = H / 2 - fs * 0.3;
+  }
+  makeTitle();
+  const TW = [0, 3, 8].map(bl => { const k = document.createElement("canvas"); k.width = title.width + 60 * DPR; k.height = title.height + 60 * DPR; const x = k.getContext("2d"); x.filter = `blur(${bl * DPR}px)`; x.drawImage(title, 30 * DPR, 30 * DPR); return k; });
+  let progress = 0, shown = 0, done = false, ready = false, revealAt = 0, t0 = 0, resolveDone;
+  window.__loaderDone = new Promise(r => { resolveDone = r; });
+  window.__loaderProgress = p => { progress = Math.max(progress, p); };
+  const end = () => { if (done) return; done = true; loader.remove(); resolveDone(); };
+  // 點一下：直接跳到最後的暈開
+  loader.addEventListener("click", () => { if (ready && !revealAt) revealAt = performance.now(); });
+  const DUR = 3000, REVEAL = 900;
+  const wobPath = (cx, cy, r, k, c = mainCtx) => { c.beginPath(); for (let i = 0; i <= 96; i++) { const a = i / 96 * Math.PI * 2, rr = r * (1 + 0.06 * Math.sin(a * 5 + k) + 0.035 * Math.sin(a * 11 + k * 1.7) + 0.02 * Math.sin(a * 23 + k)); i ? c.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr) : c.moveTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr); } c.closePath(); };
+  function scene(t) {
+    c.globalCompositeOperation = "source-over";
+    c.fillStyle = weave; c.fillRect(0, 0, W, H);
+    // 1. 四處花樣的藍色繼續往外擴散，交會到中間
+    const sp = smooth(0.34, 0.78, t);
+    if (sp > 0) {
+      for (let i = 0; i < blooms.length; i++) {
+        const bl = blooms[i], far = Math.hypot(Math.max(bl.x, W - bl.x), Math.max(bl.y, H - bl.y));
+        const r0 = bl.sz * 0.42, r = r0 + (far * 1.05 - r0) * sp; bl.rr = r;
+        // 實心、不透明的藍色漫開：外圈稍淺、內圈深藍，邊緣保留水彩的不規則線
+        c.fillStyle = "#1c2f5e"; wobPath(bl.x, bl.y, r + 30, i * 2.3); c.fill();
+        c.fillStyle = "#16244a"; wobPath(bl.x, bl.y, Math.max(0, r - 60), i * 2.3 + 0.5); c.fill();
+      }
+    }
+    // 花樣在最上層、全程不透明；藍色漫過時白布底跟著染藍
+    const fl = smooth(0, 0.75, sp);
+    for (const bl of blooms) {
+      const p = clamp((t - bl.start) / bl.dur); if (p <= 0) continue;
+      if (!bl.b) bl.b = makeBloom(bl.type, 220, bl.seed);
+      bl.b.paint(p, fl);
+      c.save(); c.translate(bl.x, bl.y); c.rotate(bl.rot); c.globalAlpha = 1; c.imageSmoothingQuality = "high";
+      c.drawImage(bl.b.can, -bl.sz / 2, -bl.sz / 2, bl.sz, bl.sz); c.restore();
+    }
+    // 2. 字和白布同色：只畫在藍色漫到的地方，藍色包圍後白字留下來，填滿後維持白色
+    const tw = title.width / DPR, th = title.height / DPR, x = W / 2 - tw / 2 - 30, y = H / 2 - th / 2 - 30;
+    if (sp > 0) {
+      const gl = smooth(0.3, 0.9, sp), tt = tlT.getContext("2d"), m = tlC.getContext("2d");
+      tt.setTransform(1, 0, 0, 1, 0, 0); tt.globalAlpha = 1; tt.clearRect(0, 0, tlT.width, tlT.height); tt.setTransform(DPR, 0, 0, DPR, 0, 0);
+      tt.globalAlpha = 0.55 * gl; tt.drawImage(TW[2], x, y, tw + 60, th + 60);
+      tt.globalAlpha = 0.8 * gl; tt.drawImage(TW[1], x, y, tw + 60, th + 60);
+      tt.globalAlpha = 1; tt.drawImage(TW[0], x, y, tw + 60, th + 60);
+      m.setTransform(1, 0, 0, 1, 0, 0); m.globalCompositeOperation = "source-over"; m.clearRect(0, 0, tlC.width, tlC.height);
+      m.setTransform(DPR, 0, 0, DPR, 0, 0); m.fillStyle = "#000";
+      for (let i = 0; i < blooms.length; i++) { const bl = blooms[i]; wobPath(bl.x, bl.y, bl.rr + 30, i * 2.3, m); m.fill(); }
+      m.setTransform(1, 0, 0, 1, 0, 0); m.globalCompositeOperation = "source-in"; m.drawImage(tlT, 0, 0);
+      c.drawImage(tlC, 0, 0, W, H);
+    }
+  }
+  function frame(now) {
+    if (done) return;
+    const t = REDUCE ? 1 : clamp((now - t0) / DUR);
+    scene(t);
+    // 進度條：真實的準備進度
+    shown += (progress - shown) * 0.18; if (progress >= 100 && shown > 99.5) shown = 100;
+    fill.style.width = shown.toFixed(1) + "%";
+    if (sp2(t)) loader.classList.add("flooded");
+    if (shown >= 100) { if (!ready) { ready = true; loader.classList.add("ready"); } pctEl.textContent = t < 1 && !revealAt ? "準備好了・點一下進入" : "準備好了"; }
+    else pctEl.textContent = `準備中 ${Math.floor(shown)}%`;
+    if (!revealAt && t >= 1 && shown >= 100) revealAt = now;
+    // 3. 從「染」字的三點水暈開，露出網站
+    if (revealAt) {
+      const q = REDUCE ? 1 : clamp((now - revealAt) / REVEAL), e = 1 - Math.pow(1 - q, 2.4);
+      loader.classList.add("reveal");
+      const maxR = Math.hypot(Math.max(dotX, W - dotX), Math.max(dotY, H - dotY)) * 1.15, r = maxR * e;
+      c.globalCompositeOperation = "destination-out";
+      const g = c.createRadialGradient(dotX, dotY, Math.max(0, r * 0.7), dotX, dotY, r + 24);
+      g.addColorStop(0, "rgba(0,0,0,1)"); g.addColorStop(1, "rgba(0,0,0,0)");
+      c.fillStyle = g; wobPath(dotX, dotY, r + 24, 7.1); c.fill();
+      c.fillStyle = "#000"; wobPath(dotX, dotY, Math.max(0, r * 0.72), 3.3); c.fill();
+      c.globalCompositeOperation = "source-over";
+      if (q < 0.35) { c.strokeStyle = `rgba(241,240,234,${0.6 * (1 - q / 0.35)})`; c.lineWidth = 2; c.beginPath(); c.arc(dotX, dotY, 6 + q * 160, 0, Math.PI * 2); c.stroke(); }
+      if (q >= 1) { end(); return; }
+    }
+    requestAnimationFrame(frame);
+  }
+  const sp2 = t => t > 0.6;
+  t0 = performance.now();
+  requestAnimationFrame(frame);
+  window.__startLoader = () => { window.__loaderProgress(100); };
+})();
+</script>
+
+<div class="wrap">
+  <header class="top">
+    <h1>島宇染坊</h1>
+    <a href="culture.html">藍染的故事 →</a>
+  </header>
+
+  <main class="app">
+    <div class="stage" id="stageBox">
+      <canvas id="stage" width="900" height="900" aria-label="染布工作台"></canvas>
+      <img class="card-img" id="cardImg" alt="" hidden>
+      <p class="cap" id="caption" aria-live="polite"></p>
+    </div>
+
+    <aside class="rail">
+      <ol class="steps" id="steps">
+        <li><button type="button" data-go="1">選布</button></li>
+        <li><button type="button" data-go="2">綁布</button></li>
+        <li><button type="button" data-go="3">浸染</button></li>
+        <li><button type="button" data-go="4">拆布</button></li>
+      </ol>
+
+      <section class="step" id="step1">
+        <p class="label">布架</p>
+        <div class="shelf" id="fabricOpts" role="radiogroup" aria-label="布料"></div>
+        <p class="tip" id="fabricTip"></p>
+        <div class="actions"><button class="btn wide" type="button" id="to2">就用這塊布</button></div>
+      </section>
+
+      <section class="step" id="step2" hidden>
+        <p class="tip" id="redyeNote" hidden></p>
+        <div class="wood"><div class="in">
+          <p class="wlabel">工具盤<small>點工具就是拿起來</small></p>
+          <div class="picks" id="toolOpts" role="radiogroup" aria-label="綁法"></div>
+        </div></div>
+        <div class="wood"><div class="in" id="toolDetail">
+          <div class="opts" id="toolSettings"></div>
+          <div class="range ruler" id="sizeRow"><label for="penSize" id="sizeLabel">大小</label><input type="range" id="penSize" min="40" max="170" value="95"></div>
+        </div></div>
+        <div class="actions">
+          <button class="btn ghost small" type="button" id="undoBtn">復原</button>
+          <button class="btn ghost small" type="button" id="delBtn">刪除選取</button>
+          <button class="btn ghost small" type="button" id="clearBtn">清除</button>
+        </div>
+        <p class="tip" id="bindTip"></p>
+        <div class="actions">
+          <button class="btn wide" type="button" id="to3">綁好了，下缸</button>
+          <button class="btn ghost" type="button" id="back1">上一步</button>
+        </div>
+      </section>
+
+      <section class="step" id="step3" hidden>
+        <div>
+          <p class="label">染缸<small style="margin-left:8px;letter-spacing:0">點畫面上的缸，或點這裡</small></p>
+          <div class="picks" id="dyeOpts" role="radiogroup" aria-label="染缸"></div>
+        </div>
+        <div class="raw"><p class="label" id="rawTitle" style="margin:0">原料</p><ol class="flow" id="rawFlow"></ol></div>
+        <div class="wood"><div class="in">
+          <p class="wlabel">要舀幾杓染料？</p>
+          <div class="picks" id="strengthOpts" role="radiogroup" aria-label="染液濃淡"></div>
+        </div></div>
+        <div class="meter">
+          <div class="row"><span class="label" style="margin:0">已經浸了幾次</span><span class="count" id="dipCount">0 / 8 次</span></div>
+          <div class="strips" id="dipBar" style="margin-block:6px 20px"></div>
+        </div>
+        <p class="tip" id="dipTip"></p>
+        <div class="actions">
+          <button class="btn wide" type="button" id="dipBtn">浸入染缸</button>
+          <button class="btn ghost" type="button" id="to4" disabled>拆開看看</button>
+        </div>
+      </section>
+
+      <section class="step" id="step4" hidden>
+        <div id="beforeReveal" class="step">
+          <p class="tip">拆布中……</p>
+        </div>
+        <div id="afterReveal" class="step" hidden>
+          <span class="badge" id="rareBadge" hidden>罕見紋樣</span>
+          <p class="result-name" id="resultName"></p>
+          <p class="serial" id="serial"></p>
+          <ul class="facts" id="facts"></ul>
+          <div class="actions">
+            <button class="btn wide" type="button" id="toCard">分享</button>
+            <button class="btn ghost" type="button" id="again">染新的一塊</button>
+          </div>
+          <button class="btn ghost small" type="button" id="redyeBtn" hidden>再染一回</button>
+        </div>
+      </section>
+
+      <section class="step" id="viewPanel" hidden>
+        <span class="badge" id="vRare" hidden>罕見紋樣</span>
+        <p class="result-name" id="vName"></p>
+        <p class="serial" id="vSerial"></p>
+        <ul class="facts" id="vFacts"></ul>
+        <div class="actions">
+          <button class="btn wide" type="button" id="vCard">分享</button>
+          <button class="btn ghost" type="button" id="vBack">回到染布</button>
+        </div>
+        <button class="btn ghost small" type="button" id="vRedye" hidden>再染一回</button>
+        <p class="tip" id="vNote"></p>
+      </section>
+
+      <form class="form" id="cardForm" autocomplete="off" hidden>
+          <div><p class="label">做成什麼</p><div class="picks prods" id="productOpts" role="radiogroup" aria-label="分享樣式"></div></div>
+          <div class="card-only"><p class="label">版型</p><div class="seg" id="layoutOpts" role="radiogroup" aria-label="小卡版型"></div></div>
+          <div><label class="t" for="cTitle">作品名稱</label><input type="text" id="cTitle" maxlength="12"></div>
+          <div class="card-only">
+            <label class="t" for="cMsg">想說的話</label>
+            <textarea id="cMsg" maxlength="48">把一缸藍染成的布送給你，願你日子平順。</textarea>
+            <div class="suggest" id="msgSuggest"></div>
+          </div>
+          <div class="card-only"><label class="t" for="cSign">署名</label><input type="text" id="cSign" maxlength="12" placeholder="你的名字"></div>
+          <div class="actions">
+            <button class="btn wide" type="button" id="dlBtn">下載圖片</button>
+            <button class="btn ghost" type="button" id="shareBtn" hidden>分享</button>
+          </div>
+          <p class="tip" id="prodTip">手機可長按圖片儲存，電腦可按右鍵另存。</p>
+          <button class="btn ghost small" type="button" id="backWork">← 回到作品</button>
+      </form>
+    </aside>
+  </main>
+
+  <section class="rack-sec" aria-label="晾布架">
+    <div class="rack-head"><h2>晾布架</h2><span id="rackCount">0 / 6</span></div>
+    <div class="rack-choose" id="rackChoose" hidden>
+      <p>晾布架滿了，選一塊收下來，換上新染好的布。</p>
+      <button class="btn ghost small" type="button" id="skipHang">這塊先不掛</button>
+    </div>
+    <div class="rack"><div class="rack-inner"><div class="pole"></div><div class="slots" id="slots"></div></div></div>
+    <p class="tip">染好的布會掛在這裡，存在這個瀏覽器中，最多 6 塊；再染新的會自動收下最舊的一塊。點一塊布可以再看一次、做成小卡，還沒染到最深的布也可以再染一回。</p>
+  </section>
+
+  <footer class="foot">
+    <span>圖案依照你的布、綁法與浸染，由程式即時生成，每一塊都不一樣。</span>
+    <a href="culture.html">藍染的故事 →</a>
+  </footer>
+</div>
+
+<script>
+/* ============================================================
+   島宇染坊：線上染布體驗
+   ============================================================ */
+(function () {
+"use strict";
+
+const S = 900;                       // 畫布邊長（像素）
+const MAX_DIPS = 8;                  // 一塊布最多累積浸染次數
+const MAX_ROUNDS = 3;                // 最多染三回
+const REDUCED = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ---------- 資料 ---------- */
+const FABRICS = {
+  cotton: { name: "棉布", desc: "吃色均勻，花紋邊緣清楚。", base: [241, 240, 234], absorb: 1.0, uneven: 0.14 },
+  linen:  { name: "麻布", desc: "纖維粗，顏色帶著自然的斑駁。", base: [228, 221, 205], absorb: 0.92, uneven: 0.26 },
+  silk:   { name: "絲巾", desc: "薄而有光澤，顏色比較明亮。", base: [246, 244, 240], absorb: 0.82, uneven: 0.10 }
+};
+const TECHS = {
+  kumo:    { name: "捆紮", tool: "點一下布面揪起一個角，用繩子綁緊。" },
+  nui:     { name: "縫紮", tool: "在布上畫線，代表縫針腳、再把線抽緊。" },
+  itajime: { name: "夾染", tool: "拖出一個方框，代表摺起來用板子夾住的範圍。" },
+  arashi:  { name: "揉皺", tool: "塗出一塊區域，代表揉皺或捲起來綁住的地方。" }
+};
+// 細部設定
+const OPTS = {
+  kumo: [
+    { key: "bands", label: "綁幾圈", choices: [[1, "1"], [2, "2"], [3, "3"], [4, "4"], [5, "5"]] },
+    { key: "core", label: "內包物", choices: [["none", "不包"], ["stone", "小石頭"], ["marble", "彈珠"]] }
+  ],
+  itajime: [
+    { key: "board", label: "夾板", choices: [["circle", "圓木片"], ["square", "方木片"], ["tri", "三角木片"], ["carved", "雕版"]] },
+    { key: "fold", label: "摺法", choices: [["square", "方摺"], ["tri", "三角摺"]] },
+    { key: "bands", label: "橡皮筋", choices: [[0, "不綁"], [1, "1 條"], [2, "2 條"], [3, "3 條"], [4, "4 條"]] }
+  ],
+  nui: [
+    { key: "stitch", label: "針法", choices: [["hira", "平針縫"], ["ori", "摺縫"], ["maki", "捲針縫"], ["gather", "抽褶縫"]] }
+  ],
+  arashi: [
+    { key: "group", label: "方式", choices: [["rope", "繩綁揉皺"], ["net", "網袋／絲襪"], ["pole", "棒捲縮縐"]] },
+    { key: "style", label: "紋樣", choices: [] }   // 依方式切換
+  ]
+};
+const ARASHI_STYLES = {
+  rope: [["marble", "大理石紋"], ["lightning", "閃電紋"]],
+  net:  [["ice", "冰裂紋"], ["cloud", "雲霧紋"]],
+  pole: [["storm", "嵐絞"], ["wood", "木紋"], ["ripple", "水波紋"]]
+};
+const STYLE_NAME = Object.fromEntries(Object.values(ARASHI_STYLES).flat());
+const STITCH_NAME = { hira: "平針縫", ori: "摺縫", maki: "捲針縫", gather: "抽褶縫" };
+const OPT_TIPS = {
+  core_none: "布揪起後直接綁，中心會散出放射線。", core_bean: "包一把豆子再綁，染出一群小圓點。", core_marble: "包一顆彈珠再綁，中心留下圓圓的白點。", core_coin: "包一枚硬幣再綁，染出邊緣清楚的扁圓和一圈細環。", core_chop: "包一段竹筷再綁，染出長條形的紋。", core_stone: "包一顆小石頭再綁，中心留下不規則的圓。",
+  bean: "包一把豆子再綁，染出一群小圓點。", coin: "包一枚硬幣再綁，染出邊緣清楚的扁圓和一圈細環。", chop: "包一段竹筷再綁，染出長條形的紋。",
+  none: "布揪起後直接綁，中心會散出放射線。", stone: "包一顆小石頭再綁，中心留下不規則的圓。", marble: "包一顆彈珠再綁，中心留下圓圓的白點。",
+  circle: "圓形木片夾住的地方留白。", square: "方形木片夾住的地方留白。", tri: "三角木片夾住的地方留白。", carved: "雕刻了花紋的木板，夾住後染出花樣。",
+  hira: "一排平針縫好抽緊，染出像木紋的直皺。", ori: "把布摺起來沿摺線縫，染出一串菱形。", maki: "沿著布邊繞圈縫，染出斜斜的短紋。", gather: "縫好幾排平行的針腳再抽緊，皺褶比較寬。",
+  marble: "揉成一團用繩子綁住，紋路像大理石。", lightning: "揉得更緊，留下尖銳的閃電狀白紋。", ice: "裝進網袋或絲襪壓緊，留下細碎的裂紋。", cloud: "鬆鬆地壓進網袋，顏色深淺像雲霧。",
+  storm: "捲在棍子上纏線、往下推擠，染出細細的斜線。", wood: "捲在棍子上推擠，紋路像木紋。", ripple: "捲在棍子上輕輕推擠，紋路像水波。"
+};
+// 色階：0 = 布的原色，1 = 最深
+const DYES = {
+  indigo:   { name: "大菁藍", desc: "藍染缸的染液是黃綠色的，布出缸後碰到空氣才會變藍。", liquid: [96, 106, 40],  chip: "#2b4c86", stops: [[0.22, [176, 203, 224]], [0.5, [86, 128, 175]], [0.78, [37, 64, 115]], [1, [18, 29, 62]]], oxidize: true,
+    flow: ["採下馬藍（大菁）的葉子，泡水數天", "加入熟石灰快速攪拌「打靛」", "取出沉澱的藍靛，調成染缸"] },
+  shulang:  { name: "薯榔褐", desc: "薯榔的地下塊莖切開是赭紅色，汁液能染出紅褐色。", liquid: [92, 46, 26],   chip: "#8a4a2b", stops: [[0.22, [222, 190, 160]], [0.5, [176, 112, 72]], [0.78, [118, 62, 36]], [1, [72, 36, 22]]],
+    flow: ["挖出薯榔的地下塊莖", "切塊、刨絲", "搾出汁液來染布"] },
+  turmeric: { name: "薑黃",   desc: "黃色的植物染料，和藍色套染可以疊出綠色。", liquid: [196, 150, 30], chip: "#d9a521", stops: [[0.22, [244, 226, 150]], [0.5, [232, 192, 70]], [0.78, [196, 146, 24]], [1, [150, 104, 10]]],
+    flow: ["取薑黃的根莖", "切片，加水煮沸成黃色染液", "染好後用明礬水固色"] }
+};
+const STRENGTH = { light: { name: "淡", k: 0.6 }, mid: { name: "中", k: 1 }, deep: { name: "濃", k: 1.6 } };
+const NAMES = {
+  kumo:    ["星火", "桐花雨", "月暈", "煙花", "滿天星", "蒲公英", "漣漪", "花開"],
+  itajime: ["窗花", "田字", "格子月", "竹窗", "方勝", "棋盤", "磚牆", "井字"],
+  nui:     ["溪浪", "年輪", "山稜", "水紋", "稻浪", "沙丘", "細雨", "風痕"],
+  arashi:  ["雨絲", "山嵐", "溪石", "雲湧", "苔痕", "海霧", "石紋", "夜雲"],
+  mix:     ["百花園", "山水間", "四季", "拼花", "旅途", "庄頭", "日常", "合奏"]
+};
+const RARE_NAMES = { kumo: "大花開", itajime: "八方星", nui: "同心圓", arashi: "雷雨夜", mix: "滿園春" };
+const MESSAGES = ["把一缸藍染成的布送給你，願你日子平順。", "顏色會越染越深，就像我們的交情。", "慢慢來，好看的東西都需要時間。", "這塊布裡藏著我沒說出口的祝福。", "祝你天天都有好心情。"];
+const LAYOUTS = { portrait: { name: "直式", w: 1080, h: 1350 }, square: { name: "方形", w: 1080, h: 1080 }, story: { name: "限動", w: 1080, h: 1920 } };
+
+/* ---------- 狀態 ---------- */
+const state = {
+  step: 1, fabric: "cotton", tool: "kumo", marks: [], sel: -1,
+  opts: { kumo: { bands: 3, core: "none" }, itajime: { board: "circle" }, nui: { stitch: "hira" }, arashi: { group: "rope", style: "marble" } },
+  ita: { fold: "sq3", bands: 0 },   // 夾染：整塊布的摺法與橡皮筋
+  dye: "indigo", strength: "mid", dips: [], seed: 0, rare: false,
+  prev: null,              // 再染時：之前幾回的資料
+  work: null, viewing: null, revealed: false, layout: "portrait", product: "card", busy: false, cardMode: false
+};
+
+/* ---------- 亂數與雜訊 ---------- */
+function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function makeNoise(seed) {
+  const rnd = mulberry32(seed);
+  const perm = new Uint8Array(512), grad = new Float32Array(256);
+  const p = []; for (let i = 0; i < 256; i++) p[i] = i;
+  for (let i = 255; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [p[i], p[j]] = [p[j], p[i]]; }
+  for (let i = 0; i < 512; i++) perm[i] = p[i & 255];
+  for (let i = 0; i < 256; i++) grad[i] = rnd();
+  function n2(x, y) {
+    const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi;
+    const u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf);
+    const X = xi & 255, Y = yi & 255;
+    const a = grad[perm[perm[X] + Y]], b = grad[perm[perm[X + 1] + Y]];
+    const c = grad[perm[perm[X] + Y + 1]], d = grad[perm[perm[X + 1] + Y + 1]];
+    return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
+  }
+  function fbm(x, y, oct) {
+    let s = 0, amp = 0.5, f = 1, n = 0;
+    for (let i = 0; i < oct; i++) { s += amp * n2(x * f, y * f); n += amp; amp *= 0.5; f *= 2.03; }
+    return s / n;
+  }
+  return { n2, fbm };
+}
+const clamp = (v, a = 0, b = 1) => v < a ? a : v > b ? b : v;
+const smooth = (e0, e1, x) => { const t = clamp((x - e0) / (e1 - e0)); return t * t * (3 - 2 * t); };
+const tri = t => { const m = ((t % 2) + 2) % 2; return 1 - Math.abs(m - 1); };
+function hash2(x, y) { let h = (x * 374761393 + y * 668265263) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; }
+
+/* ---------- 花紋（防染程度 r：1 = 完全沒吃色） ---------- */
+function makePattern(tech, rare, rng, N) {
+  if (tech === "kumo") {
+    const centers = [];
+    if (rare) centers.push({ x: S / 2, y: S / 2, R: S * 0.44, bands: 5, k: 7 + rng() * 3, ph: rng() * 50 });
+    const count = rare ? 2 + Math.floor(rng() * 3) : 3 + Math.floor(rng() * 5);
+    let tries = 0;
+    while (centers.length < count + (rare ? 1 : 0) && tries++ < 400) {
+      const R = S * (0.1 + rng() * 0.17);
+      const c = { x: R * 0.4 + rng() * (S - R * 0.8), y: R * 0.4 + rng() * (S - R * 0.8), R, bands: 1 + Math.floor(rng() * 3), k: 6 + rng() * 6, ph: rng() * 50 };
+      if (centers.every(o => Math.hypot(o.x - c.x, o.y - c.y) > (o.R + c.R) * 0.78)) centers.push(c);
+    }
+    return (x, y) => {
+      let r = 0;
+      for (const c of centers) {
+        const dx = x - c.x, dy = y - c.y, d = Math.sqrt(dx * dx + dy * dy), f = d / c.R;
+        if (f > 1.08) continue;
+        const ca = dx / (d || 1), sa = dy / (d || 1);
+        const ray = N.n2(ca * c.k + c.ph, sa * c.k + f * 1.4 + c.ph);
+        let band = 0;
+        for (let j = 0; j < c.bands; j++) {
+          const pj = 0.38 + (j + 0.5) * (0.58 / c.bands);
+          const z = (f - pj + (ray - 0.5) * 0.09) / 0.05;
+          band = Math.max(band, Math.exp(-z * z));
+        }
+        const core = f < 0.42 ? Math.pow(1 - f / 0.42, 1.3) * (0.3 + 0.7 * smooth(0.4, 0.68, ray)) : 0;
+        const streak = smooth(0.62, 0.9, ray) * (1 - f) * smooth(0.04, 0.25, f) * 0.6;
+        const fade = f > 0.92 ? clamp(1 - (f - 0.92) / 0.16) : 1;
+        r = Math.max(r, Math.max(band * 0.93, core, streak) * fade);
+      }
+      return { r, vein: 0 };
+    };
+  }
+  if (tech === "itajime") {
+    const variant = Math.floor(rng() * 4);       // 0 方格中心圓、1 摺角圓、2 方塊、3 三角摺
+    const k = 2 + Math.floor(rng() * 3);
+    const P = S / (2 * k);
+    const rad = 0.24 + rng() * 0.16;
+    return (x, y) => {
+      let u, v;
+      if (rare) {                                 // 八方星：放射摺疊
+        const dx = x - S / 2, dy = y - S / 2, rr = Math.hypot(dx, dy);
+        const sec = Math.PI / 4; let a = Math.atan2(dy, dx);
+        a = ((a % sec) + sec) % sec; a = Math.abs(a - sec / 2);
+        u = tri(rr * Math.cos(a) / (S / 7)); v = tri(rr * Math.sin(a) / (S / 7));
+      } else { u = tri(x / P); v = tri(y / P); }
+      if (variant === 3 && u < v) { const t = u; u = v; v = t; }
+      const wick = (N.fbm(x * 0.02, y * 0.02, 3) - 0.5) * 0.12;
+      let d;
+      if (variant === 1) d = Math.hypot(u, v);
+      else if (variant === 2) d = Math.max(Math.abs(u - 0.5), Math.abs(v - 0.5)) * 1.25;
+      else d = Math.hypot(u - 0.5, v - 0.5);
+      const shape = 1 - smooth(rad - 0.03, rad + 0.07, d + wick);
+      const edge = Math.min(u, 1 - u, v, 1 - v);
+      const inner = 0.32 * smooth(0.02, 0.4, edge + wick * 0.5);
+      return { r: Math.max(shape * 0.95, inner), vein: (1 - smooth(0, 0.05, edge)) * 0.5 };
+    };
+  }
+  if (tech === "nui") {
+    const variant = rare ? 2 : Math.floor(rng() * 2); // 0 橫向波紋、1 斜向波紋、2 同心圓
+    const sp = S / (7 + Math.floor(rng() * 7));
+    const amp = sp * (0.2 + rng() * 0.6), fq = (1 + rng() * 2.5) * Math.PI * 2 / S, ph = rng() * 6.28;
+    const stitch = 9 + rng() * 6;
+    const ang = variant === 1 ? (rng() < 0.5 ? 1 : -1) * (0.45 + rng() * 0.4) : 0;
+    const cs = Math.cos(ang), sn = Math.sin(ang);
+    return (x, y) => {
+      let t, q;
+      if (variant === 2) { const dx = x - S / 2, dy = y - S / 2; q = Math.hypot(dx, dy) + (N.fbm(x * 0.01, y * 0.01, 2) - 0.5) * sp * 0.6; t = Math.atan2(dy, dx) * q; }
+      else { t = x * cs + y * sn; q = -x * sn + y * cs; q += amp * Math.sin(t * fq + ph) + (N.fbm(t * 0.004, q * 0.004, 3) - 0.5) * sp * 0.5; }
+      const loc = ((q / sp) % 1 + 1) % 1 - 0.5;
+      const m = Math.abs(loc) * sp;
+      const zb = m / (sp * 0.09), zz = m / (sp * 0.3);
+      const band = Math.exp(-zb * zb), zone = Math.exp(-zz * zz);
+      const pleat = 0.5 + 0.5 * Math.sin(t * Math.PI * 2 / stitch + N.n2(t * 0.05, q * 0.05) * 4);
+      const r = Math.max(band * 0.85 * (0.55 + 0.45 * pleat), zone * smooth(0.55, 0.92, pleat) * 0.72);
+      return { r, vein: 0 };
+    };
+  }
+  // arashi 揉皺：揉成一團後，凸出的皺褶吃色、裡面留白，形成碎裂的網紋
+  const sc = 3 + rng() * 2, warp = 1.2 + rng() * 0.8, o = rng() * 100;
+  return (x, y) => {
+    const wx = x / S * sc + o, wy = y / S * sc;
+    const qx = N.fbm(wx, wy, 3), qy = N.fbm(wx + 5.2, wy + 1.3, 3);
+    const n = N.fbm(wx + warp * qx, wy + warp * qy, 5);
+    const d = Math.abs(n - 0.5) / 0.09;
+    const n2 = N.fbm(wx * 2.3 + 7 + qx, wy * 2.3 + qy, 4);
+    const d2 = Math.abs(n2 - 0.5) / 0.08;
+    let r = smooth(0.35, 1.1, d) * (0.35 + 0.65 * smooth(0.15, 0.7, d2)) * 0.93;
+    let vein = Math.exp(-((d / 0.07) ** 2)) * 0.6 + Math.exp(-((d2 / 0.05) ** 2)) * 0.25;
+    if (rare) { const n3 = N.fbm(wy * 1.3 + 9, wx * 1.3 + warp * qy, 4); const zw = (n3 - 0.5) / 0.007; r = Math.max(r, Math.exp(-zw * zw) * 0.95); }
+    return { r, vein };
+  };
+}
+
+
+
+/* ---------- 顏色 ---------- */
+function rampColor(dyeKey, base, t) {
+  const stops = [[0, base]].concat(DYES[dyeKey].stops);
+  t = clamp(t);
+  for (let i = 1; i < stops.length; i++) {
+    if (t <= stops[i][0]) {
+      const [t0, c0] = stops[i - 1], [t1, c1] = stops[i], k = (t - t0) / (t1 - t0);
+      return [c0[0] + (c1[0] - c0[0]) * k, c0[1] + (c1[1] - c0[1]) * k, c0[2] + (c1[2] - c0[2]) * k];
+    }
+  }
+  return stops[stops.length - 1][1].slice();
+}
+const mix = (a, b, k) => [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, a[2] + (b[2] - a[2]) * k];
+const css = c => `rgb(${c[0] | 0},${c[1] | 0},${c[2] | 0})`;
+function shade(c, k) { return k >= 0 ? mix(c, [255, 255, 255], k) : mix(c, [8, 10, 24], -k); }
+// 每一缸累積的濃度（套染時各缸分開計算）
+function dyeDepths(fabric, dips) {
+  const amt = {};
+  for (const d of dips) amt[d.dye] = (amt[d.dye] || 0) + STRENGTH[d.strength].k;
+  return Object.entries(amt).map(([dye, a]) => ({ dye, tmax: FABRICS[fabric].absorb * (1 - Math.exp(-0.33 * a)) }));
+}
+// 套染：各缸顏色以相乘的方式疊加（像透明色紙疊在一起）
+function layered(base, depths, f, start) {
+  let c = start || base;
+  for (const d of depths) {
+    const k = rampColor(d.dye, base, f(d.tmax));
+    c = [c[0] * k[0] / base[0], c[1] * k[1] / base[1], c[2] * k[2] / base[2]];
+  }
+  return c;
+}
+// 布的外層顏色（綁著時只看得到外面）
+function outerOf(fabric, rounds) {
+  const base = FABRICS[fabric].base; let c = base;
+  for (const r of rounds) c = layered(base, dyeDepths(fabric, r.dips), t => t * 0.96, c);
+  return c;
+}
+const prevRounds = () => state.prev ? state.prev.rounds : [];
+const prevDips = () => prevRounds().reduce((n, r) => n + r.dips.length, 0);
+function outerColor(dips) { return outerOf(state.fabric, prevRounds().concat([{ dips }])); }
+
+function texture(fabric, x, y, N) {
+  const g = hash2(x, y) - 0.5;
+  if (fabric === "cotton") return 1 + 0.03 * Math.sin(x * 2.2) * Math.sin(y * 2.2) + g * 0.035;
+  if (fabric === "linen") return 1 + 0.07 * (N.n2(x * 0.04, y * 1.1) - 0.5) + 0.07 * (N.n2(x * 1.1 + 40, y * 0.04) - 0.5) + 0.035 * Math.sin(x * 1.5) * Math.sin(y * 1.5) + g * 0.05;
+  return 1 + 0.05 * Math.sin((x * 0.8 + y) * 0.006 + N.n2(x * 0.002, y * 0.002) * 3) + g * 0.015;
+}
+
+
+
+/* ---------- 防染圖：把每個綁點寫進 R（防染程度）與 V（染料聚集） ---------- */
+function bboxOf(m, pad) {
+  if (m.type === "kumo") return [m.x - m.R * 1.1, m.y - m.R * 1.1, m.x + m.R * 1.1, m.y + m.R * 1.1];
+  if (m.type === "itajime") return [Math.min(m.x0, m.x1) - pad, Math.min(m.y0, m.y1) - pad, Math.max(m.x0, m.x1) + pad, Math.max(m.y0, m.y1) + pad];
+  let x0 = S, y0 = S, x1 = 0, y1 = 0;
+  for (const p of m.pts) { x0 = Math.min(x0, p[0]); y0 = Math.min(y0, p[1]); x1 = Math.max(x1, p[0]); y1 = Math.max(y1, p[1]); }
+  return [x0 - pad, y0 - pad, x1 + pad, y1 + pad];
+}
+const ibox = b => [Math.max(0, Math.floor(b[0])), Math.max(0, Math.floor(b[1])), Math.min(S - 1, Math.ceil(b[2])), Math.min(S - 1, Math.ceil(b[3]))];
+
+function applyItajimeRect(m, rare, N, put) {
+  const rng = mulberry32(m.s);
+  const rx0 = Math.min(m.x0, m.x1), rx1 = Math.max(m.x0, m.x1), ry0 = Math.min(m.y0, m.y1), ry1 = Math.max(m.y0, m.y1);
+  const n = 1 + Math.floor(rng() * 2), P = Math.min(rx1 - rx0, ry1 - ry0) / (2 * n);
+  const rad = 0.26 + rng() * 0.12, board = rare && m.o.board !== "carved" ? "carved" : m.o.board, bands = m.o.bands;
+  const [x0, y0, x1, y1] = ibox(bboxOf(m, 10));
+  for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+    const wick = (N.fbm(x * 0.02, y * 0.02, 3) - 0.5) * 0.12;
+    const e = Math.min(x - rx0, rx1 - x, y - ry0, ry1 - y) + wick * 80;
+    const inside = smooth(-4, 12, e); if (inside <= 0) continue;
+    let u = tri((x - rx0) / P), v = tri((y - ry0) / P);
+    if (m.o.fold === "tri" && u < v) { const t = u; u = v; v = t; }
+    const cu = u - 0.5, cv = v - 0.5;
+    let shape;
+    if (board === "square") shape = 1 - smooth(rad - 0.03, rad + 0.06, Math.max(Math.abs(cu), Math.abs(cv)) * 1.25 + wick);
+    else if (board === "tri") { const dtri = Math.max(Math.abs(cu) * 0.866 + cv * 0.5, -cv) * 1.5; shape = 1 - smooth(rad - 0.03, rad + 0.06, dtri + wick); }
+    else if (board === "carved") {
+      const r = Math.hypot(cu, cv), a = Math.atan2(cv, cu), petal = rad * 1.1 * (0.62 + 0.38 * Math.abs(Math.cos(a * 3)));
+      shape = (1 - smooth(petal - 0.03, petal + 0.04, r + wick * 0.5)) * smooth(0.04, 0.07, r);
+      const zr = (r - rad * 1.32) / 0.02; shape = Math.max(shape, Math.exp(-zr * zr) * 0.9);
+    } else shape = 1 - smooth(rad - 0.03, rad + 0.07, Math.hypot(cu, cv) + wick);
+    let band = 0;
+    for (let i = 1; i <= bands; i++) { const zb = (v - i / (bands + 1)) / 0.022; band = Math.max(band, Math.exp(-zb * zb) * 0.85); }
+    const edge = Math.min(u, 1 - u, v, 1 - v);
+    const inner = 0.32 * smooth(0.02, 0.4, edge + wick * 0.5);
+    put(y * S + x, Math.max(shape * 0.95, inner, band) * inside, ((1 - smooth(0, 0.05, edge)) * 0.5 + Math.exp(-((e / 6) ** 2)) * 0.4) * inside);
+  }
+}
+
+function applyNui(m, rare, N, put) {
+  const pts = m.pts; if (pts.length < 2) return;
+  const rng = mulberry32(m.s), st = m.o.stitch;
+  const W = 6, M = st === "gather" ? W * 9 : W * 5, stitch = 9 + rng() * 6;
+  const [x0, y0, x1, y1] = ibox(bboxOf(m, M));
+  const bw = x1 - x0 + 1, bh = y1 - y0 + 1;
+  const dist = new Float32Array(bw * bh).fill(1e9), tpar = new Float32Array(bw * bh), sgn = new Int8Array(bw * bh);
+  let L0 = 0;
+  for (let s = 0; s < pts.length - 1; s++) {
+    const [ax, ay] = pts[s], [bx, by] = pts[s + 1], ex = bx - ax, ey = by - ay, len2 = ex * ex + ey * ey || 1, len = Math.sqrt(len2);
+    const [sx0, sy0, sx1, sy1] = ibox([Math.min(ax, bx) - M, Math.min(ay, by) - M, Math.max(ax, bx) + M, Math.max(ay, by) + M]);
+    for (let y = Math.max(sy0, y0); y <= Math.min(sy1, y1); y++) for (let x = Math.max(sx0, x0); x <= Math.min(sx1, x1); x++) {
+      const t = clamp(((x - ax) * ex + (y - ay) * ey) / len2), px = ax + ex * t - x, py = ay + ey * t - y, d = Math.sqrt(px * px + py * py);
+      const i = (y - y0) * bw + (x - x0);
+      if (d < dist[i]) { dist[i] = d; tpar[i] = L0 + t * len; sgn[i] = (ex * (y - ay) - ey * (x - ax)) >= 0 ? 1 : -1; }
+    }
+    L0 += len;
+  }
+  const grain = (d, tp) => {           // 平針縫抽緊後的木紋直皺
+    const zb = d / W, zz = d / (W * (2.2 + N.n2(tp * 0.02, 3) * 1.4));
+    const pleat = 0.5 + 0.5 * Math.sin(tp * Math.PI * 2 / stitch + N.n2(tp * 0.05, d * 0.08) * 6);
+    return Math.max(Math.exp(-zb * zb) * 0.88 * (0.55 + 0.45 * pleat), Math.exp(-zz * zz) * smooth(0.55, 0.92, pleat) * 0.75);
+  };
+  for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+    const i = (y - y0) * bw + (x - x0), d = dist[i]; if (d > M) continue;
+    const tp = tpar[i], sd = d * sgn[i];
+    let r = 0;
+    if (st === "ori") {                // 摺縫：沿線一串菱形
+      const ph = (tp / 30) % 1, wd = W * 3 * (1 - Math.abs(ph - 0.5) * 2) + (N.n2(tp * 0.05, 1) - 0.5) * 3;
+      r = (1 - smooth(wd - 2, wd + 3, d)) * 0.9;
+      const zc = d / 2.2; r = Math.max(r * (1 - Math.exp(-zc * zc) * 0.6), 0);
+    } else if (st === "maki") {        // 捲針縫：斜斜的短紋
+      const q = (((tp + sd * 0.9) / 15) % 1 + 1) % 1;
+      r = smooth(0, 0.12, q) * (1 - smooth(0.32, 0.46, q)) * Math.exp(-((d / (W * 2.4)) ** 2)) * 0.92;
+    } else if (st === "gather") {      // 抽褶縫：好幾排平行的直皺
+      for (const o of [-2, -1, 0, 1, 2]) r = Math.max(r, grain(Math.abs(sd - o * W * 3), tp + o * 37) * (o === 0 ? 1 : 0.85));
+    } else r = grain(d, tp);
+    if (rare) { const ze = (d - W * 3.6 - (st === "gather" ? W * 6 : 0)) / 3; r = Math.max(r, Math.exp(-ze * ze) * 0.6); }
+    put(y * S + x, r, 0);
+  }
+}
+
+// 揉皺的各種紋樣
+function arashiPattern(style, seed, N, angle) {
+  const rng = mulberry32(seed), o = rng() * 100;
+  if (style === "marble") { const f = makePattern("arashi", false, mulberry32(seed), N); return f; }
+  if (style === "lightning") {
+    const sc = 3 + rng() * 2;
+    return (x, y) => {
+      const wx = x / S * sc + o, wy = y / S * sc;
+      const qx = N.fbm(wx * 1.5, wy * 1.5, 4), qy = N.fbm(wx * 1.5 + 4, wy * 1.5 + 2, 4);
+      const n = N.fbm(wx + qx * 1.8, wy + qy * 1.8, 6), n2 = N.fbm(wx * 2.2 + 9 + qy, wy * 2.2 + qx, 5);
+      const z1 = Math.abs(n - 0.5) / 0.008, z2 = Math.abs(n2 - 0.5) / 0.006;
+      return { r: Math.max(Math.exp(-z1 * z1) * 0.95, Math.exp(-z2 * z2) * 0.75, smooth(0.6, 0.68, n) * 0.25), vein: Math.exp(-(((Math.abs(n - 0.5) - 0.02) / 0.01) ** 2)) * 0.4 };
+    };
+  }
+  if (style === "ice") {
+    const cell = 26 + rng() * 14, off = Math.floor(rng() * 1000);
+    const pt = (i, j) => { const h = hash2(i + off, j - off), h2 = hash2(j + off * 3, i + 7); return [(i + 0.15 + h * 0.7) * cell, (j + 0.15 + h2 * 0.7) * cell, hash2(i * 7 + off, j * 13)]; };
+    return (x, y) => {
+      const wx = x + (N.n2(x * 0.02, y * 0.02) - 0.5) * 14, wy = y + (N.n2(x * 0.02 + 5, y * 0.02) - 0.5) * 14;
+      const ci = Math.floor(wx / cell), cj = Math.floor(wy / cell);
+      let f1 = 1e9, f2 = 1e9, tone = 0;
+      for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) {
+        const [px, py, h] = pt(ci + a, cj + b), d = Math.hypot(wx - px, wy - py);
+        if (d < f1) { f2 = f1; f1 = d; tone = h; } else if (d < f2) f2 = d;
+      }
+      const edge = 1 - smooth(1.2, 3.5, f2 - f1);
+      return { r: Math.max(edge * 0.95, tone * 0.3), vein: 0 };
+    };
+  }
+  if (style === "cloud") {
+    const sc = 3.5 + rng() * 2;
+    return (x, y) => { const n = N.fbm(x / S * sc + o, y / S * sc, 5); return { r: smooth(0.42, 0.66, n) * 0.75, vein: 0 }; };
+  }
+  // 棒捲縮縐：嵐絞（斜線）、木紋、水波紋
+  const ang = angle != null ? angle : (style === "storm" ? (rng() < 0.5 ? 1 : -1) * (0.6 + rng() * 0.3) : (rng() - 0.5) * 0.3);
+  const ca = Math.cos(ang), sa = Math.sin(ang), per = style === "storm" ? 7 + rng() * 3 : 18 + rng() * 8, ph = rng() * 6.28;
+  return (x, y) => {
+    const t = x * ca + y * sa, q0 = -x * sa + y * ca;
+    let q;
+    if (style === "storm") q = q0 + (N.n2(t * 0.01, q0 * 0.05) - 0.5) * 10;
+    else if (style === "wood") q = q0 + (N.fbm(t * 0.004, q0 * 0.012, 4) - 0.5) * 140;
+    else q = q0 + Math.sin(t * 0.022 + ph) * 16 + Math.sin(t * 0.007 + ph * 2) * 26;
+    const line = Math.abs(((q / per) % 1 + 1) % 1 - 0.5);
+    const crink = 0.6 + 0.4 * N.n2(t * 0.05, q * 0.2);
+    const r = (1 - smooth(0.05, style === "storm" ? 0.16 : 0.12, line)) * 0.9 * crink;
+    return { r, vein: style === "storm" ? 0 : (1 - smooth(0.36, 0.5, line)) * 0.25 };
+  };
+}
+/* ---------- 生成整塊布（可多回疊染） ---------- */
+// recipe: { fabric, seed, rare, rounds: [{ marks, dips }] }
+function renderCloth(recipe) {
+  const { fabric, seed, rare } = recipe, rounds = recipe.rounds || [];
+  const cv = document.createElement("canvas"); cv.width = cv.height = S;
+  const ctx = cv.getContext("2d");
+  const img = ctx.createImageData(S, S), px = img.data;
+  const F = FABRICS[fabric], base = F.base;
+  const col = new Float32Array(S * S * 3);
+  for (let i = 0; i < S * S; i++) { col[i * 3] = base[0]; col[i * 3 + 1] = base[1]; col[i * 3 + 2] = base[2]; }
+  const R = new Float32Array(S * S), V = new Float32Array(S * S);
+  rounds.forEach((rd, ri) => {
+    const depths = dyeDepths(fabric, rd.dips); if (!depths.length) return;
+    const rs = seed + ri * 1013;
+    const N = makeNoise(rs), U = makeNoise(rs ^ 0x51ed27);
+    R.fill(0); V.fill(0);
+    applyMarks(rd.marks, rare, rs, N, R, V, rd.ita);
+    for (let y = 0, i = 0; y < S; y++) for (let x = 0; x < S; x++, i++) {
+      const r = clamp(R[i]), v = V[i];
+      const uneven = (U.fbm(x * 0.005, y * 0.005, 4) - 0.5) * F.uneven * 2;
+      const c = layered(base, depths, tmax => tmax * (1 - r * 0.97) * (1 + uneven) + v * 0.28 * tmax, [col[i * 3], col[i * 3 + 1], col[i * 3 + 2]]);
+      col[i * 3] = c[0]; col[i * 3 + 1] = c[1]; col[i * 3 + 2] = c[2];
+    }
+  });
+  const T = makeNoise(seed ^ 0x9e3779b9);
+  for (let y = 0, i = 0; y < S; y++) for (let x = 0; x < S; x++, i++) {
+    const tx = texture(fabric, x, y, T), j = i * 4;
+    px[j] = clamp(col[i * 3] * tx, 0, 255); px[j + 1] = clamp(col[i * 3 + 1] * tx, 0, 255); px[j + 2] = clamp(col[i * 3 + 2] * tx, 0, 255); px[j + 3] = 255;
+  }
+  ctx.putImageData(img, 0, 0);
+  return cv;
+}
+
+/* ---------- 工作台繪圖 ---------- */
+const stage = document.getElementById("stage");
+const stageBox = document.getElementById("stageBox");
+const sctx = stage.getContext("2d");
+const baseSwatch = {};
+function swatchFor(fabric) {
+  if (!baseSwatch[fabric]) baseSwatch[fabric] = renderCloth({ fabric, seed: 11, rare: false, rounds: [] });
+  return baseSwatch[fabric];
+}
+const flatImage = () => state.prev ? state.prev.baseImg : swatchFor(state.fabric);
+function clearStage() { sctx.setTransform(1, 0, 0, 1, 0, 0); sctx.clearRect(0, 0, S, S); }
+function softShadow(ctx, blur, oy) { ctx.shadowColor = "rgba(10,16,36,0.28)"; ctx.shadowBlur = blur; ctx.shadowOffsetY = oy; }
+function noShadow(ctx) { ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0; }
+
+function blobPath(ctx, cx, cy, rx, ry, rnd, bumps, jitter) {
+  ctx.beginPath();
+  const n = bumps, pts = [];
+  for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2; const k = 1 + (rnd() - 0.5) * jitter; pts.push([cx + Math.cos(a) * rx * k, cy + Math.sin(a) * ry * k]); }
+  for (let i = 0; i < n; i++) {
+    const p0 = pts[i], p1 = pts[(i + 1) % n];
+    const mx = (p0[0] + p1[0]) / 2, my = (p0[1] + p1[1]) / 2;
+    if (i === 0) ctx.moveTo(mx, my); else ctx.quadraticCurveTo(p0[0], p0[1], mx, my);
+  }
+  const p0 = pts[0], p1 = pts[1]; ctx.quadraticCurveTo(p0[0], p0[1], (p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2);
+  ctx.closePath();
+}
+function fillCloth(ctx, color, cx, cy, r) {
+  const g = ctx.createRadialGradient(cx - r * 0.35, cy - r * 0.45, r * 0.1, cx, cy, r * 1.15);
+  g.addColorStop(0, css(shade(color, 0.22))); g.addColorStop(0.6, css(color)); g.addColorStop(1, css(shade(color, -0.32)));
+  ctx.fillStyle = g; ctx.fill();
+}
+const THREAD = "#6a5238", WOOD = [196, 164, 118];
+
+function drawPresetBundle(ctx, tech, color, opt = {}) {
+  const rnd = mulberry32((state.seed || 1) + 99);
+  const cx = opt.x ?? S / 2, cy = opt.y ?? S / 2, sc = opt.scale ?? 1, rot = opt.rot ?? 0, ties = opt.ties ?? 1;
+  ctx.save(); ctx.translate(cx, cy); ctx.rotate(rot); ctx.scale(sc, sc);
+  if (tech === "kumo") {
+    softShadow(ctx, 28, 14);
+    blobPath(ctx, 0, 30, 190, 130, rnd, 9, 0.18); fillCloth(ctx, color, 0, 30, 190);
+    noShadow(ctx);
+    const knobs = 5;
+    for (let i = 0; i < knobs; i++) {
+      const a = -Math.PI * 0.92 + i / (knobs - 1) * Math.PI * 0.84 + (rnd() - 0.5) * 0.2;
+      const kx = Math.cos(a) * 140, ky = 30 + Math.sin(a) * 120, kr = 46 + rnd() * 18;
+      ctx.save(); ctx.translate(kx, ky); ctx.rotate(a + Math.PI / 2);
+      blobPath(ctx, 0, -kr * 0.6, kr * 0.62, kr, rnd, 7, 0.2); fillCloth(ctx, color, 0, -kr * 0.6, kr);
+      if (ties > 0) {
+        ctx.strokeStyle = THREAD; ctx.lineWidth = 6; ctx.globalAlpha = ties; ctx.lineCap = "round";
+        for (let b = 0; b < 3; b++) { const yy = -kr * 0.15 - b * kr * 0.42; ctx.beginPath(); ctx.ellipse(0, yy, kr * 0.5 - b * 4, 8, 0, 0, Math.PI); ctx.stroke(); }
+        ctx.globalAlpha = 1;
+      }
+      ctx.restore();
+    }
+  } else if (tech === "itajime") {
+    softShadow(ctx, 26, 14);
+    for (let l = 5; l >= 0; l--) {
+      ctx.beginPath(); ctx.rect(-150 + l * 3, -150 + l * 5, 300, 300);
+      ctx.fillStyle = css(shade(color, -0.06 * l)); ctx.fill();
+      if (l === 0) noShadow(ctx);
+    }
+    const g = ctx.createLinearGradient(-150, -150, 150, 150);
+    g.addColorStop(0, css(shade(color, 0.18))); g.addColorStop(1, css(shade(color, -0.2)));
+    ctx.fillStyle = g; ctx.fillRect(-150, -150, 300, 300);
+    // 木板
+    softShadow(ctx, 12, 6);
+    ctx.beginPath(); ctx.arc(0, 0, 92, 0, Math.PI * 2); ctx.fillStyle = css(WOOD); ctx.fill(); noShadow(ctx);
+    ctx.strokeStyle = css(shade(WOOD, -0.25)); ctx.lineWidth = 2;
+    for (let i = -3; i <= 3; i++) { ctx.beginPath(); ctx.moveTo(-80, i * 22); ctx.bezierCurveTo(-30, i * 22 + 6, 30, i * 22 - 6, 80, i * 22); ctx.stroke(); }
+    if (ties > 0) {
+      ctx.globalAlpha = ties; ctx.strokeStyle = THREAD; ctx.lineWidth = 7; ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(-165, -20); ctx.lineTo(165, 20); ctx.moveTo(-20, -165); ctx.lineTo(20, 165); ctx.stroke(); ctx.globalAlpha = 1;
+    }
+  } else if (tech === "nui") {
+    softShadow(ctx, 26, 14);
+    ctx.beginPath(); ctx.ellipse(0, 0, 250, 92, -0.12, 0, Math.PI * 2); fillCloth(ctx, color, 0, 0, 250); noShadow(ctx);
+    ctx.save(); ctx.rotate(-0.12);
+    ctx.strokeStyle = css(shade(color, -0.3)); ctx.lineWidth = 3;
+    for (let i = -11; i <= 11; i++) { const x = i * 21; const h = Math.sqrt(Math.max(0, 1 - (x / 250) ** 2)) * 88; ctx.beginPath(); ctx.moveTo(x, -h); ctx.quadraticCurveTo(x + 8, 0, x, h); ctx.stroke(); }
+    if (ties > 0) {
+      ctx.globalAlpha = ties; ctx.strokeStyle = "#f0ead8"; ctx.lineWidth = 3; ctx.setLineDash([10, 8]);
+      for (const yy of [-36, 0, 36]) { ctx.beginPath(); ctx.moveTo(-240, yy * 0.8); ctx.lineTo(240, yy * 0.8); ctx.stroke(); }
+      ctx.setLineDash([]); ctx.strokeStyle = THREAD; ctx.lineWidth = 6;
+      ctx.beginPath(); ctx.moveTo(240, 0); ctx.quadraticCurveTo(290, -20, 310, 30); ctx.stroke(); ctx.globalAlpha = 1;
+    }
+    ctx.restore();
+  } else {
+    softShadow(ctx, 28, 14);
+    blobPath(ctx, 0, 0, 175, 160, rnd, 14, 0.3); fillCloth(ctx, color, 0, 0, 175); noShadow(ctx);
+    ctx.strokeStyle = css(shade(color, -0.32)); ctx.lineWidth = 3; ctx.lineCap = "round";
+    for (let i = 0; i < 16; i++) {
+      const a = rnd() * Math.PI * 2, r0 = rnd() * 110, x0 = Math.cos(a) * r0, y0 = Math.sin(a) * r0;
+      ctx.beginPath(); ctx.moveTo(x0, y0); ctx.quadraticCurveTo(x0 + (rnd() - 0.5) * 60, y0 + (rnd() - 0.5) * 60, x0 + (rnd() - 0.5) * 90, y0 + (rnd() - 0.5) * 90); ctx.stroke();
+    }
+    if (ties > 0) {
+      ctx.globalAlpha = ties; ctx.strokeStyle = THREAD; ctx.lineWidth = 7;
+      ctx.beginPath(); ctx.ellipse(0, 0, 178, 40, 0.5, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.ellipse(0, 0, 40, 165, 0.5, 0, Math.PI * 2); ctx.stroke(); ctx.globalAlpha = 1;
+    }
+  }
+  ctx.restore();
+}
+
+
+const bundleTech = () => "custom";
+function nameKey(marks) {
+  const types = new Set(marks.map(m => m.type));
+  return types.size === 1 ? [...types][0] : types.size === 0 ? "arashi" : "mix";
+}
+function markLabel(m) {
+  if (m.type === "nui") return STITCH_NAME[m.o.stitch];
+  if (m.type === "arashi") return STYLE_NAME[m.o.style];
+  if (m.type === "kumo") return m.o.core && m.o.core !== "none" ? `捆紮（${CORE_NAME[m.o.core]}）` : "捆紮";
+  if (m.type === "itajime") return m.u != null ? `夾染（${BOARD_NAME[m.o.board]}）` : "夾染";
+  return TECHS[m.type].name;
+}
+function techLabel(rounds) {
+  const names = [];
+  for (const r of rounds) for (const m of r.marks) { const n = markLabel(m); if (!names.includes(n)) names.push(n); }
+  if (!names.length) return "整塊浸染";
+  return names.length > 4 ? names.slice(0, 4).join("＋") + " 等" : names.join("＋");
+}
+function dyeLabel(dips) {
+  const cnt = []; for (const d of dips) { const last = cnt[cnt.length - 1]; if (last && last.dye === d.dye) last.n++; else cnt.push({ dye: d.dye, n: 1 }); }
+  return cnt.map(c => `${DYES[c.dye].name} ${c.n} 次`).join("＋");
+}
+
+/* ---------- 動畫工具 ---------- */
+function animate(ms, fn) {
+  return new Promise(res => {
+    if (REDUCED) { fn(1); res(); return; }
+    const t0 = performance.now();
+    (function frame(now) { const t = clamp((now - t0) / ms); fn(t); if (t < 1) requestAnimationFrame(frame); else res(); })(t0);
+  });
+}
+const ease = t => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+const easeOut = t => 1 - Math.pow(1 - t, 3);
+const wait = ms => new Promise(r => setTimeout(r, REDUCED ? 0 : ms));
+
+
+
+/* ============================================================
+   實體化介面：布架、工具盤、染缸
+   ============================================================ */
+const WOODC = ["#c8a46e", "#a07a45", "#7d5d30"];
+function makeIcon(w, h, draw) { const c = document.createElement("canvas"); c.width = w; c.height = h; draw(c.getContext("2d"), w, h); return c.toDataURL(); }
+function hexShade(hex, k) {
+  const n = parseInt(hex.slice(1), 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255;
+  const f = v => Math.round(k >= 0 ? v + (255 - v) * k : v * (1 + k));
+  return `rgb(${f(r)},${f(g)},${f(b)})`;
+}
+const rgbHex = c => "#" + c.map(v => Math.round(v).toString(16).padStart(2, "0")).join("");
+
+/* 工作檯木紋（畫面底） */
+function woodTexture() {
+  return makeIcon(600, 600, (c, w, h) => {
+    const g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, "#6e4f33"); g.addColorStop(1, "#573d27");
+    c.fillStyle = g; c.fillRect(0, 0, w, h);
+    const r = mulberry32(7);
+    for (let i = 0; i < 70; i++) {
+      const y = r() * h; c.strokeStyle = `rgba(0,0,0,${0.05 + r() * 0.1})`; c.lineWidth = 1 + r() * 2;
+      c.beginPath(); c.moveTo(0, y); c.bezierCurveTo(w * 0.3, y + (r() - 0.5) * 24, w * 0.7, y + (r() - 0.5) * 24, w, y + (r() - 0.5) * 10); c.stroke();
+    }
+    for (let i = 0; i < 18; i++) { const y = r() * h; c.strokeStyle = "rgba(255,220,170,0.05)"; c.lineWidth = 3; c.beginPath(); c.moveTo(0, y); c.lineTo(w, y + (r() - 0.5) * 16); c.stroke(); }
+  });
+}
+
+/* 布疋 */
+// 布疋：捲筒（兩端圓弧）
+function boltIcon(fabric) {
+  const base = rgbHex(FABRICS[fabric].base);
+  return makeIcon(360, 115, (c) => {
+    const x = 40, y = 60, len = 262, r = 44, er = r * 0.36;
+    c.save(); c.shadowColor = "rgba(0,0,0,0.45)"; c.shadowBlur = 12; c.shadowOffsetY = 6;
+    const g = c.createLinearGradient(0, y - r, 0, y + r); g.addColorStop(0, hexShade(base, 0.25)); g.addColorStop(0.5, base); g.addColorStop(1, hexShade(base, -0.32));
+    c.fillStyle = g; c.beginPath(); c.moveTo(x, y - r); c.lineTo(x + len, y - r); c.ellipse(x + len, y, er, r, 0, -Math.PI / 2, Math.PI / 2); c.lineTo(x, y + r); c.ellipse(x, y, er, r, 0, Math.PI / 2, Math.PI * 1.5); c.closePath(); c.fill(); c.restore();
+    c.save(); c.beginPath(); c.rect(x - er, y - r, len + er, r * 2); c.clip();
+    c.strokeStyle = fabric === "linen" ? "rgba(110,90,60,0.22)" : "rgba(0,0,0,0.05)"; c.lineWidth = fabric === "linen" ? 1.6 : 1;
+    for (let i = -er; i < len; i += fabric === "linen" ? 5 : 3) { c.beginPath(); c.moveTo(x + i, y - r); c.lineTo(x + i, y + r); c.stroke(); }
+    if (fabric === "silk") { c.fillStyle = "rgba(255,255,255,0.4)"; c.fillRect(x - er, y - r * 0.55, len + er, r * 0.22); }
+    c.restore();
+    c.beginPath(); c.ellipse(x + len, y, er, r, 0, 0, Math.PI * 2); c.fillStyle = hexShade(base, -0.1); c.fill();
+  });
+}
+// 布捲端面的捲紋（圓形，畫面上再壓扁成橢圓，旋轉時才自然）
+function capIcon(fabric) {
+  const base = rgbHex(FABRICS[fabric].base);
+  return makeIcon(176, 176, (c) => {
+    const C = 88;
+    c.beginPath(); c.arc(C, C, 86, 0, Math.PI * 2); c.fillStyle = hexShade(base, -0.1); c.fill();
+    c.strokeStyle = hexShade(base, -0.4); c.lineWidth = 2.4; c.beginPath();
+    for (let a = 0; a < Math.PI * 2 * 6; a += 0.05) { const r = 14 + a * 1.9; if (r > 84) break; const px = C + Math.cos(a) * r, py = C + Math.sin(a) * r; if (a === 0) c.moveTo(px, py); else c.lineTo(px, py); }
+    c.stroke();
+    c.strokeStyle = hexShade(base, -0.25); c.lineWidth = 3; c.beginPath(); c.moveTo(C + 16, C); c.lineTo(C + 80, C + 6); c.stroke();
+    // 中心的洞
+    const g = c.createRadialGradient(C, C, 2, C, C, 16); g.addColorStop(0, "#1c140c"); g.addColorStop(0.8, "#3a2a18"); g.addColorStop(1, hexShade(base, -0.45));
+    c.beginPath(); c.arc(C, C, 16, 0, Math.PI * 2); c.fillStyle = g; c.fill();
+  });
+}
+// 布疋：垂下的布尾，和捲筒同寬，下緣平直
+function tailIcon(fabric) {
+  const base = rgbHex(FABRICS[fabric].base);
+  return makeIcon(360, 100, (c) => {
+    const x = 40, len = 262;
+    const g = c.createLinearGradient(0, 0, 0, 80); g.addColorStop(0, hexShade(base, -0.22)); g.addColorStop(0.3, hexShade(base, -0.05)); g.addColorStop(1, base);
+    c.fillStyle = g; c.fillRect(x, 0, len, 78);
+    c.save(); c.beginPath(); c.rect(x, 0, len, 78); c.clip();
+    c.strokeStyle = fabric === "linen" ? "rgba(110,90,60,0.22)" : "rgba(0,0,0,0.05)"; c.lineWidth = 1;
+    for (let i = 0; i < len; i += fabric === "linen" ? 5 : 3) { c.beginPath(); c.moveTo(x + i, 0); c.lineTo(x + i, 78); c.stroke(); }
+    if (fabric === "silk") { c.fillStyle = "rgba(255,255,255,0.3)"; c.fillRect(x, 30, len, 10); }
+    c.restore();
+    c.fillStyle = "rgba(0,0,0,0.12)"; c.fillRect(x, 77, len, 2);
+  });
+}
+
+/* 工具 */
+function drawRope(c, x, y, s) {
+  c.lineCap = "round";
+  for (let i = 0; i < 6; i++) { c.strokeStyle = "#b08a5a"; c.lineWidth = s * 0.17; c.beginPath(); c.ellipse(x, y, s - i * s * 0.13, (s - i * s * 0.13) * 0.55, 0, 0, Math.PI * 2); c.stroke(); }
+  c.strokeStyle = "#7a5a32"; c.lineWidth = s * 0.05;
+  for (let i = 0; i < 6; i++) { c.beginPath(); c.ellipse(x, y, s - i * s * 0.13, (s - i * s * 0.13) * 0.55, 0, 0.3, 1.3); c.stroke(); }
+  c.strokeStyle = "#b08a5a"; c.lineWidth = s * 0.17; c.beginPath(); c.moveTo(x + s, y); c.quadraticCurveTo(x + s * 1.5, y + s * 0.8, x + s * 0.8, y + s * 1.2); c.stroke();
+}
+function drawNeedle(c, x, y, a, len) {
+  c.save(); c.translate(x, y); c.rotate(a);
+  c.strokeStyle = "#e3e7ee"; c.lineWidth = len * 0.06; c.lineCap = "round"; c.beginPath(); c.moveTo(0, 0); c.lineTo(len, 0); c.stroke();
+  c.strokeStyle = "#7d879c"; c.lineWidth = 1.5; c.beginPath(); c.ellipse(len * 0.88, 0, len * 0.07, len * 0.025, 0, 0, Math.PI * 2); c.stroke();
+  c.restore();
+}
+function drawSpool(c, x, y, s) {
+  c.fillStyle = "#c9a07a"; c.fillRect(x - s * 0.55, y - s * 0.8, s * 1.1, s * 0.2); c.fillRect(x - s * 0.55, y + s * 0.6, s * 1.1, s * 0.2);
+  c.fillStyle = "#f0ead8"; c.fillRect(x - s * 0.42, y - s * 0.6, s * 0.84, s * 1.2);
+  c.strokeStyle = "rgba(0,0,0,0.14)"; c.lineWidth = 1; for (let i = -s * 0.55; i < s * 0.6; i += 4) { c.beginPath(); c.moveTo(x - s * 0.42, y + i); c.lineTo(x + s * 0.42, y + i + 2); c.stroke(); }
+}
+function drawWoodPiece(c, x, y, shape, r) {
+  c.save(); c.shadowColor = "rgba(0,0,0,0.35)"; c.shadowBlur = 5; c.shadowOffsetY = 3;
+  const g = c.createLinearGradient(x - r, y - r, x + r, y + r); g.addColorStop(0, "#d8b57e"); g.addColorStop(1, "#a9834e");
+  c.fillStyle = g; c.beginPath();
+  if (shape === "circle") c.arc(x, y, r, 0, Math.PI * 2);
+  else if (shape === "square") c.rect(x - r * 0.9, y - r * 0.9, r * 1.8, r * 1.8);
+  else if (shape === "tri") { c.moveTo(x - r * 1.05, y + r * 0.8); c.lineTo(x + r * 1.05, y + r * 0.8); c.lineTo(x, y - r * 1.0); c.closePath(); }
+  else { c.roundRect(x - r * 1.1, y - r * 0.85, r * 2.2, r * 1.7, 4); }
+  c.fill(); c.restore();
+  c.strokeStyle = "#7d5d30"; c.lineWidth = Math.max(1, r * 0.05);
+  if (shape === "carved") { for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; c.beginPath(); c.ellipse(x + Math.cos(a) * r * 0.42, y + Math.sin(a) * r * 0.42, r * 0.28, r * 0.12, a, 0, Math.PI * 2); c.stroke(); } c.beginPath(); c.arc(x, y, r * 0.1, 0, Math.PI * 2); c.stroke(); }
+  else for (let i = -1; i <= 1; i++) { c.beginPath(); c.moveTo(x - r * 0.55, y + i * r * 0.3 + (shape === "tri" ? r * 0.2 : 0)); c.lineTo(x + r * 0.55, y + i * r * 0.3 + (shape === "tri" ? r * 0.2 : 0)); c.stroke(); }
+}
+function drawNet(c, x, y, s) {
+  c.strokeStyle = "#ece6d6"; c.lineWidth = 1.6;
+  c.beginPath(); c.ellipse(x, y, s * 0.8, s, 0, 0, Math.PI * 2); c.stroke();
+  c.save(); c.beginPath(); c.ellipse(x, y, s * 0.8, s, 0, 0, Math.PI * 2); c.clip();
+  for (let a = -s * 2; a < s * 2; a += s * 0.28) { c.beginPath(); c.moveTo(x + a, y - s); c.lineTo(x + a + s, y + s); c.stroke(); c.beginPath(); c.moveTo(x + a, y - s); c.lineTo(x + a - s, y + s); c.stroke(); }
+  c.restore();
+  c.strokeStyle = "#b08a5a"; c.lineWidth = 3; c.beginPath(); c.moveTo(x - s * 0.3, y - s * 0.95); c.quadraticCurveTo(x, y - s * 1.25, x + s * 0.3, y - s * 0.95); c.stroke();
+}
+function drawPole(c, x, y, len, a) {
+  c.save(); c.translate(x, y); c.rotate(a);
+  const g = c.createLinearGradient(0, -7, 0, 7); g.addColorStop(0, "#dcbb86"); g.addColorStop(1, "#8d6b3a");
+  c.fillStyle = g; c.beginPath(); c.roundRect(-len / 2, -7, len, 14, 7); c.fill();
+  c.strokeStyle = "rgba(90,60,30,0.6)"; c.lineWidth = 2; for (let i = -len / 2 + 18; i < len / 2; i += len / 4) { c.beginPath(); c.moveTo(i, -7); c.lineTo(i, 7); c.stroke(); }
+  c.restore();
+}
+function drawStone(c, x, y, s) { c.fillStyle = "#77716a"; c.beginPath(); c.ellipse(x, y, s, s * 0.7, 0.3, 0, Math.PI * 2); c.fill(); c.fillStyle = "rgba(255,255,255,0.22)"; c.beginPath(); c.ellipse(x - s * 0.3, y - s * 0.25, s * 0.35, s * 0.15, 0.2, 0, Math.PI * 2); c.fill(); }
+function drawMarble(c, x, y, s) { const g = c.createRadialGradient(x - s * 0.3, y - s * 0.3, 1, x, y, s); g.addColorStop(0, "#eef6ff"); g.addColorStop(0.5, "#7fb3d9"); g.addColorStop(1, "#2f5f8a"); c.fillStyle = g; c.beginPath(); c.arc(x, y, s, 0, Math.PI * 2); c.fill(); }
+function drawDish(c, x, y, s) {
+  c.save(); c.shadowColor = "rgba(0,0,0,0.35)"; c.shadowBlur = 6; c.shadowOffsetY = 3;
+  c.fillStyle = "#e7e2d6"; c.beginPath(); c.ellipse(x, y, s, s * 0.45, 0, 0, Math.PI * 2); c.fill(); c.restore();
+  c.fillStyle = "#cfc8b8"; c.beginPath(); c.ellipse(x, y - 2, s * 0.8, s * 0.33, 0, 0, Math.PI * 2); c.fill();
+}
+const ICON = {};
+function buildIcons() {
+  const sq = 160;
+  ICON.tool = {
+    kumo: makeIcon(sq, sq, c => drawRope(c, 76, 72, 46)),
+    nui: makeIcon(sq, sq, c => { drawSpool(c, 56, 80, 40); drawNeedle(c, 70, 118, -0.75, 80); c.strokeStyle = "#f0ead8"; c.lineWidth = 2; c.beginPath(); c.moveTo(72, 70); c.quadraticCurveTo(120, 100, 126, 58); c.stroke(); }),
+    itajime: makeIcon(sq, sq, c => { drawWoodPiece(c, 52, 84, "circle", 30); drawWoodPiece(c, 104, 74, "square", 24); c.fillStyle = "#8a93a8"; c.fillRect(130, 40, 12, 76); c.fillRect(118, 40, 30, 10); }),
+    arashi: makeIcon(sq, sq, c => { drawNet(c, 58, 82, 36); drawPole(c, 112, 80, 110, -1.0); })
+  };
+  ICON.core = {};
+  for (const k of ["none", "bean", "marble", "coin", "chop", "stone"]) ICON.core[k] = makeIcon(sq, 110, c => {
+    drawDish(c, 80, 62, 62);
+    if (k === "none") { c.fillStyle = "#3b2a17"; c.font = '600 20px "Noto Sans TC", sans-serif'; c.textAlign = "center"; c.fillText("空", 80, 68); }
+    else drawCore(c, k, 80, 58, 20);
+  });
+  ICON.ring = on => makeIcon(90, 70, c => { c.strokeStyle = on ? "#b08a5a" : "rgba(176,138,90,0.28)"; c.lineWidth = 11; c.beginPath(); c.ellipse(45, 35, 28, 15, 0, 0, Math.PI * 2); c.stroke(); if (on) { c.strokeStyle = "#7a5a32"; c.lineWidth = 3; c.beginPath(); c.ellipse(45, 35, 28, 15, 0, 0.2, 1.2); c.stroke(); } });
+  ICON.ringOn = ICON.ring(true); ICON.ringOff = ICON.ring(false);
+  ICON.stitch = {};
+  for (const k of ["hira", "ori", "maki", "gather"]) ICON.stitch[k] = makeIcon(sq, 100, c => {
+    c.fillStyle = "#ebe8de"; c.fillRect(6, 10, 148, 80);
+    c.strokeStyle = "rgba(0,0,0,0.05)"; for (let i = 6; i < 154; i += 3) { c.beginPath(); c.moveTo(i, 10); c.lineTo(i, 90); c.stroke(); }
+    c.strokeStyle = "#3d5a99"; c.lineWidth = 3; c.lineCap = "round";
+    if (k === "hira") { c.setLineDash([10, 7]); c.beginPath(); c.moveTo(14, 50); c.lineTo(146, 50); c.stroke(); c.setLineDash([]); }
+    if (k === "ori") { c.strokeStyle = "rgba(0,0,0,0.18)"; c.beginPath(); c.moveTo(6, 50); c.lineTo(154, 50); c.stroke(); c.strokeStyle = "#3d5a99"; c.beginPath(); for (let i = 0; i < 12; i++) c.lineTo(14 + i * 12, 50 + (i % 2 ? -12 : 12)); c.stroke(); }
+    if (k === "maki") { for (let i = 0; i < 11; i++) { c.beginPath(); c.moveTo(16 + i * 12, 34); c.lineTo(24 + i * 12, 66); c.stroke(); } }
+    if (k === "gather") { c.setLineDash([10, 7]); for (const y of [32, 50, 68]) { c.beginPath(); c.moveTo(14, y); c.lineTo(146, y); c.stroke(); } c.setLineDash([]); }
+  });
+  ICON.board = {};
+  for (const k of ["circle", "square", "tri", "carved"]) ICON.board[k] = makeIcon(120, 120, c => drawWoodPiece(c, 60, 62, k, 36));
+  ICON.fold = {};
+  for (const f of ["sq2", "sq3", "sq4", "tri"]) ICON.fold[f] = makeIcon(120, 110, c => {
+    const n = f === "tri" ? 3 : foldN(f);
+    for (let l = 3; l >= 0; l--) { c.fillStyle = hexShade("#ece9e0", -0.06 * l); c.beginPath(); if (f === "tri") { c.moveTo(26 + l * 4, 20 + l * 5); c.lineTo(92 + l * 4, 20 + l * 5); c.lineTo(92 + l * 4, 86 + l * 5); c.closePath(); } else c.rect(26 + l * 4, 20 + l * 5, 66, 66); c.fill(); }
+    if (f !== "tri") { c.strokeStyle = "rgba(60,40,20,0.35)"; c.lineWidth = 1.2; for (let i = 1; i < n; i++) { c.beginPath(); c.moveTo(26 + 66 * i / n, 20); c.lineTo(26 + 66 * i / n, 86); c.moveTo(26, 20 + 66 * i / n); c.lineTo(92, 20 + 66 * i / n); c.stroke(); } }
+  });
+  ICON.peg = n => makeIcon(120, 110, c => {
+    c.fillStyle = "#6f5a3e"; c.beginPath(); c.arc(60, 22, 7, 0, Math.PI * 2); c.fill(); c.fillRect(57, 22, 6, 18);
+    if (!n) { c.fillStyle = "#3b2a17"; c.font = '600 18px "Noto Sans TC", sans-serif'; c.textAlign = "center"; c.fillText("不綁", 60, 80); return; }
+    for (let i = 0; i < n; i++) { c.strokeStyle = ["#c9a07a", "#b98b62", "#d6b08c", "#a8784e"][i]; c.lineWidth = 5; c.beginPath(); c.ellipse(60 + (i - (n - 1) / 2) * 6, 60 + i * 3, 22, 26, 0, 0, Math.PI * 2); c.stroke(); }
+  });
+  ICON.pegs = [0, 1, 2, 3, 4].map(ICON.peg);
+  ICON.group = {
+    rope: makeIcon(sq, 110, c => { c.fillStyle = "#ebe8de"; c.beginPath(); c.ellipse(80, 58, 44, 34, 0.2, 0, Math.PI * 2); c.fill(); c.strokeStyle = "rgba(0,0,0,0.2)"; c.lineWidth = 2; for (let i = 0; i < 6; i++) { c.beginPath(); c.moveTo(50 + i * 10, 40 + (i % 3) * 8); c.quadraticCurveTo(64 + i * 8, 60, 52 + i * 11, 80); c.stroke(); } c.strokeStyle = "#8a6a40"; c.lineWidth = 5; c.beginPath(); c.ellipse(80, 58, 46, 10, 0.6, 0, Math.PI * 2); c.stroke(); c.beginPath(); c.ellipse(80, 58, 10, 36, 0.6, 0, Math.PI * 2); c.stroke(); }),
+    net: makeIcon(sq, 110, c => { c.fillStyle = "#ebe8de"; c.beginPath(); c.ellipse(80, 60, 38, 34, 0, 0, Math.PI * 2); c.fill(); drawNet(c, 80, 58, 40); }),
+    pole: makeIcon(sq, 110, c => { drawPole(c, 80, 56, 150, -0.25); c.save(); c.translate(80, 56); c.rotate(-0.25); c.fillStyle = "#ebe8de"; c.fillRect(-46, -16, 92, 32); c.strokeStyle = "rgba(0,0,0,0.25)"; c.lineWidth = 2; for (let x = -42; x < 46; x += 7) { c.beginPath(); c.moveTo(x, -16); c.lineTo(x + 4, 16); c.stroke(); } c.strokeStyle = "#f6f2e6"; c.lineWidth = 1.5; for (let x = -40; x < 46; x += 14) { c.beginPath(); c.moveTo(x, -18); c.lineTo(x + 10, 18); c.stroke(); } c.restore(); })
+  };
+  // 紋樣預覽：用真的花紋算一小塊
+  ICON.style = {};
+  const N = makeNoise(4242), base = FABRICS.cotton.base;
+  for (const st of Object.keys(STYLE_NAME)) {
+    const pat = arashiPattern(st, 99, N), Z = 96;
+    ICON.style[st] = makeIcon(Z, Z, c => {
+      const img = c.createImageData(Z, Z), px = img.data, sc = 3.2;
+      for (let y = 0; y < Z; y++) for (let x = 0; x < Z; x++) {
+        const q = pat(200 + x * sc, 200 + y * sc), t = 0.7 * (1 - clamp(q.r) * 0.97) + q.vein * 0.2, col = rampColor("indigo", base, t), j = (y * Z + x) * 4;
+        px[j] = col[0]; px[j + 1] = col[1]; px[j + 2] = col[2]; px[j + 3] = 255;
+      }
+      c.putImageData(img, 0, 0);
+    });
+  }
+  ICON.ladle = n => makeIcon(150, 110, c => {
+    for (let k = 0; k < n; k++) {
+      c.save(); c.translate(48 + k * 16, 60 + k * 8); c.rotate(-0.55);
+      c.fillStyle = "#c8a46e"; c.beginPath(); c.roundRect(4, -5, 74, 10, 5); c.fill();
+      c.beginPath(); c.ellipse(-12, 0, 22, 15, 0, 0, Math.PI * 2); c.fillStyle = "#9c7646"; c.fill();
+      c.beginPath(); c.ellipse(-12, -2, 16, 9, 0, 0, Math.PI * 2); c.fillStyle = "#5f4426"; c.fill();
+      c.restore();
+    }
+  });
+  ICON.ladles = { light: ICON.ladle(1), mid: ICON.ladle(2), deep: ICON.ladle(3) };
+  // 游標
+  const cur = (draw, hx, hy) => `url(${makeIcon(44, 44, draw)}) ${hx} ${hy}, crosshair`;
+  ICON.cursor = {
+    kumo: cur(c => drawRope(c, 22, 20, 13), 22, 22),
+    stone: cur(c => drawStone(c, 22, 22, 11), 22, 22),
+    marble: cur(c => drawMarble(c, 22, 22, 10), 22, 22),
+    bean: cur(c => drawCore(c, "bean", 22, 22, 12), 22, 22),
+    coin: cur(c => drawCore(c, "coin", 22, 22, 12), 22, 22),
+    chop: cur(c => drawCore(c, "chop", 22, 22, 11), 22, 22),
+    pole: cur(c => drawPole(c, 22, 22, 40, -0.8), 22, 22),
+    nui: cur(c => drawNeedle(c, 4, 40, -0.8, 50), 4, 40),
+    itajime: cur(c => drawWoodPiece(c, 22, 22, "square", 12), 4, 4),
+    arashi: cur(c => drawNet(c, 22, 24, 14), 22, 22)
+  };
+}
+
+/* 布架、工具盤、染缸選單 */
+function radioHTML(name, value, id, inner, checked, cls = "") {
+  return `<span class="pick ${cls}"><input type="radio" name="${name}" id="${id}" value="${value}" ${checked ? "checked" : ""}><label for="${id}">${inner}</label></span>`;
+}
+function buildOptions() {
+  buildIcons();
+  document.getElementById("stageBox").style.backgroundImage = `url(${woodTexture()})`;
+  document.getElementById("fabricOpts").innerHTML = Object.entries(FABRICS).map(([k, f]) =>
+    radioHTML("fabric", k, "fabric-" + k, `<span class="boltwrap"><span class="boltbox"><img class="tail" src="${tailIcon(k)}" alt=""><img class="roll" src="${boltIcon(k)}" alt=""><span class="sheen"></span><span class="cap"><span class="squash"><img class="rot" src="${capIcon(k)}" alt=""></span></span><span class="axle-front"></span></span></span><span>${f.name}</span>`, k === state.fabric, "bolt")).join("");
+  document.getElementById("toolOpts").innerHTML = Object.entries(TECHS).map(([k, t]) =>
+    radioHTML("tool", k, "tool-" + k, `<img src="${ICON.tool[k]}" alt=""><span>${t.name}</span>`, k === state.tool, "tool")).join("");
+  document.getElementById("dyeOpts").innerHTML = ["shulang", "indigo", "turmeric"].map(k =>
+    radioHTML("dye", k, "dye-" + k, `<i style="background:${DYES[k].chip}"></i>${DYES[k].name}`, k === state.dye, "chipv")).join("");
+  document.getElementById("strengthOpts").innerHTML = Object.entries(STRENGTH).map(([k, s], i) =>
+    radioHTML("strength", k, "st-" + k, `<img src="${ICON.ladles[k]}" alt=""><span>${i + 1} 杓・${s.name}</span>`, k === state.strength, "ladle")).join("");
+  document.getElementById("productOpts").innerHTML = Object.entries(PRODUCTS).map(([k, pr]) =>
+    radioHTML("product", k, "prod-" + k, `<img src="${productIcon(k)}" alt=""><span>${pr.name}</span>`, k === state.product, "prod")).join("");
+  document.getElementById("layoutOpts").innerHTML = Object.entries(LAYOUTS).map(([k, l]) =>
+    `<span><input type="radio" name="layout" id="lay-${k}" value="${k}" ${k === state.layout ? "checked" : ""}><label for="lay-${k}">${l.name}</label></span>`).join("");
+  document.getElementById("msgSuggest").innerHTML = MESSAGES.map(m => `<button type="button">${m}</button>`).join("");
+  document.getElementById("fabricTip").textContent = FABRICS[state.fabric].desc;
+}
+
+/* 細部設定：以實物呈現 */
+const curOpts = () => state.sel >= 0 ? state.marks[state.sel].o : state.opts[state.tool];
+function renderSettings() {
+  const tool = state.tool, o = curOpts(), el = document.getElementById("toolSettings");
+  const group = (title, hint, html, cls = "") => `<div class="detail ${cls}"><p class="wlabel">${title}${hint ? `<small>${hint}</small>` : ""}</p><div class="picks" role="radiogroup" aria-label="${title}">${html}</div></div>`;
+  const pick = (key, v, inner, cls) => radioHTML("opt-" + key, v, `opt-${key}-${v}`, inner, String(o[key]) === String(v), cls).replace("<input ", `<input data-key="${key}" `);
+  let html = "";
+  if (tool === "kumo") {
+    html += group("內包物", "點碟子，再點布上的角", ["none", "bean", "marble", "coin", "chop", "stone"].map(v => pick("core", v, `<img src="${ICON.core[v]}" alt=""><span>${CORE_NAME[v]}</span>`, "dish")).join(""), "cores");
+    html += group("綁幾圈", `${o.bands} 圈`, [1, 2, 3, 4, 5].map(v => pick("bands", v, `<img src="${v <= o.bands ? ICON.ringOn : ICON.ringOff}" alt="${v} 圈">`, "ring")).join(""), "rings");
+  } else if (tool === "nui") {
+    html += group("針法", "點一塊樣布", ["hira", "ori", "maki", "gather"].map(v => pick("stitch", v, `<img src="${ICON.stitch[v]}" alt=""><span>${STITCH_NAME[v]}</span>`, "swatch")).join(""));
+  } else if (tool === "itajime") {
+    const ita = state.ita, pickI = (key, v, inner, cls) => radioHTML("opt-" + key, v, `opt-${key}-${v}`, inner, String(ita[key]) === String(v), cls).replace("<input ", `<input data-key="${key}" `);
+    html += group("摺法", "整塊布一起摺", ["sq2", "sq3", "sq4", "tri"].map(v => pickI("fold", v, `<img src="${ICON.fold[v]}" alt=""><span>${FOLD_NAME[v]}</span>`, "board")).join(""));
+    html += group("夾板", "從中心往外拉", ["circle", "square", "tri", "carved"].map(v => pick("board", v, `<img src="${ICON.board[v]}" alt=""><span>${BOARD_NAME[v]}</span>`, "board")).join(""));
+    html += group("橡皮筋", `${ita.bands ? ita.bands + " 條" : "不綁"}`, [0, 1, 2, 3, 4].map(v => pickI("bands", v, `<img src="${ICON.pegs[v]}" alt="${v ? v + " 條" : "不綁"}">`, "peg")).join(""));
+  } else {
+    html += group("用什麼綁", "", ["rope", "net", "pole"].map(v => pick("group", v, `<img src="${ICON.group[v]}" alt=""><span>${{ rope: "繩子", net: "網袋／絲襪", pole: "木棍" }[v]}</span>`, "board")).join(""));
+    html += group("紋樣", "", ARASHI_STYLES[o.group].map(([v, n]) => pick("style", v, `<img src="${ICON.style[v]}" alt=""><span>${n}</span>`, "board")).join(""));
+  }
+  el.innerHTML = html;
+  const sizeRow = document.getElementById("sizeRow");
+  sizeRow.hidden = !(tool === "kumo" || (tool === "arashi" && o.group !== "pole"));
+  document.getElementById("sizeLabel").textContent = tool === "kumo" ? "揪起的深度" : "範圍大小";
+  if (state.sel >= 0) { const m = state.marks[state.sel]; document.getElementById("penSize").value = m.type === "kumo" ? m.R : Math.round(m.w / 1.1); }
+  updateCursor();
+}
+function updateCursor() {
+  const t = state.tool, core = state.opts.kumo.core;
+  stage.style.cursor = state.step !== 2 ? "" : t === "kumo" && core !== "none" ? ICON.cursor[core] : t === "arashi" && state.opts.arashi.group === "pole" ? ICON.cursor.pole : ICON.cursor[t];
+}
+function setOpt(key, raw) {
+  if (state.busy) return;
+  if (state.tool === "itajime" && (key === "fold" || key === "bands")) {
+    state.ita[key] = key === "bands" ? +raw : raw;
+    renderSettings(); updateBind(); return;
+  }
+  const o = curOpts(), v = key === "bands" ? +raw : raw;
+  o[key] = v;
+  if (key === "group") o.style = ARASHI_STYLES[v][0][0];
+  if (state.sel >= 0) Object.assign(state.opts[state.tool], o);
+  renderSettings(); updateBind();
+}
+/* 選布：布疋滾出來攤開 */
+async function unrollFabric() {
+  const sw = swatchFor(state.fabric), base = FABRICS[state.fabric].base;
+  await animate(750, t => {
+    clearStage();
+    const w = S * ease(t);
+    sctx.drawImage(sw, 0, 0, Math.max(1, w), S, 0, 0, Math.max(1, w), S);
+    const rw = 70 * (1 - t) + 12, g = sctx.createLinearGradient(w, 0, w + rw, 0);
+    g.addColorStop(0, css(shade(base, -0.25))); g.addColorStop(0.5, css(shade(base, 0.2))); g.addColorStop(1, css(shade(base, -0.35)));
+    sctx.fillStyle = g; sctx.fillRect(w, 0, rw, S);
+  });
+  drawFabricScene();
+}
+
+/* 染缸：三缸並排，大菁藍在中間、比較大 */
+const VAT_SLOTS = { L: { x: 168, y: 585, s: 0.72 }, C: { x: 450, y: 555, s: 1 }, R: { x: 732, y: 585, s: 0.72 } };
+const VAT_ORDER = ["shulang", "indigo", "turmeric"];
+function vatLayout(dye) {
+  const others = VAT_ORDER.filter(k => k !== dye), out = {};
+  out[dye] = Object.assign({}, VAT_SLOTS.C); out[others[0]] = Object.assign({}, VAT_SLOTS.L); out[others[1]] = Object.assign({}, VAT_SLOTS.R);
+  return out;
+}
+const VATS = vatLayout("indigo");
+// 換缸：選到的缸滑到正中間
+async function moveVats(dye) {
+  const from = JSON.parse(JSON.stringify(VATS)), to = vatLayout(dye);
+  state.busy = true; updateMeter();
+  await animate(550, t => {
+    const e = ease(t);
+    for (const k of VAT_ORDER) for (const p of ["x", "y", "s"]) VATS[k][p] = from[k][p] + (to[k][p] - from[k][p]) * e;
+    drawDyeScene(outerColor(state.dips), 330, 0);
+  });
+  Object.assign(VATS, to);
+  state.busy = false; updateMeter();
+  drawDyeScene(outerColor(state.dips), 330, 0);
+}
+const vatOf = () => VATS[state.dye];
+function drawVat(ctx, key, active, ripple) {
+  const v = VATS[key], s = v.s, rx = 150 * s, ry = 34 * s, h = 200 * s;
+  ctx.save();
+  softShadow(ctx, 20, 10);
+  const body = ctx.createLinearGradient(v.x - rx, 0, v.x + rx, 0);
+  body.addColorStop(0, "#2a211d"); body.addColorStop(0.45, "#5a4337"); body.addColorStop(1, "#231b17");
+  const cb = 26 * s;   // 缸底的弧度
+  ctx.beginPath(); ctx.moveTo(v.x - rx, v.y); ctx.lineTo(v.x - rx * 0.84, v.y + h - cb); ctx.quadraticCurveTo(v.x - rx * 0.8, v.y + h + cb * 0.4, v.x, v.y + h + cb * 0.5); ctx.quadraticCurveTo(v.x + rx * 0.8, v.y + h + cb * 0.4, v.x + rx * 0.84, v.y + h - cb); ctx.lineTo(v.x + rx, v.y); ctx.closePath();
+  ctx.fillStyle = body; ctx.fill(); noShadow(ctx);
+  const L = DYES[key].liquid;
+  ctx.beginPath(); ctx.ellipse(v.x, v.y, rx * 0.96, ry * 0.9, 0, 0, Math.PI * 2);
+  const lg = ctx.createRadialGradient(v.x - rx * 0.2, v.y - ry * 0.3, 4, v.x, v.y, rx);
+  lg.addColorStop(0, css(shade(L, 0.25))); lg.addColorStop(1, css(shade(L, -0.35)));
+  ctx.fillStyle = lg; ctx.fill();
+  if (key === "indigo") { ctx.globalAlpha = 0.35; ctx.beginPath(); ctx.ellipse(v.x - rx * 0.25, v.y - ry * 0.2, rx * 0.4, ry * 0.25, -0.08, 0, Math.PI * 2); ctx.fillStyle = "#a07a3c"; ctx.fill(); ctx.globalAlpha = 1; }
+  if (ripple > 0) {
+    ctx.strokeStyle = `rgba(255,255,255,${0.35 * ripple})`; ctx.lineWidth = 2;
+    for (let i = 0; i < 3; i++) { const k = (1 - ripple) + i * 0.25; ctx.beginPath(); ctx.ellipse(v.x, v.y, rx * (0.25 + k * 0.6), ry * (0.25 + k * 0.6), 0, 0, Math.PI * 2); ctx.stroke(); }
+  }
+  ctx.lineWidth = 12 * s + 2; ctx.strokeStyle = active ? "#f1efe6" : "#6b5143";
+  ctx.beginPath(); ctx.ellipse(v.x, v.y, rx, ry, 0, 0, Math.PI * 2); ctx.stroke();
+  ctx.restore();
+}
+function drawRawItems(ctx) {
+  const leaf = (x, y, a, sz) => { ctx.save(); ctx.translate(x, y); ctx.rotate(a); ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(sz * 0.45, -sz * 0.28, sz, 0); ctx.quadraticCurveTo(sz * 0.45, sz * 0.28, 0, 0); ctx.fillStyle = "#3f7a3a"; ctx.fill(); ctx.strokeStyle = "rgba(0,0,0,0.25)"; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(sz * 0.9, 0); ctx.stroke(); ctx.restore(); };
+  const RY = 812;
+  for (const k of VAT_ORDER) {
+    const v = VATS[k], x = v.x, sc = 0.8 + (v.s - 0.72) * 0.7;
+    ctx.save(); ctx.translate(x, RY); ctx.scale(sc, sc);
+    if (k === "indigo") { leaf(-65, 3, -0.3, 54); leaf(-40, 15, -0.75, 50); leaf(-10, 1, 0.1, 48); ctx.fillStyle = "#f2f0ea"; ctx.beginPath(); ctx.moveTo(28, 23); ctx.quadraticCurveTo(48, -15, 68, 23); ctx.closePath(); ctx.fill(); }
+    else if (k === "shulang") { ctx.fillStyle = "#5b3a26"; ctx.beginPath(); ctx.ellipse(-18, 0, 34, 20, 0.2, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = "#a8452a"; ctx.beginPath(); ctx.ellipse(12, 0, 16, 18, 0.2, 0, Math.PI * 2); ctx.fill(); }
+    else { ctx.fillStyle = "#b98a4a"; ctx.beginPath(); ctx.ellipse(-20, 2, 30, 12, 0.1, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.ellipse(-38, -8, 14, 8, -0.8, 0, Math.PI * 2); ctx.fill(); for (let i = 0; i < 3; i++) { ctx.fillStyle = "#e39a1a"; ctx.beginPath(); ctx.arc(20 + i * 17, 8, 8, 0, Math.PI * 2); ctx.fill(); } }
+    ctx.restore();
+    ctx.font = '600 22px "Noto Sans TC", sans-serif'; ctx.textAlign = "center";
+    ctx.fillStyle = k === state.dye ? "#f1efe6" : "rgba(241,239,230,0.6)"; ctx.fillText(DYES[k].name, x, 868);
+    ctx.textAlign = "left";
+  }
+}
+function drawDyeScene(color, by, ripple, drops) {
+  clearStage();
+  for (const k of VAT_ORDER.filter(x => x !== state.dye).concat([state.dye])) drawVat(sctx, k, k === state.dye, k === state.dye ? ripple : 0);
+  drawRawItems(sctx);
+  const v = vatOf();
+  sctx.strokeStyle = "rgba(217,205,181,0.8)"; sctx.lineWidth = 2; sctx.beginPath(); sctx.moveTo(v.x, 0); sctx.lineTo(v.x, Math.max(0, by - 110)); sctx.stroke();
+  sctx.save(); sctx.beginPath(); sctx.rect(0, 0, S, v.y); sctx.clip();
+  drawCustomBundle(sctx, color, { x: v.x, y: by, scale: 0.52 });
+  sctx.restore();
+  if (drops) for (const d of drops) { sctx.beginPath(); sctx.ellipse(d.x, d.y, 4, 7, 0, 0, Math.PI * 2); sctx.fillStyle = d.c; sctx.fill(); }
+}
+function vatAt(x, y) {
+  for (const k of ["indigo", "shulang", "turmeric"]) { const v = VATS[k]; if (Math.abs(x - v.x) < 150 * v.s && y > v.y - 60 && y < v.y + 260 * v.s) return k; }
+  return null;
+}
+/* 原料流程（文字） */
+function drawRaw() {
+  document.getElementById("rawFlow").innerHTML = DYES[state.dye].flow.map(t => `<li>${t}</li>`).join("");
+  document.getElementById("rawTitle").textContent = `${DYES[state.dye].name}的原料`;
+}
+/* 浸染次數：一條條染過的布條 */
+function renderStrips() {
+  const pd = prevDips(), n = state.dips.length, prevOuter = outerOf(state.fabric, prevRounds());
+  let html = "";
+  for (let i = 0; i < MAX_DIPS; i++) {
+    const done = i < pd + n, col = i < pd ? css(prevOuter) : done ? css(outerColor(state.dips.slice(0, i - pd + 1))) : "";
+    html += `<span class="strip${done ? " done" : ""}${i < pd ? " prev" : ""}" style="${done ? `background:${col}` : ""}"><b>${i + 1}</b></span>`;
+  }
+  document.getElementById("dipBar").innerHTML = html;
+}
+
+
+/* ============================================================
+   綁布引擎（第二版）：內包物、整塊摺布的夾染、棒捲與揉皺
+   ============================================================ */
+const CORE_NAME = { none: "不包", bean: "豆子", marble: "彈珠", coin: "硬幣", chop: "竹筷", stone: "小石頭" };
+const BOARD_NAME = { circle: "圓木片", square: "方木片", tri: "三角木片", carved: "雕版" };
+const FOLD_NAME = { sq2: "方摺 2×2", sq3: "方摺 3×3", sq4: "方摺 4×4", tri: "三角摺" };
+const foldN = f => f === "sq2" ? 2 : f === "sq4" ? 4 : 3;
+
+/* 捆紮：六種內包物 */
+function applyKumo(m, rare, N, put) {
+  const rng = mulberry32(m.s);
+  const bands = Math.min(6, m.o.bands + (rare ? 2 : 0)), k = 6 + rng() * 6, ph = rng() * 50, core = m.o.core || "none";
+  const ang = rng() * Math.PI, ca0 = Math.cos(ang), sa0 = Math.sin(ang);
+  const stretch = core === "chop" ? 1.5 : 1;
+  const beans = core === "bean" ? Array.from({ length: 6 + Math.floor(rng() * 4) }, () => { const a = rng() * 6.283, r = Math.sqrt(rng()) * 0.25; return [Math.cos(a) * r, Math.sin(a) * r, 0.05 + rng() * 0.025]; }) : null;
+  const ext = m.R * 1.1 * stretch;
+  const [x0, y0, x1, y1] = ibox([m.x - ext, m.y - ext, m.x + ext, m.y + ext]);
+  for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+    const dx = x - m.x, dy = y - m.y, al = dx * ca0 + dy * sa0, ac = -dx * sa0 + dy * ca0;
+    const lu = al / stretch, d = Math.sqrt(lu * lu + ac * ac), f = d / m.R;
+    if (f > 1.08) continue;
+    const ca = lu / (d || 1), sa = ac / (d || 1);
+    const ray = N.n2(ca * k + ph, sa * k + f * 1.4 + ph);
+    let band = 0;
+    for (let j = 0; j < bands; j++) { const pj = 0.4 + (j + 0.5) * (0.56 / bands); const z = (f - pj + (ray - 0.5) * 0.09) / (0.05 * 3 / (bands + 1.2)); band = Math.max(band, Math.exp(-z * z)); }
+    let center = 0, vein = 0;
+    if (core === "marble") {
+      center = 1 - smooth(0.24, 0.27, f); const zr = (f - 0.3) / 0.012; vein = Math.exp(-zr * zr) * 0.7;
+    } else if (core === "stone") {
+      const rr = 0.27 * (1 + (N.n2(ca * 1.6 + ph, sa * 1.6 + ph) - 0.5) * 0.7);
+      center = 1 - smooth(rr - 0.02, rr + 0.03, f); const zr = (f - rr - 0.04) / 0.02; vein = Math.exp(-zr * zr) * 0.5;
+    } else if (core === "coin") {           // 扁平的圓，邊緣清楚，外面一圈細環
+      center = 1 - smooth(0.26, 0.272, f);
+      const zr = (f - 0.335) / 0.011; center = Math.max(center, Math.exp(-zr * zr) * 0.92);
+      const zv = (f - 0.3) / 0.009; vein = Math.exp(-zv * zv) * 0.75;
+    } else if (core === "bean") {           // 一把豆子：一群小圓點
+      for (const [bx, by, br] of beans) {
+        const db = Math.hypot(lu / m.R - bx, ac / m.R - by);
+        center = Math.max(center, 1 - smooth(br - 0.006, br + 0.012, db));
+        const zv = (db - br - 0.018) / 0.008; vein = Math.max(vein, Math.exp(-zv * zv) * 0.55);
+      }
+      center = Math.max(center, f < 0.33 ? 0.22 : 0);
+    } else if (core === "chop") {           // 竹筷：長條
+      const along = Math.abs(al) / m.R, across = Math.abs(ac) / m.R;
+      center = (1 - smooth(0.5, 0.55, along)) * (1 - smooth(0.05, 0.068, across));
+      const zv = (across - 0.08) / 0.01; vein = Math.exp(-zv * zv) * 0.6 * (1 - smooth(0.5, 0.56, along));
+    } else {
+      center = f < 0.42 ? Math.pow(1 - f / 0.42, 1.3) * (0.3 + 0.7 * smooth(0.4, 0.68, ray)) : 0;
+    }
+    const streak = (core === "none" || core === "stone" || core === "bean") ? smooth(0.62, 0.9, ray) * (1 - f) * smooth(0.3, 0.45, f) * 0.6 : 0;
+    const fade = f > 0.92 ? clamp(1 - (f - 0.92) / 0.16) : 1;
+    put(y * S + x, Math.max(band * 0.93, center * 0.97, streak) * fade, vein * fade);
+  }
+}
+
+/* 夾染：整塊布摺好再夾，圖案依摺法對稱重複 */
+function boardShape(shape, du, dv, r, wick) {
+  if (shape === "square") return 1 - smooth(r * 0.92, r * 1.04, Math.max(Math.abs(du), Math.abs(dv)) + wick);
+  if (shape === "tri") { const d = Math.max(Math.abs(du) * 0.866 + dv * 0.5, -dv) * 1.15; return 1 - smooth(r * 0.9, r * 1.04, d + wick); }
+  if (shape === "carved") {
+    const rr = Math.hypot(du, dv), a = Math.atan2(dv, du), petal = r * (0.6 + 0.4 * Math.abs(Math.cos(a * 2.5)));
+    const flower = (1 - smooth(petal * 0.94, petal * 1.06, rr + wick * 0.6)) * smooth(r * 0.1, r * 0.16, rr);
+    const zr = (rr - r * 0.07) / (r * 0.03); return Math.max(flower, Math.exp(-zr * zr) * 0.9);
+  }
+  return 1 - smooth(r * 0.92, r * 1.06, Math.hypot(du, dv) + wick);
+}
+function applyItajimeFold(marks, ita, rare, N, put) {
+  const boards = marks.filter(m => m.type === "itajime" && m.u != null);
+  if (!ita || (!boards.length && !ita.bands)) return;
+  const n = foldN(ita.fold), P = S / n, isTri = ita.fold === "tri", bands = ita.bands || 0;
+  for (let y = 0, i = 0; y < S; y++) for (let x = 0; x < S; x++, i++) {
+    let u = tri(x / P), v = tri(y / P);
+    if (isTri && u < v) { const t = u; u = v; v = t; }
+    const wick = (N.fbm(x * 0.02, y * 0.02, 3) - 0.5) * 0.03;
+    let r = 0;
+    for (const b of boards) r = Math.max(r, boardShape(rare && b.o.board === "circle" ? "carved" : b.o.board, u - b.u, v - b.v, b.r, wick) * 0.95);
+    let band = 0;
+    for (let k = 1; k <= bands; k++) { const zb = (v - k / (bands + 1)) / 0.02; band = Math.max(band, Math.exp(-zb * zb) * 0.85); }
+    const edge = Math.min(u, 1 - u, v, 1 - v, isTri ? Math.abs(u - v) * 0.7 : 1);
+    const inner = 0.28 * smooth(0.02, 0.4, edge + wick * 2);
+    put(i, Math.max(r, inner, band), (1 - smooth(0, 0.045, edge)) * 0.5);
+  }
+}
+
+/* 揉皺：棒捲是整塊布，繩綁／網袋是塗的範圍 */
+function applyArashiAll(marks, rare, seed, N, put) {
+  const pole = marks.filter(m => m.type === "arashi" && m.pole).pop();
+  if (pole) {
+    const [a, b] = pole.pts, ang = Math.atan2(b[1] - a[1], b[0] - a[0]);
+    const pat = arashiPattern(pole.o.style, seed + 51, N, ang);
+    for (let y = 0, i = 0; y < S; y++) for (let x = 0; x < S; x++, i++) { const q = pat(x, y); put(i, q.r, q.vein); }
+  }
+  const byStyle = {};
+  for (const m of marks) if (m.type === "arashi" && !m.pole) (byStyle[m.o.style] = byStyle[m.o.style] || []).push(m);
+  let si = 0;
+  for (const [style, strokes] of Object.entries(byStyle)) {
+    const md = regionMask(strokes).getContext("2d").getImageData(0, 0, S, S).data;
+    const pat = arashiPattern(style, seed + 33 + si++ * 101, N);
+    for (let i = 0, p = 3; i < S * S; i++, p += 4) {
+      const al = md[p] / 255; if (al < 0.02) continue;
+      const q = pat(i % S, (i / S) | 0);
+      let r = q.r;
+      if (rare && style !== "marble") { const z = (N.fbm((i % S) * 0.004 + 9, ((i / S) | 0) * 0.004, 4) - 0.5) / 0.007; r = Math.max(r, Math.exp(-z * z) * 0.9); }
+      put(i, r * al, q.vein * al);
+    }
+  }
+}
+function regionMask(strokes, blur = 10) {
+  const mc = document.createElement("canvas"); mc.width = mc.height = S;
+  const mx = mc.getContext("2d");
+  mx.filter = `blur(${blur}px)`; mx.strokeStyle = "#fff"; mx.lineCap = mx.lineJoin = "round";
+  for (const s of strokes) {
+    mx.lineWidth = s.w; mx.beginPath(); mx.moveTo(s.pts[0][0], s.pts[0][1]);
+    for (const p of s.pts) mx.lineTo(p[0], p[1]);
+    if (s.pts.length === 1) mx.lineTo(s.pts[0][0] + 0.1, s.pts[0][1]);
+    mx.stroke();
+  }
+  return mc;
+}
+function applyMarks(marks, rare, seed, N, R, V, ita) {
+  const put = (i, r, v) => { if (r > R[i]) R[i] = r; if (v > V[i]) V[i] = v; };
+  for (const m of marks) {
+    if (m.type === "kumo") applyKumo(m, rare, N, put);
+    else if (m.type === "itajime" && m.x0 != null) applyItajimeRect(m, rare, N, put);   // 舊版作品的方框夾染
+    else if (m.type === "nui") applyNui(m, rare, N, put);
+  }
+  applyItajimeFold(marks, ita, rare, N, put);
+  applyArashiAll(marks, rare, seed, N, put);
+}
+
+/* ---------- 布面上的標記：跟工具一樣的樣子 ---------- */
+const THREADC = "#4d5f94", ROPEC = "#9c7646";
+let NET_PAT = null, ROPE_PAT = null;
+function texPatterns(ctx) {
+  if (!NET_PAT) {
+    const a = document.createElement("canvas"); a.width = a.height = 28; const c = a.getContext("2d");
+    c.strokeStyle = "rgba(90,66,36,0.75)"; c.lineWidth = 1.6;
+    c.beginPath(); c.moveTo(0, 0); c.lineTo(28, 28); c.moveTo(28, 0); c.lineTo(0, 28); c.stroke();
+    NET_PAT = ctx.createPattern(a, "repeat");
+    const b = document.createElement("canvas"); b.width = b.height = 60; const d = b.getContext("2d"), r = mulberry32(3);
+    d.strokeStyle = "rgba(90,66,36,0.55)"; d.lineWidth = 1.8; d.lineCap = "round";
+    for (let i = 0; i < 9; i++) { const x = r() * 60, y = r() * 60; d.beginPath(); d.moveTo(x, y); d.quadraticCurveTo(x + (r() - 0.5) * 30, y + (r() - 0.5) * 30, x + (r() - 0.5) * 40, y + (r() - 0.5) * 40); d.stroke(); }
+    ROPE_PAT = ctx.createPattern(b, "repeat");
+  }
+}
+function drawCore(ctx, core, x, y, s) {
+  if (core === "bean") { const r = mulberry32(5); for (let i = 0; i < 6; i++) { const a = r() * 6.28, d = r() * s * 0.8; ctx.fillStyle = "#8a5a2e"; ctx.beginPath(); ctx.ellipse(x + Math.cos(a) * d, y + Math.sin(a) * d, s * 0.32, s * 0.22, a, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = "#e9d8b8"; ctx.fillRect(x + Math.cos(a) * d - 1, y + Math.sin(a) * d - s * 0.05, 2, s * 0.1); } }
+  else if (core === "marble") drawMarble(ctx, x, y, s * 0.8);
+  else if (core === "coin") { ctx.fillStyle = "#c9a24c"; ctx.beginPath(); ctx.arc(x, y, s * 0.85, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = "#8f6d22"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, s * 0.6, 0, Math.PI * 2); ctx.stroke(); }
+  else if (core === "chop") { ctx.save(); ctx.translate(x, y); ctx.rotate(-0.5); ctx.fillStyle = "#d8bb8a"; ctx.fillRect(-s * 1.6, -s * 0.16, s * 3.2, s * 0.14); ctx.fillRect(-s * 1.6, s * 0.06, s * 3.2, s * 0.14); ctx.restore(); }
+  else if (core === "stone") drawStone(ctx, x, y, s * 0.8);
+  else { ctx.fillStyle = ROPEC; ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI * 2); ctx.fill(); }
+}
+function drawMarks(ctx, marks, opt = {}) {
+  texPatterns(ctx);
+  ctx.save(); ctx.lineCap = "round"; ctx.lineJoin = "round";
+  const list = marks.concat(opt.live ? [opt.live] : []);
+  list.forEach((m, idx) => {
+    const sel = idx === opt.sel;
+    if (m.type === "itajime" && m.u != null) return;
+    if (m.type === "kumo") {
+      if (sel) { ctx.strokeStyle = "rgba(255,255,255,0.95)"; ctx.lineWidth = 12; ctx.beginPath(); ctx.arc(m.x, m.y, m.R, 0, Math.PI * 2); ctx.stroke(); }
+      ctx.strokeStyle = ROPEC; ctx.lineWidth = 5; ctx.setLineDash([16, 8]);
+      ctx.beginPath(); ctx.arc(m.x, m.y, m.R, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+      ctx.lineWidth = 6;
+      for (let b = 1; b <= m.o.bands; b++) { ctx.beginPath(); ctx.arc(m.x, m.y, m.R * (0.4 + b * 0.56 / (m.o.bands + 1)), -0.45, 0.45); ctx.stroke(); }
+      drawCore(ctx, m.o.core || "none", m.x, m.y, Math.max(12, m.R * 0.2));
+    } else if (m.type === "nui") {
+      if (m.pts.length < 1) return;
+      const offs = m.o.stitch === "gather" ? [-14, 0, 14] : [0];
+      const path = o => { ctx.beginPath(); m.pts.forEach((p, i) => { const q = m.pts[Math.min(i + 1, m.pts.length - 1)], r0 = m.pts[Math.max(i - 1, 0)], dx = q[0] - r0[0], dy = q[1] - r0[1], l = Math.hypot(dx, dy) || 1; const x = p[0] - dy / l * o, y = p[1] + dx / l * o; if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); }); };
+      if (sel) { ctx.strokeStyle = "rgba(255,255,255,0.95)"; ctx.lineWidth = 12; for (const o of offs) { path(o); ctx.stroke(); } }
+      ctx.strokeStyle = THREADC; ctx.lineWidth = 3.5;
+      ctx.setLineDash(m.o.stitch === "maki" ? [3, 6] : m.o.stitch === "ori" ? [14, 5, 3, 5] : [12, 8]);
+      for (const o of offs) { path(o); ctx.stroke(); }
+      ctx.setLineDash([]);
+      if (m.o.stitch === "maki") { ctx.lineWidth = 2; for (let i = 0; i < m.pts.length - 1; i++) { const [ax, ay] = m.pts[i]; ctx.beginPath(); ctx.moveTo(ax - 5, ay - 9); ctx.lineTo(ax + 5, ay + 9); ctx.stroke(); } }
+      const e = m.pts[m.pts.length - 1], e0 = m.pts[Math.max(0, m.pts.length - 2)];
+      drawNeedle(ctx, e[0], e[1], Math.atan2(e[1] - e0[1], e[0] - e0[0]), 46);
+    } else if (m.type === "itajime") {   // 舊版方框
+      const x = Math.min(m.x0, m.x1), y = Math.min(m.y0, m.y1), w = Math.abs(m.x1 - m.x0), h = Math.abs(m.y1 - m.y0);
+      ctx.strokeStyle = ROPEC; ctx.lineWidth = 4; ctx.setLineDash([12, 9]); ctx.strokeRect(x, y, w, h); ctx.setLineDash([]);
+    } else if (m.type === "arashi" && m.pole) {
+      const [a, b] = m.pts, ang = Math.atan2(b[1] - a[1], b[0] - a[0]), len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+      ctx.save(); ctx.translate((a[0] + b[0]) / 2, (a[1] + b[1]) / 2); ctx.rotate(ang);
+      if (sel) { ctx.fillStyle = "rgba(255,255,255,0.9)"; ctx.fillRect(-len / 2 - 8, -16, len + 16, 32); }
+      const g = ctx.createLinearGradient(0, -10, 0, 10); g.addColorStop(0, "#dcbb86"); g.addColorStop(1, "#8d6b3a");
+      ctx.fillStyle = g; ctx.beginPath(); ctx.roundRect(-len / 2, -10, len, 20, 10); ctx.fill();
+      ctx.strokeStyle = THREADC; ctx.lineWidth = 2; for (let x = -len / 2 + 10; x < len / 2; x += 16) { ctx.beginPath(); ctx.moveTo(x, -12); ctx.lineTo(x + 10, 12); ctx.stroke(); }
+      ctx.restore();
+    } else if (m.type === "arashi") {
+      const path = () => { ctx.beginPath(); ctx.moveTo(m.pts[0][0], m.pts[0][1]); for (const p of m.pts) ctx.lineTo(p[0], p[1]); if (m.pts.length === 1) ctx.lineTo(m.pts[0][0] + 0.1, m.pts[0][1]); };
+      if (sel) { path(); ctx.strokeStyle = "rgba(255,255,255,0.9)"; ctx.lineWidth = m.w + 12; ctx.stroke(); }
+      path(); ctx.strokeStyle = "rgba(156,118,70,0.16)"; ctx.lineWidth = m.w; ctx.stroke();
+      path(); ctx.strokeStyle = m.o.group === "net" ? NET_PAT : ROPE_PAT; ctx.lineWidth = m.w; ctx.stroke();
+      if (m.o.group === "rope") { const c = m.pts[Math.floor(m.pts.length / 2)]; ctx.strokeStyle = ROPEC; ctx.lineWidth = 5; ctx.beginPath(); ctx.ellipse(c[0], c[1], m.w * 0.45, m.w * 0.12, 0.5, 0, Math.PI * 2); ctx.stroke(); }
+    }
+  });
+  ctx.restore();
+}
+
+/* ---------- 夾染：摺好的布塊 ---------- */
+const PV = { x: 150, y: 140, w: 600 };
+function panelPath(ctx, isTri, ox = 0, oy = 0) {
+  ctx.beginPath();
+  if (isTri) { ctx.moveTo(PV.x + ox, PV.y + oy); ctx.lineTo(PV.x + PV.w + ox, PV.y + oy); ctx.lineTo(PV.x + PV.w + ox, PV.y + PV.w + oy); ctx.closePath(); }
+  else ctx.rect(PV.x + ox, PV.y + oy, PV.w, PV.w);
+}
+function drawBoardShape(ctx, shape, cx, cy, r, sel) {
+  ctx.save();
+  if (sel) { ctx.shadowColor = "rgba(255,255,255,0.95)"; ctx.shadowBlur = 18; }
+  else { ctx.shadowColor = "rgba(0,0,0,0.4)"; ctx.shadowBlur = 10; ctx.shadowOffsetY = 5; }
+  const g = ctx.createLinearGradient(cx - r, cy - r, cx + r, cy + r); g.addColorStop(0, "#dcbb86"); g.addColorStop(1, "#a07a45");
+  ctx.fillStyle = g; ctx.beginPath();
+  if (shape === "square") ctx.rect(cx - r, cy - r, r * 2, r * 2);
+  else if (shape === "tri") { ctx.moveTo(cx - r * 1.16, cy + r * 0.67); ctx.lineTo(cx + r * 1.16, cy + r * 0.67); ctx.lineTo(cx, cy - r * 1.33); ctx.closePath(); }
+  else if (shape === "carved") { for (let i = 0; i <= 60; i++) { const a = i / 60 * Math.PI * 2, rr = r * (0.6 + 0.4 * Math.abs(Math.cos(a * 2.5))); const x = cx + Math.cos(a) * rr, y = cy + Math.sin(a) * rr; if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y); } ctx.closePath(); }
+  else ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.fill(); ctx.restore();
+  ctx.strokeStyle = "#7d5d30"; ctx.lineWidth = 1.5;
+  if (shape === "carved") { ctx.beginPath(); ctx.arc(cx, cy, r * 0.12, 0, Math.PI * 2); ctx.stroke(); for (let i = 0; i < 5; i++) { const a = i / 5 * Math.PI * 2 + 0.6; ctx.beginPath(); ctx.moveTo(cx + Math.cos(a) * r * 0.18, cy + Math.sin(a) * r * 0.18); ctx.lineTo(cx + Math.cos(a) * r * 0.5, cy + Math.sin(a) * r * 0.5); ctx.stroke(); } }
+  else for (let i = -1; i <= 1; i++) { ctx.beginPath(); ctx.moveTo(cx - r * 0.5, cy + i * r * 0.3); ctx.lineTo(cx + r * 0.5, cy + i * r * 0.3); ctx.stroke(); }
+}
+function drawFoldView(live) {
+  clearStage();
+  const ita = state.ita, n = foldN(ita.fold), isTri = ita.fold === "tri", base = state.prev ? outerOf(state.fabric, prevRounds()) : FABRICS[state.fabric].base;
+  for (let l = Math.min(n * n, 7); l >= 1; l--) { panelPath(sctx, isTri, l * 4, l * 6); sctx.fillStyle = css(shade(base, -0.05 - l * 0.03)); sctx.fill(); }
+  sctx.save(); panelPath(sctx, isTri); sctx.clip();
+  sctx.drawImage(flatImage(), 0, 0, S / n, S / n, PV.x, PV.y, PV.w, PV.w);
+  const g = sctx.createLinearGradient(PV.x, PV.y, PV.x + PV.w, PV.y + PV.w); g.addColorStop(0, "rgba(255,255,255,0.12)"); g.addColorStop(1, "rgba(0,0,0,0.12)");
+  sctx.fillStyle = g; sctx.fillRect(PV.x, PV.y, PV.w, PV.w);
+  sctx.restore();
+  // 橡皮筋
+  for (let k = 1; k <= ita.bands; k++) {
+    const y = PV.y + PV.w * k / (ita.bands + 1), x0 = isTri ? PV.x + PV.w * k / (ita.bands + 1) : PV.x;
+    sctx.strokeStyle = "#b98b62"; sctx.lineWidth = 9; sctx.beginPath(); sctx.moveTo(x0 - 18, y - 3); sctx.lineTo(PV.x + PV.w + 18, y + 3); sctx.stroke();
+    sctx.strokeStyle = "rgba(255,255,255,0.35)"; sctx.lineWidth = 2; sctx.beginPath(); sctx.moveTo(x0 - 18, y - 5); sctx.lineTo(PV.x + PV.w + 18, y + 1); sctx.stroke();
+  }
+  state.marks.forEach((m, i) => { if (m.type === "itajime" && m.u != null) drawBoardShape(sctx, m.o.board, PV.x + m.u * PV.w, PV.y + m.v * PV.w, m.r * PV.w, i === state.sel); });
+  if (live) drawBoardShape(sctx, live.o.board, PV.x + live.u * PV.w, PV.y + live.v * PV.w, live.r * PV.w, false);
+}
+function toPanel(x, y) {
+  let u = (x - PV.x) / PV.w, v = (y - PV.y) / PV.w;
+  if (u < -0.05 || u > 1.05 || v < -0.05 || v > 1.05) return null;
+  u = clamp(u); v = clamp(v);
+  if (state.ita.fold === "tri" && u < v) { const t = u; u = v; v = t; }
+  return [u, v];
+}
+// 把布摺起來的動畫
+async function foldAnim(reverse) {
+  const n = foldN(state.ita.fold), img = flatImage(), cw = S / n;
+  state.busy = true;
+  await animate(1300, t0 => {
+    const t = reverse ? 1 - t0 : t0;
+    clearStage();
+    const a = smooth(0, 0.45, t), b = smooth(0.45, 0.8, t), c = smooth(0.8, 1, t);
+    const w = S - (S - cw) * a, h = S - (S - cw) * b;
+    const tx = (PV.x + (S - PV.w) / 2 * 0) * c, fx = (S - w) / 2 * (1 - c) + PV.x * c, fy = (S - h) / 2 * (1 - c) + PV.y * c;
+    const fw = w + (PV.w - w) * c, fh = h + (PV.w - h) * c;
+    sctx.save(); softShadow(sctx, 20, 8);
+    sctx.drawImage(img, 0, 0, S - (S - cw) * a, S - (S - cw) * b, fx, fy, fw, fh); noShadow(sctx);
+    // 摺痕
+    const cols = Math.max(1, Math.round(n * (1 - a)) || 1);
+    sctx.globalAlpha = 0.25 * (a + b) * (1 - c);
+    for (let i = 0; i < n; i++) { sctx.fillStyle = i % 2 ? "#000" : "#fff"; sctx.fillRect(fx + fw * i / n, fy, fw / n, fh); }
+    sctx.globalAlpha = 1; sctx.restore();
+  });
+  state.busy = false;
+}
+// 棒捲：布捲上棍子、纏線、往下推擠
+async function rollAnim(m) {
+  const [a, b] = m.pts, ang = Math.atan2(b[1] - a[1], b[0] - a[0]), len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+  const mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2, img = flatImage();
+  const base = state.prev ? outerOf(state.fabric, prevRounds()) : FABRICS[state.fabric].base;
+  state.busy = true;
+  await animate(1800, t => {
+    const p = smooth(0, 0.5, t), q = smooth(0.5, 1, t), sy = 1 - 0.93 * p;
+    clearStage();
+    // 布慢慢捲向棍子
+    if (p < 1) {
+      sctx.save(); sctx.globalAlpha = 1 - smooth(0.7, 1, p);
+      sctx.translate(mx, my); sctx.rotate(ang); sctx.scale(1, sy); sctx.rotate(-ang); sctx.translate(-mx, -my);
+      sctx.drawImage(img, 0, 0); sctx.restore();
+    }
+    sctx.save(); sctx.translate(mx, my); sctx.rotate(ang);
+    const L0 = Math.max(len, 360), L = L0 * (1 - 0.42 * q), th = 18 + 30 * p;
+    const g = sctx.createLinearGradient(0, -10, 0, 10); g.addColorStop(0, "#dcbb86"); g.addColorStop(1, "#8d6b3a");
+    sctx.fillStyle = g; sctx.beginPath(); sctx.roundRect(-L0 / 2 - 50, -10, L0 + 100, 20, 10); sctx.fill();
+    if (p > 0.5) {
+      // 捲在棍子上的布筒：推擠後變短、皺褶變密
+      const tg = sctx.createLinearGradient(0, -th, 0, th); tg.addColorStop(0, css(shade(base, 0.2))); tg.addColorStop(0.5, css(base)); tg.addColorStop(1, css(shade(base, -0.3)));
+      sctx.globalAlpha = smooth(0.5, 0.8, p);
+      sctx.fillStyle = tg; sctx.beginPath(); sctx.roundRect(-L / 2, -th, L, th * 2, th * 0.6); sctx.fill();
+      sctx.strokeStyle = css(shade(base, -0.35)); sctx.lineWidth = 2;
+      const gap = 14 - 8 * q;
+      for (let x = -L / 2 + 4; x < L / 2 - 2; x += gap) { sctx.beginPath(); sctx.moveTo(x, -th + 3); sctx.quadraticCurveTo(x + 3, 0, x, th - 3); sctx.stroke(); }
+      if (q > 0) { sctx.globalAlpha = q; sctx.strokeStyle = THREADC; sctx.lineWidth = 2; for (let x = -L / 2; x < L / 2; x += 12) { sctx.beginPath(); sctx.moveTo(x, -th - 2); sctx.lineTo(x + 9, th + 2); sctx.stroke(); } }
+      sctx.globalAlpha = 1;
+    }
+    sctx.restore();
+  });
+  await wait(300);
+  state.busy = false;
+}
+// 繩綁／網袋：那一塊布被揉成一團
+async function crumpleAnim(m) {
+  const mask = regionMask([m], 4), img = flatImage();
+  const region = document.createElement("canvas"); region.width = region.height = S;
+  const rc = region.getContext("2d"); rc.drawImage(mask, 0, 0); rc.globalCompositeOperation = "source-in"; rc.drawImage(img, 0, 0);
+  const hole = document.createElement("canvas"); hole.width = hole.height = S;
+  const hc = hole.getContext("2d"); hc.drawImage(img, 0, 0); hc.globalCompositeOperation = "destination-out"; hc.drawImage(mask, 0, 0);
+  let cx = 0, cy = 0; for (const p of m.pts) { cx += p[0]; cy += p[1]; } cx /= m.pts.length; cy /= m.pts.length;
+  state.busy = true;
+  await animate(1100, t => {
+    const k = 1 - 0.7 * ease(Math.min(1, t * 1.6)), back = smooth(0.75, 1, t);
+    clearStage(); sctx.drawImage(hole, 0, 0);
+    drawMarks(sctx, state.marks.filter(x => x !== m), {});
+    sctx.save(); sctx.translate(cx, cy); sctx.rotate((1 - k) * 0.6); sctx.scale(k + (1 - k) * back, k + (1 - k) * back); sctx.translate(-cx, -cy);
+    softShadow(sctx, 16, 6); sctx.drawImage(region, 0, 0); noShadow(sctx);
+    sctx.restore();
+    if (back < 1) {
+      sctx.save(); sctx.globalAlpha = (1 - back) * smooth(0.1, 0.4, t);
+      const rr = Math.sqrt(m.w * m.w + 400) * 0.6 * k;
+      sctx.strokeStyle = m.o.group === "net" ? "rgba(235,228,210,0.9)" : ROPEC; sctx.lineWidth = m.o.group === "net" ? 2 : 6;
+      if (m.o.group === "net") { for (let i = -3; i <= 3; i++) { sctx.beginPath(); sctx.moveTo(cx + i * rr * 0.3 - rr, cy - rr); sctx.lineTo(cx + i * rr * 0.3 + rr, cy + rr); sctx.stroke(); sctx.beginPath(); sctx.moveTo(cx + i * rr * 0.3 + rr, cy - rr); sctx.lineTo(cx + i * rr * 0.3 - rr, cy + rr); sctx.stroke(); } }
+      else { sctx.beginPath(); sctx.ellipse(cx, cy, rr, rr * 0.3, 0.5, 0, Math.PI * 2); sctx.stroke(); sctx.beginPath(); sctx.ellipse(cx, cy, rr * 0.3, rr, 0.5, 0, Math.PI * 2); sctx.stroke(); }
+      sctx.restore();
+    }
+  });
+  state.busy = false;
+}
+
+function drawFabricScene(live) {
+  if (state.step === 2 && state.tool === "itajime") { drawFoldView(live && live.type === "itajime" ? live : null); return; }
+  clearStage();
+  sctx.drawImage(flatImage(), 0, 0);
+  if (state.step === 2) drawMarks(sctx, state.marks, { live, sel: state.sel });
+}
+
+/* ---------- 綁好的樣子（下缸、拆布用） ---------- */
+function drawBundle(ctx, tech, color, opt = {}) { return drawCustomBundle(ctx, color, opt); }
+function drawCustomBundle(ctx, color, opt = {}) {
+  const g = opt.gather ?? 1, ties = opt.ties ?? 1, marks = opt.marks || state.marks;
+  const cx = opt.x ?? S / 2, cy = opt.y ?? S / 2, sc = opt.scale ?? 1, rot = opt.rot ?? 0;
+  const k = 1 - 0.58 * g, half = S / 2 * k;
+  const rnd = mulberry32((state.seed || 1) + 77);
+  const map = (x, y, push = 1) => [(x - S / 2) * k * push, (y - S / 2) * k * push];
+  const fa = smooth(0.15, 0.85, g);
+  const boards = marks.filter(m => m.type === "itajime" && m.u != null), hasFold = boards.length || state.ita.bands;
+  ctx.save(); ctx.translate(cx, cy); ctx.rotate(rot); ctx.scale(sc, sc);
+  const N = 64, e = 2.2 + 14 * Math.pow(1 - g, 2), wob = [];
+  for (let i = 0; i < N; i++) wob.push(1 + (rnd() - 0.5) * 0.22 * g);
+  for (let p = 0; p < 2; p++) for (let i = 0; i < N; i++) wob[i] = (wob[(i + N - 1) % N] + wob[i] * 2 + wob[(i + 1) % N]) / 4;
+  ctx.beginPath();
+  for (let i = 0; i < N; i++) {
+    const a = i / N * Math.PI * 2, ca = Math.cos(a), sa = Math.sin(a);
+    const r = half / Math.pow(Math.pow(Math.abs(ca), e) + Math.pow(Math.abs(sa), e), 1 / e) * wob[i];
+    if (i === 0) ctx.moveTo(ca * r, sa * r); else ctx.lineTo(ca * r, sa * r);
+  }
+  ctx.closePath();
+  softShadow(ctx, 6 + 24 * g, 4 + 10 * g); fillCloth(ctx, color, 0, 0, half); noShadow(ctx);
+  if (g < 0.4) {
+    ctx.save(); ctx.clip(); ctx.globalAlpha = 1 - g / 0.4;
+    ctx.drawImage(flatImage(), -half, -half, half * 2, half * 2);
+    ctx.translate(-half, -half); ctx.scale(k, k); drawMarks(ctx, marks);
+    ctx.restore();
+  }
+  ctx.globalAlpha = fa;
+  const dark = css(shade(color, -0.35)), light = css(shade(color, 0.22));
+  // 夾染：整塊摺好的布疊與夾板
+  if (hasFold) {
+    const s2 = half * 0.95, isTri = state.ita.fold === "tri";
+    softShadow(ctx, 12, 6);
+    for (let l = 4; l >= 0; l--) { ctx.fillStyle = css(shade(color, -0.06 * l)); ctx.beginPath(); if (isTri) { ctx.moveTo(-s2 / 2 + l * 2, -s2 / 2 + l * 3); ctx.lineTo(s2 / 2 + l * 2, -s2 / 2 + l * 3); ctx.lineTo(s2 / 2 + l * 2, s2 / 2 + l * 3); ctx.closePath(); } else ctx.rect(-s2 / 2 + l * 2, -s2 / 2 + l * 3, s2, s2); ctx.fill(); }
+    noShadow(ctx);
+    for (const b of boards) drawBoardShape(ctx, b.o.board, -s2 / 2 + b.u * s2, -s2 / 2 + b.v * s2, b.r * s2, false);
+    if (ties > 0) { ctx.save(); ctx.globalAlpha = fa * ties; for (let i = 1; i <= state.ita.bands; i++) { const yy = -s2 / 2 + s2 * i / (state.ita.bands + 1); ctx.strokeStyle = "#b98b62"; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(-s2 * 0.6, yy); ctx.lineTo(s2 * 0.6, yy + 4); ctx.stroke(); } ctx.restore(); ctx.globalAlpha = fa; }
+  }
+  // 棒捲
+  const pole = marks.filter(m => m.type === "arashi" && m.pole).pop();
+  if (pole) {
+    const [a, b] = pole.pts, ang = Math.atan2(b[1] - a[1], b[0] - a[0]), L = half * 1.7;
+    ctx.save(); ctx.rotate(ang);
+    const gg = ctx.createLinearGradient(0, -12, 0, 12); gg.addColorStop(0, "#dcbb86"); gg.addColorStop(1, "#8d6b3a");
+    ctx.fillStyle = gg; ctx.beginPath(); ctx.roundRect(-L / 2 - 50, -12, L + 100, 24, 12); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(0, 0, L / 2, half * 0.28, 0, 0, Math.PI * 2); fillCloth(ctx, color, 0, 0, L / 2);
+    ctx.strokeStyle = dark; ctx.lineWidth = 2.5; for (let x = -L / 2 + 6; x < L / 2; x += 7) { ctx.beginPath(); ctx.moveTo(x, -half * 0.26); ctx.lineTo(x + 4, half * 0.26); ctx.stroke(); }
+    if (ties > 0) { ctx.globalAlpha = fa * ties; ctx.strokeStyle = "#f0ead8"; ctx.lineWidth = 2; for (let x = -L / 2 + 10; x < L / 2; x += 16) { ctx.beginPath(); ctx.moveTo(x, -half * 0.3); ctx.lineTo(x + 12, half * 0.3); ctx.stroke(); } }
+    ctx.restore(); ctx.globalAlpha = fa;
+  }
+  // 繩綁、網袋
+  for (const m of marks.filter(m => m.type === "arashi" && !m.pole)) {
+    const ptsM = m.pts.map(p => map(p[0], p[1])), rr = m.w * k * 0.9;
+    ctx.strokeStyle = dark; ctx.lineWidth = 4; ctx.lineCap = "round";
+    for (let i = 0; i < ptsM.length; i += 2) {
+      const [x, y] = ptsM[i];
+      for (let j = 0; j < 5; j++) { const x0 = x + (rnd() - 0.5) * rr * 1.4, y0 = y + (rnd() - 0.5) * rr * 1.4; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.quadraticCurveTo(x0 + (rnd() - 0.5) * rr, y0 + (rnd() - 0.5) * rr, x0 + (rnd() - 0.5) * rr * 1.2, y0 + (rnd() - 0.5) * rr * 1.2); ctx.stroke(); }
+    }
+    if (ties > 0) {
+      const xs = ptsM.map(p => p[0]), ys = ptsM.map(p => p[1]);
+      const bx0 = Math.min(...xs) - rr / 2, bx1 = Math.max(...xs) + rr / 2, by0 = Math.min(...ys) - rr / 2, by1 = Math.max(...ys) + rr / 2;
+      ctx.save(); ctx.globalAlpha = fa * ties;
+      if (m.o.group === "net") { ctx.strokeStyle = "rgba(240,234,216,0.85)"; ctx.lineWidth = 1.6; for (let x = bx0; x <= bx1; x += 12) { ctx.beginPath(); ctx.moveTo(x, by0); ctx.lineTo(x + (by1 - by0) * 0.3, by1); ctx.stroke(); } for (let x = bx0; x <= bx1 + (by1 - by0) * 0.3; x += 12) { ctx.beginPath(); ctx.moveTo(x, by0); ctx.lineTo(x - (by1 - by0) * 0.3, by1); ctx.stroke(); } }
+      else { ctx.strokeStyle = THREAD; ctx.lineWidth = 6; const mx = (bx0 + bx1) / 2, my = (by0 + by1) / 2; ctx.beginPath(); ctx.ellipse(mx, my, (bx1 - bx0) / 2, Math.max(10, (by1 - by0) / 6), 0.4, 0, Math.PI * 2); ctx.stroke(); ctx.beginPath(); ctx.ellipse(mx, my, Math.max(10, (bx1 - bx0) / 6), (by1 - by0) / 2, 0.4, 0, Math.PI * 2); ctx.stroke(); }
+      ctx.restore(); ctx.globalAlpha = fa;
+    }
+  }
+  // 縫紮
+  for (const m of marks.filter(m => m.type === "nui")) {
+    const pts = m.pts.map(p => map(p[0], p[1])), st = m.o.stitch;
+    const path = () => { ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]); for (const p of pts) ctx.lineTo(p[0], p[1]); };
+    ctx.lineCap = ctx.lineJoin = "round";
+    path(); ctx.strokeStyle = dark; ctx.lineWidth = st === "gather" ? 40 : 24; ctx.stroke();
+    path(); ctx.strokeStyle = light; ctx.lineWidth = st === "gather" ? 16 : 9; ctx.stroke();
+    ctx.strokeStyle = dark; ctx.lineWidth = 2.5;
+    for (let s2 = 0; s2 < pts.length - 1; s2++) {
+      const [ax, ay] = pts[s2], [bx, by] = pts[s2 + 1], len = Math.hypot(bx - ax, by - ay) || 1, nx = -(by - ay) / len, ny = (bx - ax) / len, hw = st === "gather" ? 20 : 12;
+      for (let d = 0; d < len; d += 7) { const x = ax + (bx - ax) * d / len, y = ay + (by - ay) * d / len; ctx.beginPath(); ctx.moveTo(x - nx * hw, y - ny * hw); ctx.lineTo(x + nx * hw, y + ny * hw); ctx.stroke(); }
+    }
+    if (ties > 0) { ctx.save(); ctx.globalAlpha = fa * ties; ctx.strokeStyle = "#f0ead8"; ctx.lineWidth = 3; ctx.setLineDash([8, 6]); path(); ctx.stroke(); ctx.restore(); ctx.globalAlpha = fa; }
+  }
+  // 捆紮：依內包物改變布球的形狀
+  for (const m of marks.filter(m => m.type === "kumo")) {
+    const [x, y] = map(m.x, m.y, 1.12), a = Math.atan2(y, x) + (x === 0 && y === 0 ? -Math.PI / 2 : 0);
+    const kr = m.R * 0.8 * (0.35 + 0.65 * fa), core = m.o.core || "none";
+    ctx.save(); ctx.translate(x, y); ctx.rotate(a + Math.PI / 2);
+    softShadow(ctx, 10, 4);
+    ctx.beginPath();
+    if (core === "marble") { ctx.ellipse(0, -kr * 0.6, kr * 0.5, kr * 0.62, 0, 0, Math.PI * 2); ctx.rect(-kr * 0.22, -kr * 0.2, kr * 0.44, kr * 0.35); }
+    else if (core === "coin") { ctx.ellipse(0, -kr * 0.62, kr * 0.72, kr * 0.4, 0, 0, Math.PI * 2); ctx.rect(-kr * 0.22, -kr * 0.3, kr * 0.44, kr * 0.4); }
+    else if (core === "chop") { ctx.ellipse(0, -kr * 0.8, kr * 0.3, kr * 1.05, 0, 0, Math.PI * 2); }
+    else blobPath(ctx, 0, -kr * 0.55, kr * 0.62, kr, rnd, core === "bean" ? 13 : core === "stone" ? 9 : 7, core === "bean" ? 0.42 : core === "stone" ? 0.35 : 0.2);
+    fillCloth(ctx, color, 0, -kr * 0.55, kr); noShadow(ctx);
+    if (core === "marble") { ctx.fillStyle = "rgba(255,255,255,0.45)"; ctx.beginPath(); ctx.ellipse(-kr * 0.18, -kr * 0.82, kr * 0.12, kr * 0.08, -0.5, 0, Math.PI * 2); ctx.fill(); }
+    if (ties > 0) {
+      ctx.globalAlpha = fa * ties; ctx.strokeStyle = THREAD; ctx.lineWidth = Math.max(3, kr * 0.08); ctx.lineCap = "round";
+      const nb = m.o.bands;
+      for (let b = 0; b < nb; b++) { const yy = -kr * 0.05 - b * kr * 0.62 / nb; ctx.beginPath(); ctx.ellipse(0, yy, kr * 0.42 - b * 2, kr * 0.11, 0, 0, Math.PI); ctx.stroke(); }
+    }
+    ctx.restore(); ctx.globalAlpha = fa;
+  }
+  ctx.restore();
+}
+
+/* ---------- 點擊判斷與紅筆 ---------- */
+function hitMark(x, y) {
+  for (let i = state.marks.length - 1; i >= 0; i--) {
+    const m = state.marks[i];
+    if (m.type === "kumo" && Math.hypot(x - m.x, y - m.y) < Math.max(24, m.R * 0.45)) return i;
+    if (m.type === "nui" || (m.type === "arashi")) {
+      const tol = m.type === "nui" ? 16 : m.pole ? 18 : m.w / 2;
+      for (let s = 0; s < m.pts.length; s++) { const a = m.pts[s], b = m.pts[Math.min(s + 1, m.pts.length - 1)], ex = b[0] - a[0], ey = b[1] - a[1], l2 = ex * ex + ey * ey || 1, t = clamp(((x - a[0]) * ex + (y - a[1]) * ey) / l2); if (Math.hypot(a[0] + ex * t - x, a[1] + ey * t - y) < tol) return i; }
+    }
+  }
+  return -1;
+}
+function hitBoard(u, v) {
+  for (let i = state.marks.length - 1; i >= 0; i--) { const m = state.marks[i]; if (m.type === "itajime" && m.u != null && Math.hypot(u - m.u, v - m.v) < Math.max(0.05, m.r)) return i; }
+  return -1;
+}
+const newMarkSeed = () => (Math.random() * 2 ** 31) >>> 0;
+const copyOpts = t => Object.assign({}, state.opts[t]);
+let live = null, penId = null;
+function toCanvas(e) { const r = stage.getBoundingClientRect(), cs = getComputedStyle(stage); return [clamp((e.clientX - r.left) / r.width) * S, clamp((e.clientY - r.top) / r.height) * S]; }
+const penSize = () => +document.getElementById("penSize").value;
+stage.addEventListener("pointerdown", e => {
+  if (state.step !== 2 || state.busy || state.viewing || state.cardMode) return;
+  e.preventDefault(); stage.setPointerCapture(e.pointerId); penId = e.pointerId;
+  const [x, y] = toCanvas(e);
+  if (state.tool === "itajime") {
+    const uv = toPanel(x, y); if (!uv) { penId = null; return; }
+    const hit = hitBoard(uv[0], uv[1]);
+    if (hit >= 0) { state.sel = hit; live = null; renderSettings(); updateBind(); return; }
+    state.sel = -1; live = { type: "itajime", u: uv[0], v: uv[1], r: 0.05, o: { board: state.opts.itajime.board }, s: newMarkSeed() };
+    drawFabricScene(live); return;
+  }
+  const hit = hitMark(x, y);
+  if (hit >= 0) {
+    const m = state.marks[hit];
+    if (state.tool === "kumo" && m.type === "kumo" && state.sel !== hit && state.opts.kumo.core !== "none" && m.o.core !== state.opts.kumo.core) {
+      m.o.core = state.opts.kumo.core; toast(`把${CORE_NAME[m.o.core]}包進這個角`);
+    }
+    state.sel = hit; state.tool = m.type;
+    const el = document.getElementById("tool-" + m.type); if (el) el.checked = true;
+    live = null; renderSettings(); updateBind(); return;
+  }
+  state.sel = -1;
+  const o = copyOpts(state.tool), s = newMarkSeed();
+  if (state.tool === "kumo") live = { type: "kumo", x, y, R: penSize(), o, s };
+  else if (state.tool === "nui") live = { type: "nui", pts: [[x, y]], o, s };
+  else if (o.group === "pole") live = { type: "arashi", pole: true, pts: [[x, y], [x, y]], o, s };
+  else live = { type: "arashi", w: penSize() * 1.1, pts: [[x, y]], o, s };
+  drawFabricScene(live);
+});
+stage.addEventListener("click", e => {
+  if (state.step !== 3 || state.busy || state.viewing || state.cardMode) return;
+  const [x, y] = toCanvas(e), k = vatAt(x, y);
+  if (k && k !== state.dye) { const el = document.getElementById("dye-" + k); if (el) { el.checked = true; el.dispatchEvent(new Event("change", { bubbles: true })); } }
+});
+stage.addEventListener("pointermove", e => {
+  if (!live || e.pointerId !== penId) return;
+  const [x, y] = toCanvas(e);
+  if (live.type === "itajime") { const r = Math.hypot((x - PV.x) / PV.w - live.u, (y - PV.y) / PV.w - live.v); live.r = clamp(r, 0.05, 0.48); }
+  else if (live.type === "kumo") { live.x = x; live.y = y; }
+  else if (live.pole) live.pts[1] = [x, y];
+  else { const l = live.pts[live.pts.length - 1]; if (Math.hypot(x - l[0], y - l[1]) > 7) live.pts.push([x, y]); }
+  drawFabricScene(live);
+});
+async function endPen(e) {
+  if (!live || (e && e.pointerId !== penId)) { penId = null; return; }
+  const m = live; live = null; penId = null;
+  let ok = true;
+  if (m.type === "itajime") ok = m.r >= 0.06;
+  if (m.type === "nui") ok = m.pts.length >= 2;
+  if (m.pole) ok = Math.hypot(m.pts[1][0] - m.pts[0][0], m.pts[1][1] - m.pts[0][1]) > 80;
+  if (ok) {
+    roundMark(m);
+    if (m.pole) state.marks = state.marks.filter(x => !(x.type === "arashi" && x.pole));
+    state.marks.push(m); state.sel = -1;
+    if (m.pole) await rollAnim(m);
+    else if (m.type === "arashi") await crumpleAnim(m);
+  }
+  else if (m.type === "itajime") toast("從中心往外拉大一點");
+  else if (m.type === "nui") toast("拖曳畫出一條線");
+  else if (m.pole) toast("拉長一點，代表棍子的方向");
+  renderSettings(); updateBind();
+}
+function roundMark(m) {
+  const r = v => Math.round(v);
+  if (m.pts) m.pts = m.pts.map(p => [r(p[0]), r(p[1])]);
+  for (const k of ["x", "y", "R", "w"]) if (k in m) m[k] = r(m[k]);
+  for (const k of ["u", "v", "r"]) if (k in m) m[k] = Math.round(m[k] * 1000) / 1000;
+}
+stage.addEventListener("pointerup", endPen);
+stage.addEventListener("pointercancel", endPen);
+
+async function selectTool(t) {
+  if (state.busy) { const el = document.getElementById("tool-" + state.tool); if (el) el.checked = true; return; }
+  const from = state.tool;
+  state.tool = t; state.sel = -1;
+  const el = document.getElementById("tool-" + t); if (el) el.checked = true;
+  renderSettings();
+  if (state.step === 2 && t === "itajime" && from !== "itajime") { say("把布摺起來……"); await foldAnim(false); }
+  else if (state.step === 2 && from === "itajime" && t !== "itajime") { say("把布攤開……"); await foldAnim(true); }
+  updateBind();
+}
+
+
+/* ---------- 文字說明 ---------- */
+const caption = document.getElementById("caption");
+const say = t => { caption.textContent = t; };
+const VAT_GREEN = [150, 164, 56];
+
+/* ---------- 步驟控制 ---------- */
+function updateRail() {
+  const card = state.cardMode, view = !!state.viewing && !card;
+  document.getElementById("steps").hidden = card || view;
+  for (let i = 1; i <= 4; i++) document.getElementById("step" + i).hidden = card || view || i !== state.step;
+  document.getElementById("viewPanel").hidden = !view;
+  document.getElementById("cardForm").hidden = !card;
+}
+const src = () => state.viewing || state.work;
+const canGo = n => !state.busy && !state.revealed && (state.dips.length === 0 || n >= 3) && !(state.prev && n === 1);
+function show(step) {
+  state.step = step;
+  updateRail();
+  document.querySelectorAll("#steps button").forEach(b => {
+    const n = +b.dataset.go, ok = n < step && canGo(n);
+    b.classList.toggle("current", n === step); b.classList.toggle("done", ok); b.disabled = !ok;
+    if (n === step) b.setAttribute("aria-current", "step"); else b.removeAttribute("aria-current");
+  });
+  stageBox.classList.toggle("drawing", step === 2);
+  stageBox.classList.toggle("vats", step === 3);
+  stageBox.classList.toggle("pick1", step === 1);   // 手機版選布時縮小預覽（CSS 只在窄螢幕生效）
+  updateCursor();
+  if (step === 1) { drawFabricScene(); say(""); }
+  if (step === 2) { renderSettings(); updateBind(); }
+  if (step === 3) { drawDyeScene(outerColor(state.dips), 330, 0); updateMeter(); drawRaw(); say(state.dips.length ? "" : (state.dye === "indigo" ? DYES.indigo.desc.replace(/。$/, "") : "染缸準備好了。")); }
+  if (step === 4) { clearStage(); if (state.work) sctx.drawImage(state.work.cloth, 0, 0); else drawCustomBundle(sctx, outerColor(state.dips)); }
+}
+
+/* ---------- 綁布：細部設定 ---------- */
+function updateBind() {
+  const n = state.marks.length, foldBoards = state.marks.filter(m => m.type === "itajime" && m.u != null).length;
+  document.getElementById("undoBtn").disabled = !n;
+  document.getElementById("clearBtn").disabled = !n && !state.ita.bands;
+  document.getElementById("delBtn").disabled = state.sel < 0;
+  document.getElementById("to3").disabled = !n && !state.ita.bands && !state.prev;
+  const o = curOpts(), t = state.tool;
+  const key = t === "kumo" ? "core_" + (o.core || "none") : t === "itajime" ? o.board : t === "nui" ? o.stitch : o.style;
+  const how = t === "arashi" && o.group === "pole" ? "在布上拉一條線，代表棍子的方向。" : t === "itajime" ? "布已經摺好了：從中心往外拉出夾板。" : TECHS[t].tool;
+  document.getElementById("bindTip").textContent = (state.sel >= 0 ? "已選取：調整上面的設定，或刪除。" : how) + (OPT_TIPS[key] || "");
+  document.getElementById("back1").hidden = !!state.prev;
+  const rn = document.getElementById("redyeNote");
+  rn.hidden = !state.prev;
+  if (state.prev) rn.textContent = `第 ${state.prev.rounds.length + 1} 回：可以再加綁點，什麼都不綁就是整塊再浸。`;
+  if (!state.busy) drawFabricScene();
+  const knobs = state.marks.filter(m => m.type === "kumo").length;
+  if (t === "itajime") say(`${FOLD_NAME[state.ita.fold]}，夾了 ${foldBoards} 片${state.ita.bands ? `，纏 ${state.ita.bands} 條橡皮筋` : ""}`);
+  else say(n ? `已綁 ${n} 處${knobs ? `，揪起 ${knobs} 個角` : ""}` : (state.prev ? "在染好的布上再綁一次" : "在布上標出要綁的地方"));
+}
+
+/* ---------- 浸染 ---------- */
+const maxDipsNow = () => MAX_DIPS - prevDips();
+function updateMeter() {
+  const n = state.dips.length, pd = prevDips(), mx = maxDipsNow();
+  document.getElementById("dipCount").textContent = state.prev ? `本回 ${n} 次（累計 ${pd + n} / ${MAX_DIPS}）` : `${n} / ${MAX_DIPS} 次`;
+  renderStrips();
+  document.getElementById("to4").disabled = n === 0 || state.busy;
+  document.getElementById("dipBtn").disabled = n >= mx || state.busy;
+  document.querySelectorAll('input[name="dye"], input[name="strength"]').forEach(i => { i.disabled = state.busy; });
+  const used = new Set(prevRounds().flatMap(r => r.dips.map(d => d.dye)).concat(state.dips.map(d => d.dye)));
+  const tip = document.getElementById("dipTip");
+  if (n >= mx) tip.textContent = "已經染到最深了，拆開看看吧。";
+  else if ((n > 0 || state.prev) && !used.has(state.dye)) tip.textContent = "換缸套染：新的顏色會疊在原本的顏色上。";
+  else if (used.size > 1) tip.textContent = "套染中。古書記載，黃色染料和藍靛套染可以染出綠色。";
+  else tip.textContent = DYES[state.dye].desc;
+}
+
+async function dip() {
+  if (state.busy || state.dips.length >= maxDipsNow()) return;
+  state.busy = true; updateMeter();
+  const before = outerColor(state.dips);
+  const next = state.dips.concat([{ dye: state.dye, strength: state.strength }]);
+  const after = outerColor(next);
+  const v = vatOf(), top = 330, bottom = v.y + 150 * v.s;
+  say("慢慢沉進染缸……");
+  await animate(700, t => drawDyeScene(before, top + (bottom - top) * ease(t), t > 0.75 ? (t - 0.75) * 4 : 0));
+  await animate(500, t => drawDyeScene(before, bottom, 1 - t * 0.5));
+  state.dips = next;
+  const oxid = DYES[state.dye].oxidize;
+  const wet = oxid ? mix(after, VAT_GREEN, 0.72) : shade(after, -0.12);
+  say(oxid ? "出缸了。布是黃綠色的！" : "出缸了。");
+  const drops = [], dropColor = css(DYES[state.dye].liquid);
+  const step = (t, color, by) => {
+    if (!REDUCED && Math.random() < 0.25) drops.push({ x: v.x - 50 + Math.random() * 100, y: by + 70, v: 0, c: dropColor });
+    for (const d of drops) { d.v += 0.9; d.y += d.v; }
+    for (let i = drops.length - 1; i >= 0; i--) if (drops[i].y > v.y) drops.splice(i, 1);
+    drawDyeScene(color, by, 0.5 * (1 - t), drops);
+  };
+  await animate(650, t => step(t, wet, bottom - (bottom - top) * easeOut(t)));
+  if (oxid) { say("接觸空氣，慢慢轉藍……"); await animate(1700, t => step(1, mix(wet, after, ease(t)), top)); }
+  drawDyeScene(after, top, 0);
+  state.busy = false; updateMeter(); show(3);
+  say(state.dips.length >= maxDipsNow() ? "染到最深了。" : `第 ${state.dips.length} 次浸染完成`);
+}
+
+/* ---------- 揭曉 ---------- */
+const pad = n => String(n).padStart(4, "0");
+function pickName() {
+  if (state.prev) return state.prev.name;
+  const key = nameKey(state.marks);
+  if (state.rare) return RARE_NAMES[key];
+  const list = NAMES[key];
+  return list[Math.floor(mulberry32(state.seed + 3)() * list.length)];
+}
+async function reveal() {
+  if (state.busy) return;
+  state.busy = true;
+  say("解開繩結……");
+  await wait(30);
+  const rounds = prevRounds().concat([{ marks: state.marks, dips: state.dips, ita: Object.assign({}, state.ita) }]);
+  const recipe = { fabric: state.fabric, seed: state.seed, rare: state.rare, rounds };
+  const cloth = renderCloth(recipe);
+  const outer = outerColor(state.dips);
+  await animate(700, t => { clearStage(); drawCustomBundle(sctx, outer, { rot: Math.sin(t * 28) * 0.04 * (1 - t), ties: 1 - t }); });
+  const drawUnfold = (wk, hk) => {
+    clearStage();
+    const w = S * wk, h = S * hk, x = (S - w) / 2, y = (S - h) / 2;
+    sctx.save(); softShadow(sctx, 30, 10); sctx.fillStyle = css(FABRICS[state.fabric].base); sctx.fillRect(x, y, w, h); noShadow(sctx);
+    sctx.beginPath(); sctx.rect(x, y, w, h); sctx.clip();
+    sctx.drawImage(cloth, 0, 0);
+    const edge = (x0, x1, y0, y1) => { const g = sctx.createLinearGradient(x0, y0, x1, y1); g.addColorStop(0, "rgba(8,12,30,0.32)"); g.addColorStop(1, "rgba(8,12,30,0)"); return g; };
+    if (wk < 1) { sctx.fillStyle = edge(x, x + 60, 0, 0); sctx.fillRect(x, y, 60, h); sctx.fillStyle = edge(x + w, x + w - 60, 0, 0); sctx.fillRect(x + w - 60, y, 60, h); }
+    if (hk < 1) { sctx.fillStyle = edge(0, 0, y, y + 60); sctx.fillRect(x, y, w, 60); sctx.fillStyle = edge(0, 0, y + h, y + h - 60); sctx.fillRect(x, y + h - 60, w, 60); }
+    sctx.restore();
+  };
+  say("攤開來……");
+  await animate(500, t => { clearStage(); drawCustomBundle(sctx, outer, { ties: 0, scale: 1 - 0.55 * easeOut(t) }); sctx.globalAlpha = easeOut(t); drawUnfold(0.25, 0.25); sctx.globalAlpha = 1; });
+  await animate(900, t => drawUnfold(0.25 + 0.75 * ease(t), 0.25));
+  await animate(900, t => drawUnfold(1, 0.25 + 0.75 * ease(t)));
+  await animate(1000, t => {
+    clearStage(); sctx.drawImage(cloth, 0, 0);
+    const p = -S * 0.6 + t * S * 2.2;
+    const g = sctx.createLinearGradient(p - 220, p - 220, p + 220, p + 220);
+    g.addColorStop(0, "rgba(255,255,255,0)"); g.addColorStop(0.5, "rgba(255,255,255,0.38)"); g.addColorStop(1, "rgba(255,255,255,0)");
+    sctx.globalCompositeOperation = "screen"; sctx.fillStyle = g; sctx.fillRect(0, 0, S, S); sctx.globalCompositeOperation = "source-over";
+  });
+  clearStage(); sctx.drawImage(cloth, 0, 0);
+  state.revealed = true; state.busy = false;
+  const id = state.prev ? state.prev.id : state.seed + "-" + Date.now();
+  state.work = { id, cloth, name: pickName(), seed: state.seed, rare: state.rare, date: cardDate(), recipe,
+    labels: { fabric: FABRICS[state.fabric].name, tech: techLabel(rounds), dye: rounds.map(r => dyeLabel(r.dips)).join(" → "), round: rounds.length } };
+  showResult();
+  const res = addToRack(state.work, !!state.prev);
+  if (res === "replaced") toast("晾布架上的布已經更新");
+  else if (res === "added") toast("已經掛上晾布架");
+}
+function canRedye(w) { return !!(w && w.recipe) && w.recipe.rounds.length < MAX_ROUNDS && w.recipe.rounds.reduce((n, r) => n + r.dips.length, 0) < MAX_DIPS; }
+function fillInfo(w, ids) {
+  const nameEl = document.getElementById(ids.name);
+  nameEl.innerHTML = "";
+  [...("《" + w.name + "》")].forEach((ch, i) => { const sp = document.createElement("span"); sp.className = "ch"; sp.textContent = ch; sp.style.animationDelay = (i * 0.12) + "s"; nameEl.appendChild(sp); });
+  document.getElementById(ids.rare).hidden = !w.rare;
+  document.getElementById(ids.serial).textContent = `No. ${pad(w.seed % 10000)}　${w.date}`;
+  document.getElementById(ids.facts).innerHTML = `<li>布料 <b>${w.labels.fabric}</b></li><li>綁法 <b>${w.labels.tech}</b></li><li>浸染 <b>${w.labels.dye}</b></li>` + (w.labels.round > 1 ? `<li>染了 <b>${w.labels.round} 回</b></li>` : "");
+}
+function showResult() {
+  document.getElementById("beforeReveal").hidden = true;
+  document.getElementById("afterReveal").hidden = false;
+  fillInfo(state.work, { name: "resultName", rare: "rareBadge", serial: "serial", facts: "facts" });
+  document.getElementById("redyeBtn").hidden = !canRedye(state.work);
+  say(state.rare && !state.prev ? "出現了罕見的紋樣！" : "");
+  document.querySelectorAll("#steps button").forEach(b => { b.disabled = true; b.classList.remove("done"); });
+}
+
+let cardSrcId = null;
+function setCardMode(on) {
+  state.cardMode = on;
+  document.getElementById("cardImg").hidden = !on;
+  stage.style.visibility = on ? "hidden" : "visible";
+  updateRail();
+  say("");
+  if (on) {
+    const w = src();
+    if (cardSrcId !== w.id + w.labels.round) { fTitle.value = w.name; cardSrcId = w.id + w.labels.round; }
+    updateShare(); refreshCard();
+  }
+}
+
+/* ---------- 晾布架 ---------- */
+const RACK_KEY = "jinglan-rack-v1", RACK_MAX = 6;
+function loadRack() {
+  try { const v = JSON.parse(localStorage.getItem(RACK_KEY) || "[]"); return Array.isArray(v) ? v.filter(x => x && x.img && x.labels).slice(-RACK_MAX) : []; }
+  catch (e) { return []; }
+}
+let rack = loadRack();
+function saveRack() {
+  for (let n = rack.length; n >= 0; n--) {
+    try { localStorage.setItem(RACK_KEY, JSON.stringify(rack.slice(rack.length - n))); return true; } catch (e) { /* 空間不夠，少存一點 */ }
+  }
+  return false;
+}
+let pendingHang = null;   // 晾布架滿了時，等使用者選一塊收下來
+function addToRack(w, replace) {
+  const c = document.createElement("canvas"); c.width = c.height = 720;
+  c.getContext("2d").drawImage(w.cloth, 0, 0, 720, 720);
+  const item = { id: w.id, img: c.toDataURL("image/jpeg", 0.86), name: w.name, seed: w.seed, rare: w.rare, date: w.date, labels: w.labels, recipe: w.recipe };
+  const at = rack.findIndex(x => x.id === w.id);
+  if (replace && at >= 0) { rack[at] = item; saveRack(); renderRack(w.id); return "replaced"; }
+  if (rack.length < RACK_MAX) { rack.push(item); saveRack(); renderRack(w.id); return "added"; }
+  pendingHang = item; renderRack();
+  setTimeout(() => document.querySelector(".rack-sec").scrollIntoView({ behavior: REDUCED ? "auto" : "smooth", block: "center" }), 300);
+  return "choose";
+}
+function hangInstead(id) {
+  const i = rack.findIndex(x => x.id === id); if (i < 0 || !pendingHang) return;
+  const el = document.querySelector(`#slots .cloth[data-id="${CSS.escape(id)}"]`);
+  if (el) el.classList.add("drop");
+  const item = pendingHang, oldName = rack[i].name; pendingHang = null;
+  setTimeout(() => { rack.splice(i, 1); rack.push(item); saveRack(); renderRack(item.id); toast(`收下《${oldName}》，掛上《${item.name}》`); }, REDUCED ? 0 : 460);
+}
+function skipHang() { if (!pendingHang) return; pendingHang = null; renderRack(); toast("這塊先不掛，還是可以分享"); }
+function renderRack(newId) {
+  const el = document.getElementById("slots");
+  document.querySelector(".rack-sec").classList.toggle("choosing", !!pendingHang);
+  document.getElementById("rackChoose").hidden = !pendingHang;
+  const cur = state.viewing ? state.viewing.id : (state.work ? state.work.id : null);
+  let html = "";
+  for (let i = 0; i < RACK_MAX; i++) {
+    const it = rack[i];
+    if (!it) { html += `<div class="cloth empty" aria-hidden="true"><span class="ph"></span><span class="nm">&nbsp;</span></div>`; continue; }
+    html += `<button type="button" class="cloth${it.id === newId && !REDUCED ? " new" : ""}${it.id === cur ? " current" : ""}" data-id="${it.id}" aria-label="${pendingHang ? "收下" : "看"}《${it.name}》">
+      <img src="${it.img}" alt=""><span class="nm">《${it.name}》${it.labels.round > 1 ? ` · ${it.labels.round} 回` : ""}</span></button>`;
+  }
+  el.innerHTML = html;
+  document.getElementById("rackCount").textContent = `${rack.length} / ${RACK_MAX}`;
+}
+function openView(id) {
+  if (state.busy) return;
+  const it = rack.find(x => x.id === id); if (!it) return;
+  const img = new Image();
+  img.onload = () => {
+    const c = document.createElement("canvas"); c.width = c.height = S; c.getContext("2d").drawImage(img, 0, 0, S, S);
+    state.viewing = Object.assign({}, it, { cloth: c, labels: Object.assign({ round: 1 }, it.labels) });
+    if (state.cardMode) setCardMode(false);
+    clearStage(); sctx.drawImage(c, 0, 0);
+    stageBox.classList.remove("drawing");
+    fillInfo(state.viewing, { name: "vName", rare: "vRare", serial: "vSerial", facts: "vFacts" });
+    const ok = canRedye(it);
+    document.getElementById("vRedye").hidden = !ok;
+    document.getElementById("vNote").textContent = !it.recipe ? "這塊是舊版作品，沒有保存染製配方，所以不能再染。" : ok ? "還沒染到最深，可以再染一回。" : "這塊布已經染到最深或已染滿三回。";
+    updateRail(); renderRack(); say("晾布架上的作品");
+    window.scrollTo({ top: 0, behavior: REDUCED ? "auto" : "smooth" });
+  };
+  img.src = it.img;
+}
+function closeView() {
+  state.viewing = null;
+  if (state.cardMode) setCardMode(false);
+  updateRail(); renderRack(); show(state.step);
+  if (state.step === 4 && state.revealed) say("");
+}
+// 再染一回：把配方載回來，在染好的布上繼續
+function startRedye(it) {
+  if (state.busy || !canRedye(it)) return;
+  pendingHang = null;
+  const r = it.recipe;
+  setCardMode(false);
+  Object.assign(state, { fabric: r.fabric, seed: r.seed, rare: r.rare, marks: [], dips: [], sel: -1, work: null, viewing: null, revealed: false, ita: { fold: "sq3", bands: 0 }, tool: "kumo" });
+  { const te = document.getElementById("tool-kumo"); if (te) te.checked = true; }
+  state.prev = { id: it.id, name: it.name, rounds: r.rounds, baseImg: renderCloth(r) };
+  document.getElementById("beforeReveal").hidden = false;
+  document.getElementById("afterReveal").hidden = true;
+  fTitle.value = ""; cardSrcId = null;
+  const fe = document.getElementById("fabric-" + r.fabric); if (fe) fe.checked = true;
+  renderRack(); renderSettings(); show(2);
+  window.scrollTo({ top: 0, behavior: REDUCED ? "auto" : "smooth" });
+}
+
+function resetAll() {
+  if (state.busy) return;
+  pendingHang = null;
+  setCardMode(false);
+  Object.assign(state, { dips: [], marks: [], sel: -1, seed: newSeed(), work: null, viewing: null, revealed: false, prev: null, ita: { fold: "sq3", bands: 0 }, tool: "kumo" });
+  { const te = document.getElementById("tool-kumo"); if (te) te.checked = true; }
+  state.rare = mulberry32(state.seed + 1)() < 0.12;
+  fTitle.value = ""; cardSrcId = null; renderRack();
+  document.getElementById("beforeReveal").hidden = false;
+  document.getElementById("afterReveal").hidden = true;
+  show(1);
+  window.scrollTo({ top: 0, behavior: REDUCED ? "auto" : "smooth" });
+}
+function newSeed() { return (Math.floor(Math.random() * 2 ** 31) ^ Date.now()) >>> 0; }
+
+/* ---------- 小卡 ---------- */
+const CARD = { bg: "#eef0eb", ink: "#1a2340", muted: "#5d6579", line: "#c9cec4", accent: "#24396f" };
+const F_DISPLAY = '"LXGW WenKai TC", "Kaiti TC", "BiauKai", serif';
+const F_BODY = '"Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif';
+const F_DATA = '"IBM Plex Mono", ui-monospace, monospace';
+// 品牌 Logo 預留位置（目前留白）。之後要放 Logo，可在 drawCard 中於 LOGO_SLOT 範圍內繪製。
+const LOGO_SLOT = { portrait: [880, 1250, 128, 64], square: [880, 64, 136, 64], story: [880, 1800, 128, 64] };
+
+function wrapText(ctx, text, maxW) {
+  const lines = []; let line = "";
+  for (const ch of text) {
+    if (ctx.measureText(line + ch).width > maxW && line) { lines.push(line); line = ch; } else line += ch;
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+function drawCover(ctx, img, x, y, w, h) {
+  const r = Math.max(w / img.width, h / img.height), sw = w / r, sh = h / r;
+  ctx.drawImage(img, (img.width - sw) / 2, (img.height - sh) / 2, sw, sh, x, y, w, h);
+}
+async function ensureFonts(text) {
+  if (!document.fonts || !document.fonts.load) return;
+  try {
+    await Promise.race([
+      Promise.all([document.fonts.load(`700 64px "LXGW WenKai TC"`, text), document.fonts.load(`400 32px "Noto Sans TC"`, text), document.fonts.load(`400 22px "IBM Plex Mono"`, "0123456789No.")]),
+      new Promise(r => setTimeout(r, 2500))
+    ]);
+  } catch (e) { /* 字型載入失敗就用備用字型 */ }
+}
+
+function cardDate() { const d = new Date(); return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`; }
+function cardRecipe() { const l = src().labels; return `${l.fabric} · ${l.tech} · ${l.dye}`; }
+function drawCard(layout, title, msg, sign) {
+  const L = LAYOUTS[layout], cv = document.createElement("canvas"); cv.width = L.w; cv.height = L.h;
+  const c = cv.getContext("2d");
+  c.fillStyle = CARD.bg; c.fillRect(0, 0, L.w, L.h);
+  const w = src(), cloth = w.cloth;
+  const serial = `No. ${pad(w.seed % 10000)}　${w.date}`;
+  const textBlock = (x, y, w, opts = {}) => {
+    const ts = opts.title || 68, bs = opts.body || 34;
+    c.fillStyle = CARD.ink; c.textBaseline = "alphabetic";
+    c.font = `700 ${ts}px ${F_DISPLAY}`; c.fillText(`《${title}》`, x - ts * 0.45, y);
+    let yy = y + (opts.gap || 64);
+    c.font = `400 ${bs}px ${F_BODY}`;
+    for (const ln of wrapText(c, msg, w).slice(0, 3)) { c.fillText(ln, x, yy); yy += bs * 1.55; }
+    if (sign) { c.font = `400 ${bs}px ${F_DISPLAY}`; c.fillStyle = CARD.muted; c.fillText(`— ${sign}`, x, yy + 6); }
+  };
+  const meta = (x, y, w, size) => {
+    c.font = `400 ${size}px ${F_DATA}`; c.fillStyle = CARD.muted;
+    const lines = [serial].concat(wrapText(c, cardRecipe(), w).slice(0, 2));
+    lines.forEach((ln, i) => c.fillText(ln, x, y + i * size * 1.6));
+  };
+  const frame = (x, y, w, h) => { c.save(); c.shadowColor = "rgba(10,16,36,0.18)"; c.shadowBlur = 24; c.shadowOffsetY = 8; c.fillStyle = "#fff"; c.fillRect(x, y, w, h); c.restore(); drawCover(c, cloth, x, y, w, h); };
+  if (layout === "portrait") {
+    frame(72, 72, 936, 800);
+    textBlock(72, 976, 936);
+    meta(72, 1222, 780, 21);
+  } else if (layout === "square") {
+    drawCover(c, cloth, 0, 0, 1080, 1080);
+    c.font = `400 34px ${F_BODY}`;
+    const lines = Math.min(3, wrapText(c, msg, 560).length);
+    c.font = `400 19px ${F_DATA}`;
+    const mlines = 1 + Math.min(2, wrapText(c, cardRecipe(), 560).length);
+    const ph = 64 + 68 + 30 + lines * 53 + (sign ? 58 : 0) + mlines * 30 + 40;
+    const py = 1080 - 56 - ph;
+    c.save(); c.shadowColor = "rgba(10,16,36,0.22)"; c.shadowBlur = 30; c.shadowOffsetY = 8; c.fillStyle = CARD.bg; c.fillRect(56, py, 640, ph); c.restore();
+    textBlock(96, py + 120, 560);
+    meta(96, py + ph - 40 - (mlines - 1) * 30, 560, 19);
+  } else {
+    frame(72, 140, 936, 1180);
+    textBlock(72, 1470, 936, { title: 80, body: 38, gap: 80 });
+    meta(72, 1770, 780, 24);
+  }
+  // LOGO_SLOT：刻意留白
+  return cv;
+}
+
+let cardBlob = null, cardURL = null, cardTimer = 0, cardSeq = 0;
+const fTitle = document.getElementById("cTitle"), fMsg = document.getElementById("cMsg"), fSign = document.getElementById("cSign");
+async function refreshCard() {
+  if (!src()) return;
+  const seq = ++cardSeq;
+  const title = (fTitle.value.trim() || src().name), msg = fMsg.value.trim(), sign = fSign.value.trim();
+  await ensureFonts(`《》—${title}${msg}${sign}${cardRecipe()}`);
+  if (seq !== cardSeq) return;
+  const cv = state.product === "card" ? drawCard(state.layout, title, msg, sign) : drawProduct(state.product, title);
+  const blob = await new Promise(r => cv.toBlob(r, "image/png"));
+  if (seq !== cardSeq || !blob) return;
+  cardBlob = blob;
+  if (cardURL) URL.revokeObjectURL(cardURL);
+  cardURL = URL.createObjectURL(blob);
+  const img = document.getElementById("cardImg");
+  img.src = cardURL; img.alt = `小卡預覽：《${title}》`;
+}
+const queueCard = () => { clearTimeout(cardTimer); cardTimer = setTimeout(refreshCard, 250); };
+
+let toastTimer = 0;
+function toast(t) {
+  let el = document.querySelector(".toast");
+  if (!el) { el = document.createElement("div"); el.className = "toast"; el.setAttribute("role", "status"); document.body.appendChild(el); }
+  el.textContent = t; el.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.hidden = true; }, 2600);
+}
+
+// 在 claude.ai 上發布時使用平台的下載功能；放到一般網站時改用瀏覽器下載
+let dlCap = null;
+const inClaude = !!(window.claude && typeof window.claude.use === "function");
+if (inClaude) { window.claude.use("downloads").then(d => { dlCap = d; }).catch(() => {}); }
+const fileName = () => `藍染${PRODUCTS[state.product].file}-${(fTitle.value.trim() || src().name)}.png`;
+async function download() {
+  if (!cardBlob) await refreshCard();
+  if (!cardBlob) return;
+  if (dlCap) {
+    try { await dlCap.save({ filename: fileName(), data: cardBlob }); toast("圖片已存檔"); }
+    catch (e) { toast(e && e.code === "declined" ? "已取消下載" : "這裡沒辦法直接下載，請長按或右鍵另存小卡圖片"); }
+    return;
+  }
+  if (inClaude) { toast("這裡沒辦法直接下載，請長按或右鍵另存小卡圖片"); return; }
+  const a = document.createElement("a"); a.href = URL.createObjectURL(cardBlob); a.download = fileName();
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  toast("圖片已下載");
+}
+function updateShare() {
+  const btn = document.getElementById("shareBtn");
+  btn.hidden = true;
+  if (inClaude || !navigator.canShare || !window.File) return;
+  try { btn.hidden = !navigator.canShare({ files: [new File([new Blob(["x"])], "a.png", { type: "image/png" })] }); } catch (e) { btn.hidden = true; }
+}
+async function share() {
+  if (!cardBlob) return;
+  try { await navigator.share({ files: [new File([cardBlob], fileName(), { type: "image/png" })], title: "我的藍染作品" }); }
+  catch (e) { if (e && e.name !== "AbortError") toast("沒辦法分享，請先下載小卡再傳給朋友"); }
+}
+
+
+/* ---------- 分享：杯墊、束口袋、T 恤示意圖 ---------- */
+const PRODUCTS = { card: { name: "小卡", file: "小卡" }, coaster: { name: "杯墊", file: "杯墊" }, bag: { name: "束口袋", file: "束口袋" }, tee: { name: "T 恤", file: "T恤" } };
+function productPath(c, kind) {
+  c.beginPath();
+  if (kind === "bag") {
+    c.moveTo(300, 300); c.lineTo(780, 300); c.lineTo(810, 860); c.quadraticCurveTo(812, 905, 765, 905); c.lineTo(315, 905); c.quadraticCurveTo(268, 905, 270, 860); c.closePath();
+  } else if (kind === "tee") {
+    c.moveTo(430, 210); c.quadraticCurveTo(540, 290, 650, 210); c.lineTo(800, 260); c.lineTo(900, 420); c.lineTo(790, 480); c.lineTo(740, 420);
+    c.lineTo(745, 900); c.lineTo(335, 900); c.lineTo(340, 420); c.lineTo(290, 480); c.lineTo(180, 420); c.lineTo(280, 260); c.closePath();
+  } else c.arc(540, 520, 340, 0, Math.PI * 2);
+}
+function drawProduct(kind, title) {
+  const W = 1080, H = 1080, cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+  const c = cv.getContext("2d"), cloth = src().cloth;
+  c.fillStyle = CARD.bg; c.fillRect(0, 0, W, H);
+  if (kind === "coaster") {     // 杯墊：軟木底＋布面＋縫邊
+    c.save(); c.shadowColor = "rgba(10,16,36,0.3)"; c.shadowBlur = 30; c.shadowOffsetY = 14;
+    c.fillStyle = "#b98a5a"; c.beginPath(); c.arc(540, 530, 352, 0, Math.PI * 2); c.fill(); c.restore();
+  } else { c.save(); c.shadowColor = "rgba(10,16,36,0.28)"; c.shadowBlur = 34; c.shadowOffsetY = 14; productPath(c, kind); c.fillStyle = "#ddd"; c.fill(); c.restore(); }
+  c.save(); productPath(c, kind); c.clip();
+  if (kind === "tee") drawCover(c, cloth, 180, 200, 720, 720); else if (kind === "bag") drawCover(c, cloth, 260, 290, 560, 620); else drawCover(c, cloth, 200, 180, 680, 680);
+  // 立體感
+  const g = c.createLinearGradient(180, 0, 900, 0); g.addColorStop(0, "rgba(0,0,0,0.18)"); g.addColorStop(0.35, "rgba(255,255,255,0.06)"); g.addColorStop(0.7, "rgba(0,0,0,0)"); g.addColorStop(1, "rgba(0,0,0,0.2)");
+  c.fillStyle = g; c.fillRect(0, 0, W, H);
+  c.restore();
+  c.strokeStyle = "rgba(245,240,228,0.85)"; c.lineWidth = 3; c.setLineDash([12, 9]);
+  if (kind === "coaster") { c.beginPath(); c.arc(540, 520, 318, 0, Math.PI * 2); c.stroke(); }
+  if (kind === "bag") {
+    c.beginPath(); c.moveTo(302, 372); c.lineTo(778, 372); c.stroke(); c.setLineDash([]);
+    c.strokeStyle = "rgba(0,0,0,0.18)"; c.lineWidth = 2; for (let x = 320; x < 770; x += 26) { c.beginPath(); c.moveTo(x, 302); c.quadraticCurveTo(x + 6, 336, x, 370); c.stroke(); }
+    c.strokeStyle = "#e9e1cf"; c.lineWidth = 10; c.lineCap = "round";
+    c.beginPath(); c.moveTo(340, 336); c.quadraticCurveTo(250, 420, 300, 560); c.stroke(); c.beginPath(); c.moveTo(740, 336); c.quadraticCurveTo(840, 420, 790, 560); c.stroke();
+    c.fillStyle = "#9c7646"; c.beginPath(); c.roundRect(284, 548, 32, 46, 8); c.fill(); c.beginPath(); c.roundRect(774, 548, 32, 46, 8); c.fill();
+  }
+  if (kind === "tee") {
+    c.setLineDash([]); c.strokeStyle = "rgba(0,0,0,0.25)"; c.lineWidth = 3;
+    c.beginPath(); c.moveTo(430, 210); c.quadraticCurveTo(540, 290, 650, 210); c.stroke();
+    c.lineWidth = 14; c.strokeStyle = "rgba(20,30,60,0.35)"; c.beginPath(); c.moveTo(436, 214); c.quadraticCurveTo(540, 282, 644, 214); c.stroke();
+    c.lineWidth = 2; c.strokeStyle = "rgba(0,0,0,0.18)"; c.beginPath(); c.moveTo(340, 420); c.lineTo(282, 260); c.moveTo(740, 420); c.lineTo(798, 260); c.stroke();
+  }
+  c.setLineDash([]);
+  c.textAlign = "center"; c.fillStyle = CARD.ink; c.font = `700 52px ${F_DISPLAY}`; c.fillText(`《${title}》`, 540, kind === "tee" ? 990 : 1000);
+  c.font = `400 20px ${F_DATA}`; c.fillStyle = CARD.muted; c.fillText(`${PRODUCTS[kind].name}示意圖，非實際商品　·　${cardRecipe()}`.slice(0, 60), 540, 1046);
+  c.textAlign = "left";
+  return cv;
+}
+function productIcon(kind) {
+  return makeIcon(120, 120, c => {
+    c.save(); c.scale(120 / 1080, 120 / 1080);
+    if (kind === "card") { c.fillStyle = "#f1efe6"; c.fillRect(250, 150, 580, 780); c.fillStyle = "#2b4c86"; c.fillRect(300, 200, 480, 480); c.fillStyle = "#1a2340"; c.fillRect(300, 730, 360, 50); }
+    else { productPath(c, kind); c.fillStyle = kind === "coaster" ? "#2b4c86" : "#3a5d9a"; c.fill(); if (kind === "coaster") { c.strokeStyle = "#f1efe6"; c.lineWidth = 30; c.setLineDash([60, 40]); c.beginPath(); c.arc(540, 520, 290, 0, Math.PI * 2); c.stroke(); } }
+    c.restore();
+  });
+}
+/* ---------- 事件 ---------- */
+document.addEventListener("change", e => {
+  const t = e.target;
+  if (t.name === "fabric") { state.fabric = t.value; document.getElementById("fabricTip").textContent = FABRICS[t.value].desc; unrollFabric(); }
+  if (t.name === "tool") selectTool(t.value);
+  if (t.name && t.name.startsWith("opt-")) setOpt(t.dataset.key, t.value);
+  if (t.name === "dye") { if (state.busy) { const cur = document.getElementById("dye-" + state.dye); if (cur) cur.checked = true; return; } state.dye = t.value; drawRaw(); moveVats(t.value); say(t.value === "indigo" ? DYES.indigo.desc.replace(/。$/, "") : `換到${DYES[t.value].name}的染缸`); }
+  if (t.name === "strength") { state.strength = t.value; say(`染液：${STRENGTH[t.value].name}`); }
+  if (t.name === "layout") { state.layout = t.value; refreshCard(); }
+  if (t.name === "product") { state.product = t.value; document.getElementById("cardForm").classList.toggle("notcard", t.value !== "card"); refreshCard(); }
+});
+document.getElementById("penSize").addEventListener("input", e => {
+  if (state.sel < 0) return;
+  const m = state.marks[state.sel], v = +e.target.value;
+  if (m.type === "kumo") m.R = v; else if (m.type === "arashi") m.w = Math.round(v * 1.1);
+  drawFabricScene();
+});
+document.getElementById("to2").onclick = () => show(2);
+document.getElementById("back1").onclick = () => show(1);
+document.getElementById("to3").onclick = async () => {
+  if (state.busy) return;
+  state.busy = true; state.sel = -1; stageBox.classList.remove("drawing"); say(state.marks.length ? "把布收攏、綁起來……" : "把布摺好，準備整塊再浸……");
+  const base = state.prev ? outerOf(state.fabric, prevRounds()) : FABRICS[state.fabric].base;
+  await animate(1500, t => { clearStage(); drawCustomBundle(sctx, base, { gather: ease(t), ties: smooth(0.55, 1, t) }); });
+  state.busy = false;
+  show(3);
+};
+document.getElementById("undoBtn").onclick = () => { if (state.busy) return; state.marks.pop(); state.sel = -1; renderSettings(); updateBind(); };
+document.getElementById("delBtn").onclick = () => { if (state.sel >= 0) { state.marks.splice(state.sel, 1); state.sel = -1; renderSettings(); updateBind(); } };
+document.getElementById("clearBtn").onclick = () => { if (state.busy) return; state.marks = []; state.ita.bands = 0; state.sel = -1; renderSettings(); updateBind(); };
+document.getElementById("dipBtn").onclick = dip;
+document.getElementById("to4").onclick = () => { if (state.busy) return; show(4); reveal(); };
+document.getElementById("again").onclick = resetAll;
+document.getElementById("redyeBtn").onclick = () => { if (state.work) startRedye(state.work); };
+document.getElementById("toCard").onclick = () => setCardMode(true);
+document.getElementById("vCard").onclick = () => setCardMode(true);
+document.getElementById("vBack").onclick = closeView;
+document.getElementById("vRedye").onclick = () => { const it = rack.find(x => x.id === state.viewing.id); if (it) startRedye(it); };
+document.getElementById("slots").addEventListener("click", e => { const b = e.target.closest("button.cloth"); if (!b) return; if (pendingHang) hangInstead(b.dataset.id); else openView(b.dataset.id); });
+document.getElementById("skipHang").onclick = skipHang;
+document.getElementById("backWork").onclick = () => setCardMode(false);
+document.getElementById("steps").addEventListener("click", e => { const b = e.target.closest("button"); if (b && !b.disabled) show(+b.dataset.go); });
+[fTitle, fMsg, fSign].forEach(el => el.addEventListener("input", queueCard));
+document.getElementById("msgSuggest").addEventListener("click", e => { const b = e.target.closest("button"); if (b) { fMsg.value = b.textContent; queueCard(); } });
+document.getElementById("dlBtn").onclick = download;
+document.getElementById("shareBtn").onclick = share;
+document.getElementById("cardForm").addEventListener("submit", e => e.preventDefault());
+
+/* ---------- 開始 ---------- */
+state.seed = newSeed();
+state.rare = mulberry32(state.seed + 1)() < 0.12;
+// 先讓載入動畫畫出第一格，再準備布料與工具的圖
+// 分段準備，讓載入動畫的進度條顯示真實進度
+async function init() {
+  const step = async (pct, fn) => { fn(); if (window.__loaderProgress) window.__loaderProgress(pct); await new Promise(r => setTimeout(r, 0)); };
+  await step(14, () => swatchFor("cotton"));
+  await step(28, () => swatchFor("linen"));
+  await step(42, () => swatchFor("silk"));
+  await step(88, buildOptions);
+  await step(95, renderRack);
+  await step(99, () => show(1));
+  if (window.__startLoader) window.__startLoader();
+}
+requestAnimationFrame(() => setTimeout(init, 0));
+
+if (location.hash === "#test") window.__dye = { state, renderCloth, show, setCardMode, rack: () => rack, selectTool, setOpt };
+})();
+</script>
+
+</body>
+</html>
