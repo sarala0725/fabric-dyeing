@@ -4,6 +4,21 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>藍染的故事｜島宇染坊</title>
+<meta name="description" content="從一株大菁到一件客家藍衫：認識藍染的原料、三角湧的染坊、綁染技法與文化故事。">
+<meta name="theme-color" content="#16244a">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="favicon.png">
+<!-- 分享到 LINE、Facebook 時的預覽卡片；之後換網域要一併修改網址 -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="島宇染坊">
+<meta property="og:title" content="藍染的故事｜島宇染坊">
+<meta property="og:description" content="從一株大菁到一件客家藍衫：認識藍染的原料、三角湧的染坊、綁染技法與文化故事。">
+<meta property="og:url" content="https://sarala0725.github.io/fabric-dyeing/culture.html">
+<meta property="og:image" content="https://sarala0725.github.io/fabric-dyeing/share.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="zh_TW">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -249,8 +264,17 @@ sup a { text-decoration: none; font-family: var(--font-data); font-size: 12px; }
     dotX = W / 2 - title.width / DPR / 2 + ranX + cw * 0.17;
     dotY = H / 2 - fs * 0.3;
   }
-  makeTitle();
-  const TW = [0, 3, 8].map(bl => { const k = document.createElement("canvas"); k.width = title.width + 60 * DPR; k.height = title.height + 60 * DPR; const x = k.getContext("2d"); x.filter = `blur(${bl * DPR}px)`; x.drawImage(title, 30 * DPR, 30 * DPR); return k; });
+  let TW = [];
+  function buildTitle() {
+    makeTitle();
+    TW = [0, 3, 8].map(bl => { const k = document.createElement("canvas"); k.width = title.width + 60 * DPR; k.height = title.height + 60 * DPR; const x = k.getContext("2d"); x.filter = `blur(${bl * DPR}px)`; x.drawImage(title, 30 * DPR, 30 * DPR); return k; });
+  }
+  buildTitle();
+  // 網路字型（霞鶩文楷）通常比動畫晚到：先用備用字型畫好，字型一載入就重畫一次。
+  // 字要等藍色漫到（約 1 秒後）才看得到，所以字型 1 秒內到達的話，使用者只會看到楷書。
+  if (document.fonts && document.fonts.load) {
+    document.fonts.load('700 48px "LXGW WenKai TC"', "島宇染坊").then(list => { if (list && list.length) buildTitle(); }).catch(() => { /* 字型載入失敗就維持備用字型 */ });
+  }
   let progress = 0, shown = 0, done = false, ready = false, revealAt = 0, t0 = 0, resolveDone;
   window.__loaderDone = new Promise(r => { resolveDone = r; });
   window.__loaderProgress = p => { progress = Math.max(progress, p); };

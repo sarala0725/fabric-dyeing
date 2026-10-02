@@ -4,6 +4,21 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>島宇染坊</title>
+<meta name="description" content="在線上體驗客家藍染：選布、綁布、浸染，拆開看看你染出的花樣，做成小卡分享給朋友。">
+<meta name="theme-color" content="#16244a">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="favicon.png">
+<!-- 分享到 LINE、Facebook 時的預覽卡片；之後換網域要一併修改網址 -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="島宇染坊">
+<meta property="og:title" content="島宇染坊">
+<meta property="og:description" content="在線上體驗客家藍染：選布、綁布、浸染，拆開看看你染出的花樣，做成小卡分享給朋友。">
+<meta property="og:url" content="https://sarala0725.github.io/fabric-dyeing/">
+<meta property="og:image" content="https://sarala0725.github.io/fabric-dyeing/share.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="zh_TW">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -274,6 +289,16 @@ a { color: var(--indigo); }
 .cloth.empty::after { display: none; }
 .cloth.empty::before { display: none; }
 .cloth.new { animation: hang 1.6s ease-out; }
+/* 手機：晾布架改成兩排、每排三塊，6 塊一次看完；兩根竹竿畫在格子背景上 */
+@media (max-width: 600px) {
+  .rack { overflow: visible; }
+  .rack-inner { min-width: 0; padding-inline: 4px; }
+  .rack .pole { display: none; }
+  .slots { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: 1fr; row-gap: 28px; column-gap: 14px; margin-top: 0; padding: 7px 8px 0;
+    background: linear-gradient(var(--bamboo), var(--bamboo-dark)) 0 0 / 100% 14px no-repeat,
+                linear-gradient(var(--bamboo), var(--bamboo-dark)) 0 calc(50% + 17.5px) / 100% 14px no-repeat; }
+  .slots .cloth { margin-top: 0; }
+}
 @keyframes hang { 0% { transform: translateY(-30px) rotate(0); opacity: 0; } 30% { transform: translateY(0) rotate(5deg); opacity: 1; } 55% { transform: rotate(-3deg); } 75% { transform: rotate(1.5deg); } 100% { transform: rotate(0); } }
 @media (prefers-reduced-motion: reduce) { .cloth.new { animation: none; } .cloth { transition: none; } }
 
@@ -469,8 +494,17 @@ a { color: var(--indigo); }
     dotX = W / 2 - title.width / DPR / 2 + ranX + cw * 0.17;
     dotY = H / 2 - fs * 0.3;
   }
-  makeTitle();
-  const TW = [0, 3, 8].map(bl => { const k = document.createElement("canvas"); k.width = title.width + 60 * DPR; k.height = title.height + 60 * DPR; const x = k.getContext("2d"); x.filter = `blur(${bl * DPR}px)`; x.drawImage(title, 30 * DPR, 30 * DPR); return k; });
+  let TW = [];
+  function buildTitle() {
+    makeTitle();
+    TW = [0, 3, 8].map(bl => { const k = document.createElement("canvas"); k.width = title.width + 60 * DPR; k.height = title.height + 60 * DPR; const x = k.getContext("2d"); x.filter = `blur(${bl * DPR}px)`; x.drawImage(title, 30 * DPR, 30 * DPR); return k; });
+  }
+  buildTitle();
+  // 網路字型（霞鶩文楷）通常比動畫晚到：先用備用字型畫好，字型一載入就重畫一次。
+  // 字要等藍色漫到（約 1 秒後）才看得到，所以字型 1 秒內到達的話，使用者只會看到楷書。
+  if (document.fonts && document.fonts.load) {
+    document.fonts.load('700 48px "LXGW WenKai TC"', "島宇染坊").then(list => { if (list && list.length) buildTitle(); }).catch(() => { /* 字型載入失敗就維持備用字型 */ });
+  }
   let progress = 0, shown = 0, done = false, ready = false, revealAt = 0, t0 = 0, resolveDone;
   window.__loaderDone = new Promise(r => { resolveDone = r; });
   window.__loaderProgress = p => { progress = Math.max(progress, p); };
