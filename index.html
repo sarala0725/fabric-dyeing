@@ -62,14 +62,14 @@ a { color: var(--indigo); }
 @media (max-width: 900px) { .app { grid-template-columns: minmax(0, 1fr); gap: 14px; } }
 
 .stage {
-  position: relative; aspect-ratio: 1 / 1; width: 100%; max-width: 100%;
-  max-height: calc(100vh - 92px); max-height: calc(100dvh - 92px);
+  position: relative; width: 100%; max-width: 100%;
   margin-left: auto; margin-right: 0; background: #62452d center / cover; border-radius: 14px; overflow: hidden;
   padding: 4.5%; box-shadow: inset 0 0 0 1px rgba(0,0,0,.25), 0 10px 30px rgba(0,0,0,.35);
 }
-@supports (aspect-ratio: 1 / 1) { .stage { width: min(100%, calc(100vh - 92px)); width: min(100%, calc(100dvh - 92px)); } }
-@media (max-width: 900px) { .stage { width: 100%; max-height: none; margin-inline: 0; } }
-.stage canvas { display: block; width: 100%; height: 100%; touch-action: auto; filter: drop-shadow(0 8px 14px rgba(0,0,0,.4)); }
+.stage { width: min(100%, calc(100vh - 92px)); width: min(100%, calc(100dvh - 92px)); }   /* 桌機：整塊正方形放得進一個螢幕高 */
+@media (max-width: 900px) { .stage { width: 100%; margin-inline: 0; } }
+/* 外框的高度跟著畫布走：畫布本身是 900×900，寬 100%、高自動就是正方形 */
+.stage canvas { display: block; width: 100%; height: auto; aspect-ratio: 1 / 1; touch-action: auto; filter: drop-shadow(0 8px 14px rgba(0,0,0,.4)); }
 .stage.drawing canvas { touch-action: none; cursor: crosshair; }
 .stage .card-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; padding: 5%; }
 .stage.vats canvas { cursor: pointer; }
@@ -256,6 +256,8 @@ a { color: var(--indigo); }
 .raw canvas { display: block; width: 100%; height: auto; }
 .flow { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 2px; font-size: 13px; color: var(--muted); counter-reset: f; }
 .flow li { counter-increment: f; }
+.raw-note { margin: 8px 0 0; padding-top: 8px; border-top: 1px solid var(--line); font-size: 13px; line-height: 1.6; color: var(--ink); }
+.raw-note:empty { display: none; }
 .flow li::before { content: counter(f) "."; font-family: var(--font-data); margin-right: 6px; color: var(--ink); }
 
 /* 晾布架 */
@@ -758,7 +760,7 @@ a { color: var(--indigo); }
           <p class="label">染缸</p>
           <div class="picks" id="dyeOpts" role="radiogroup" aria-label="染缸"></div>
         </div>
-        <div class="raw"><p class="label" id="rawTitle" style="margin:0">原料</p><ol class="flow" id="rawFlow"></ol></div>
+        <div class="raw"><p class="label" id="rawTitle" style="margin:0">原料</p><ol class="flow" id="rawFlow"></ol><p class="raw-note" id="dipTip"></p></div>
         <div class="sr-only">
           <p class="wlabel">要舀幾杓染料？</p>
           <div class="picks" id="strengthOpts" role="radiogroup" aria-label="染液濃淡"></div>
@@ -767,10 +769,9 @@ a { color: var(--indigo); }
           <div class="row"><span class="label" style="margin:0">已經浸了幾次</span><span class="count" id="dipCount">0 / 8 次</span></div>
           <div class="strips" id="dipBar" style="margin-block:6px 20px"></div>
         </div>
-        <p class="tip" id="dipTip"></p>
-        <p class="dip-hint">點缸換色、點杓子選濃淡，點布浸入染缸<button class="btn ghost small" type="button" id="dipBtn" aria-label="浸入染缸一次">浸一次</button></p>
         <div class="actions">
-          <button class="btn wide" type="button" id="to4" disabled>拆開看看</button>
+          <button class="btn wide" type="button" id="dipBtn" aria-label="浸入染缸一次（也可以直接點畫面上的布）">浸一次</button>
+          <button class="btn ghost" type="button" id="to4" disabled>拆開看看</button>
         </div>
       </section>
 
@@ -2286,7 +2287,13 @@ function selBox(m) {
   return { x0, y0, x1, y1, cx: (x0 + x1) / 2, cy: (y0 + y1) / 2 };
 }
 const sizable = m => m.type === "kumo" || (m.type === "arashi" && !m.pole);
+function alignSelLayer() {   // 選取圖層對齊畫布本身（外框的留白在桌機和手機算法不同）
+  const L = document.getElementById("selLayer"), c = stage;
+  L.style.inset = "auto"; L.style.left = c.offsetLeft + "px"; L.style.top = c.offsetTop + "px"; L.style.width = c.offsetWidth + "px"; L.style.height = c.offsetHeight + "px";
+}
+addEventListener("resize", () => { alignSelLayer(); placeSelUI(); });
 function placeSelUI() {
+  alignSelLayer();
   const del = document.getElementById("delBtn"), box = document.getElementById("selBox"), hd = document.getElementById("selHandle");
   const m = state.sel >= 0 ? state.marks[state.sel] : null;
   const show = m && state.step === 2 && !liveNow && !state.busy && (m.type !== "itajime" || state.tool === "itajime") && (state.tool !== "itajime" || m.type === "itajime");
