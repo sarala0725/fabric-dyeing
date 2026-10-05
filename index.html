@@ -303,6 +303,26 @@ a { color: var(--indigo); }
 @media (prefers-reduced-motion: reduce) { .cloth.new { animation: none; } .cloth { transition: none; } }
 
 .toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 18px; border-radius: 999px; font-size: 14px; z-index: 10; max-width: calc(100% - 32px); text-align: center; }
+/* ---------- 第一次使用的引導 ---------- */
+.guide { position: fixed; inset: 0; z-index: 40; }
+.guide[hidden] { display: none; }
+.guide-hole { position: fixed; border-radius: 12px; box-shadow: 0 0 0 9999px rgba(8, 14, 32, .62); outline: 2px solid var(--focus); outline-offset: 3px; transition: left .3s ease, top .3s ease, width .3s ease, height .3s ease; pointer-events: none; }
+.guide-card { position: fixed; width: min(320px, calc(100vw - 32px)); background: var(--indigo); color: var(--on-indigo); border-radius: 14px; padding: 16px 18px 14px; box-shadow: 0 12px 32px rgba(0,0,0,.45); transition: left .3s ease, top .3s ease; }
+.guide-card h3 { margin: 0 0 6px; font: 700 17px var(--font-display); letter-spacing: .04em; }
+.guide-card p { margin: 0; font-size: 15px; line-height: 1.65; }
+.guide-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 14px; }
+.guide-row .n { font: 500 12px var(--font-data); color: #5a6a8f; }
+.guide-row .acts { display: flex; gap: 8px; }
+.guide-card button { font: inherit; font-size: 14px; border-radius: 999px; padding: 8px 16px; min-height: 40px; cursor: pointer; border: 1px solid var(--on-indigo); }
+.guide-card .skip { background: transparent; color: var(--on-indigo); border-color: transparent; text-decoration: underline; text-underline-offset: 3px; padding-inline: 6px; }
+.guide-card .next { background: var(--on-indigo); color: var(--indigo); }
+.guide-card button:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.foot .guide-again { background: none; border: 0; padding: 0; color: inherit; font: inherit; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+/* 手機：說明卡固定在畫面底部，不擋住中間的布 */
+@media (max-width: 600px) {
+  .guide-card { left: 12px !important; right: 12px; top: auto !important; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); width: auto; }
+}
+@media (prefers-reduced-motion: reduce) { .guide-hole, .guide-card { transition: none; } }
 .foot { margin-top: 22px; color: var(--muted); font-size: 13px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 20px; }
 
 @media (prefers-reduced-motion: reduce) {
@@ -718,8 +738,19 @@ a { color: var(--indigo); }
 
   <footer class="foot">
     <span>圖案依照你的布、綁法與浸染，由程式即時生成，每一塊都不一樣。</span>
-    <a href="culture.html">藍染的故事 →</a>
+    <span><button type="button" class="guide-again" id="guideAgain">再看一次教學</button>　<a href="culture.html">藍染的故事 →</a></span>
   </footer>
+</div>
+<div class="guide" id="guide" hidden>
+  <div class="guide-hole" id="guideHole"></div>
+  <div class="guide-card" id="guideCard" role="dialog" aria-modal="true" aria-labelledby="guideTitle">
+    <h3 id="guideTitle"></h3>
+    <p id="guideText"></p>
+    <div class="guide-row">
+      <span class="n" id="guideNum"></span>
+      <span class="acts"><button type="button" class="skip" id="guideSkip">略過教學</button><button type="button" class="next" id="guideNext">下一步</button></span>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -1830,6 +1861,68 @@ function drawCore(ctx, core, x, y, s) {
   else if (core === "stone") drawStone(ctx, x, y, s * 0.8);
   else { ctx.fillStyle = ROPEC; ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI * 2); ctx.fill(); }
 }
+/* ---------- 揉皺的布面：程式產生的皺褶明暗，沿著筆刷範圍顯示 ---------- */
+const CRUMPLE = {};
+function crumpleTex(group) {
+  if (CRUMPLE[group]) return CRUMPLE[group];
+  // 繩綁：大而尖的摺痕；網袋：細碎的小皺褶
+  const N = 512, h = new Float32Array(N * N), base = group === "net" ? 7100 : 5300;
+  // 可無縫拼接的雜訊：格點在每個頻率的週期內循環，材質重複鋪時不會出現接縫
+  const pn = (x, y, f, o) => {
+    const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi, u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf);
+    const g = (i, j) => hash2(((i % f) + f) % f + o, ((j % f) + f) % f + o * 3);
+    const A = g(xi, yi), B = g(xi + 1, yi), C = g(xi, yi + 1), D = g(xi + 1, yi + 1);
+    return A + (B - A) * u + (C - A) * v + (A - B - C + D) * u * v;
+  };
+  const oct = group === "net" ? [[9, 0.55], [18, 0.33], [36, 0.12]] : [[4, 0.62], [9, 0.28], [19, 0.1]];
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+    const u = x / N, v = y / N; let t = 0;
+    for (const [f, a] of oct) { const q = pn(u * f, v * f, f, base + f) * 2 - 1; t += a * Math.sqrt(q * q + 0.004); }   // 近似絕對值：零點變成摺痕，但邊緣柔和
+    h[y * N + x] = t;
+  }
+  const cv = document.createElement("canvas"); cv.width = cv.height = N;
+  const c = cv.getContext("2d"), img = c.createImageData(N, N), d = img.data, K = group === "net" ? 4.2 : 3.2;
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+    const i = y * N + x, xl = (x + N - 1) % N, xr = (x + 1) % N, yu = (y + N - 1) % N, yd = (y + 1) % N;
+    const sh = ((h[y * N + xl] - h[y * N + xr]) + (h[yu * N + x] - h[yd * N + x])) * K * N / 100;   // 光從左上照下來
+    const crease = 1 - smooth(0, 0.07, h[i]), j = i * 4;
+    if (sh >= 0) { d[j] = 255; d[j + 1] = 252; d[j + 2] = 244; d[j + 3] = Math.min(105, sh * 230); }
+    else { d[j] = 74; d[j + 1] = 56; d[j + 2] = 34; d[j + 3] = Math.min(125, -sh * 250 + crease * 45); }
+    if (sh >= 0 && crease > 0.4) { d[j] = 74; d[j + 1] = 56; d[j + 2] = 34; d[j + 3] = crease * 50; }
+  }
+  c.putImageData(img, 0, 0);
+  return (CRUMPLE[group] = cv);
+}
+let CRUMPLE_SCRATCH = null;
+const CRUMPLE_CACHE = new WeakMap();   // 每一筆的皺褶圖層（不放進筆畫資料，免得存檔時被一起存）
+function crumpleLayer(m, isLive) {
+  const key = m.pts.length + ":" + m.w + ":" + m.o.group + ":" + m.pts[m.pts.length - 1].join(",");
+  if (!isLive) { const hit = CRUMPLE_CACHE.get(m); if (hit && hit.key === key) return hit.cv; }
+  const cv = isLive ? (CRUMPLE_SCRATCH = CRUMPLE_SCRATCH || document.createElement("canvas")) : document.createElement("canvas");
+  if (cv.width !== S) { cv.width = cv.height = S; }
+  const c = cv.getContext("2d"); c.setTransform(1, 0, 0, 1, 0, 0); c.globalCompositeOperation = "source-over";
+  // 只處理筆畫附近的範圍，畫的時候才不會拖慢
+  const pad = m.w / 2 + 8, xs = m.pts.map(p => p[0]), ys = m.pts.map(p => p[1]);
+  const bx = Math.max(0, Math.floor(Math.min(...xs) - pad)), by = Math.max(0, Math.floor(Math.min(...ys) - pad));
+  const bw = Math.min(S, Math.ceil(Math.max(...xs) + pad)) - bx, bh = Math.min(S, Math.ceil(Math.max(...ys) + pad)) - by;
+  c.clearRect(0, 0, S, S);
+  c.save(); c.beginPath(); c.rect(bx, by, bw, bh); c.clip();
+  // 1) 筆刷範圍（邊緣稍微柔一點，像布被揪起來）
+  c.lineCap = "round"; c.lineJoin = "round"; c.filter = isLive ? "none" : "blur(3px)";   // 畫的當下先不柔化邊緣，放開後再柔化
+  c.beginPath(); c.moveTo(m.pts[0][0], m.pts[0][1]); for (const p of m.pts) c.lineTo(p[0], p[1]); if (m.pts.length === 1) c.lineTo(m.pts[0][0] + 0.1, m.pts[0][1]);
+  c.strokeStyle = "#000"; c.lineWidth = m.w; c.stroke(); c.filter = "none";
+  // 2) 套上皺褶明暗（每一筆錯開位置，花紋不重複）
+  c.globalCompositeOperation = "source-in";
+  const tex = crumpleTex(m.o.group), sc = m.o.group === "net" ? 1.25 : 1.5;
+  c.save(); c.translate(-((m.s || 0) % 512), -(((m.s || 0) >>> 9) % 512)); c.scale(sc, sc);
+  c.fillStyle = c.createPattern(tex, "repeat"); c.fillRect((bx + ((m.s || 0) % 512)) / sc, (by + (((m.s || 0) >>> 9) % 512)) / sc, bw / sc + 2, bh / sc + 2); c.restore();
+  // 3) 布被揪起的陰影感，網袋再加上一層網格
+  c.globalCompositeOperation = "source-atop"; c.fillStyle = "rgba(120,92,56,0.2)"; c.fillRect(bx, by, bw, bh);
+  if (m.o.group === "net") { texPatterns(c); c.globalAlpha = 0.4; c.fillStyle = NET_PAT; c.fillRect(bx, by, bw, bh); c.globalAlpha = 1; }
+  c.globalCompositeOperation = "source-over"; c.restore();
+  if (!isLive) CRUMPLE_CACHE.set(m, { key, cv });
+  return cv;
+}
 function drawMarks(ctx, marks, opt = {}) {
   texPatterns(ctx);
   ctx.save(); ctx.lineCap = "round"; ctx.lineJoin = "round";
@@ -1870,9 +1963,9 @@ function drawMarks(ctx, marks, opt = {}) {
     } else if (m.type === "arashi") {
       const path = () => { ctx.beginPath(); ctx.moveTo(m.pts[0][0], m.pts[0][1]); for (const p of m.pts) ctx.lineTo(p[0], p[1]); if (m.pts.length === 1) ctx.lineTo(m.pts[0][0] + 0.1, m.pts[0][1]); };
       if (sel) { path(); ctx.strokeStyle = "rgba(255,255,255,0.9)"; ctx.lineWidth = m.w + 12; ctx.stroke(); }
-      path(); ctx.strokeStyle = "rgba(156,118,70,0.16)"; ctx.lineWidth = m.w; ctx.stroke();
-      path(); ctx.strokeStyle = m.o.group === "net" ? NET_PAT : ROPE_PAT; ctx.lineWidth = m.w; ctx.stroke();
-      if (m.o.group === "rope") { const c = m.pts[Math.floor(m.pts.length / 2)]; ctx.strokeStyle = ROPEC; ctx.lineWidth = 5; ctx.beginPath(); ctx.ellipse(c[0], c[1], m.w * 0.45, m.w * 0.12, 0.5, 0, Math.PI * 2); ctx.stroke(); }
+      // 筆刷經過的地方直接呈現揉皺的布（畫到哪就皺到哪），不再另外播縮小、展開的動畫
+      ctx.drawImage(crumpleLayer(m, m === opt.live), 0, 0);
+      if (m.o.group === "rope" && m.pts.length > 1 && m !== opt.live) { const c = m.pts[Math.floor(m.pts.length / 2)]; ctx.strokeStyle = ROPEC; ctx.lineWidth = 5; ctx.beginPath(); ctx.ellipse(c[0], c[1], m.w * 0.45, m.w * 0.12, 0.5, 0, Math.PI * 2); ctx.stroke(); }
     }
   });
   ctx.restore();
@@ -2197,7 +2290,7 @@ async function endPen(e) {
     if (m.pole) state.marks = state.marks.filter(x => !(x.type === "arashi" && x.pole));
     state.marks.push(m); state.sel = -1;
     if (m.pole) await rollAnim(m);
-    else if (m.type === "arashi") await crumpleAnim(m);
+    // 揉皺：畫的同時已經呈現，放開後不再播縮小、展開的動畫
   }
   else if (m.type === "itajime") toast("從中心往外拉大一點");
   else if (m.type === "nui") toast("拖曳畫出一條線");
@@ -2251,6 +2344,7 @@ function show(step) {
   stageBox.classList.toggle("drawing", step === 2);
   stageBox.classList.toggle("vats", step === 3);
   stageBox.classList.toggle("pick1", step === 1);   // 手機版選布時縮小預覽（CSS 只在窄螢幕生效）
+  if (step === 2 || step === 3) guideMaybe(step);   // 第一次進到這一步時，顯示引導
   updateCursor();
   if (step === 1) { drawFabricScene(); say(""); }
   if (step === 2) { renderSettings(); updateBind(); }
@@ -2391,6 +2485,7 @@ function showResult() {
   document.getElementById("redyeBtn").hidden = !canRedye(state.work);
   say(state.rare && !state.prev ? "出現了罕見的紋樣！" : "");
   document.querySelectorAll("#steps button").forEach(b => { b.disabled = true; b.classList.remove("done"); });
+  guideMaybe(4);   // 第一次拆完布，介紹分享和晾布架
 }
 
 let cardSrcId = null;
@@ -2763,6 +2858,87 @@ async function init() {
   await step(99, () => show(1));
   if (window.__startLoader) window.__startLoader();
 }
+/* ---------- 第一次使用的引導：進到每一步時，才指出這一步要做什麼 ---------- */
+const GUIDE_KEY = "jinglan-guide-v1";
+const GUIDES = {
+  1: [{ el: "#fabricOpts", t: "先挑一塊布", p: "點一卷布，布尾垂下來就是選好了。三種布吃色的感覺不太一樣。" },
+      { el: "#to2", t: "開始綁布", p: "選好之後按這裡，進到下一步。" }],
+  2: [{ el: "#toolOpts", t: "選一種綁法", p: "捆紮、縫紮、夾染、揉皺，可以混著用。" },
+      { el: "#stageBox", t: "直接在布上點或畫", p: "綁住、縫住、夾住的地方吃不到顏色，拆開後就會留白。點一下已經畫好的記號可以修改。" },
+      { el: "#toolDetail", t: "調整細節", p: "每種綁法都可以再調整，例如在捆紮裡包進豆子、換一種縫法。" },
+      { el: "#to3", t: "綁好就去浸染", p: "不用一次綁很多，簡單幾個也很好看。" }],
+  3: [{ el: "#dyeOpts", t: "選一個染缸", p: "也可以直接點畫面上的缸。不同染料染出不同的顏色。" },
+      { el: "#dipBtn", t: "浸一次、再浸一次", p: "每按一次就浸一次，次數越多顏色越深。" },
+      { el: "#to4", t: "拆開看看", p: "顏色夠了就拆布，看看染出什麼花樣。" }],
+  4: [{ el: "#toCard", t: "分享你的作品", p: "做成小卡、杯墊、束口袋或 T 恤的樣子，存下來傳給朋友。" },
+      { el: ".rack-sec", t: "晾布架", p: "染好的布會自動晾在這裡，最多 6 塊。點一塊布可以再看一次，或拿去重染。" }]
+};
+const guide = { step: 0, i: 0, open: false };
+function guideSeen() { try { return JSON.parse(localStorage.getItem(GUIDE_KEY) || "{}"); } catch (e) { return {}; } }
+function guideMark(obj) { try { localStorage.setItem(GUIDE_KEY, JSON.stringify(Object.assign(guideSeen(), obj))); } catch (e) { /* 瀏覽器不允許暫存就算了 */ } }
+function guideMaybe(step) {
+  const seen = guideSeen();
+  if (seen.skip || seen[step] || guide.open || state.viewing) return;
+  if (step === 4 && document.querySelector(".rack-sec.choosing")) return;   // 晾布架滿了正在選要收哪塊時先不打擾，下次再介紹
+  setTimeout(() => { if (state.step === step || step === 4) guideStart(step); }, step === 1 ? 300 : 650);
+}
+function guideStart(step) {
+  if (!GUIDES[step] || guide.open) return;
+  guide.step = step; guide.i = 0; guide.open = true;
+  guide.last = document.activeElement;
+  document.getElementById("guide").hidden = false;
+  guidePlace();
+  document.getElementById("guideNext").focus({ preventScroll: true });
+}
+function guideTarget() {
+  const item = GUIDES[guide.step][guide.i], el = document.querySelector(item.el);
+  return el && el.offsetParent !== null ? el : null;
+}
+function guidePlace() {
+  const list = GUIDES[guide.step], item = list[guide.i], el = guideTarget();
+  document.getElementById("guideTitle").textContent = item.t;
+  document.getElementById("guideText").textContent = item.p;
+  document.getElementById("guideNum").textContent = `${guide.i + 1} / ${list.length}`;
+  document.getElementById("guideNext").textContent = guide.i === list.length - 1 ? "知道了" : "下一步";
+  const hole = document.getElementById("guideHole"), card = document.getElementById("guideCard");
+  if (!el) { hole.style.cssText = "left:50%;top:50%;width:0;height:0"; card.style.left = "50%"; card.style.top = "40%"; card.style.transform = "translate(-50%,-50%)"; return; }
+  card.style.transform = "";
+  const mobile = matchMedia("(max-width: 600px)").matches;
+  el.scrollIntoView({ block: mobile ? "start" : "nearest", behavior: "auto" });
+  // 手機：卡片在底部，目標捲到畫面上半
+  if (mobile) { window.scrollBy(0, -16); const r0 = el.getBoundingClientRect(), cardH = card.offsetHeight + 24; if (r0.bottom > innerHeight - cardH) window.scrollBy(0, Math.min(r0.top - 16, r0.bottom - (innerHeight - cardH))); }
+  const r = el.getBoundingClientRect(), pad = 6;
+  hole.style.cssText = `left:${r.left - pad}px;top:${r.top - pad}px;width:${r.width + pad * 2}px;height:${r.height + pad * 2}px`;
+  if (mobile) return;
+  const cw = card.offsetWidth, ch = card.offsetHeight, gap = 14;
+  let left = Math.min(Math.max(12, r.left + r.width / 2 - cw / 2), innerWidth - cw - 12), top;
+  if (r.bottom + gap + ch < innerHeight - 8) top = r.bottom + gap;            // 放在下面
+  else if (r.top - gap - ch > 8) top = r.top - gap - ch;                      // 放在上面
+  else { top = Math.max(12, Math.min(innerHeight - ch - 12, r.top)); left = r.right + gap + cw < innerWidth ? r.right + gap : Math.max(12, r.left - gap - cw); }   // 放在旁邊
+  card.style.left = left + "px"; card.style.top = top + "px";
+}
+function guideClose(all) {
+  guide.open = false; document.getElementById("guide").hidden = true;
+  guideMark(all ? { skip: true } : { [guide.step]: true });
+  if (guide.last && guide.last.focus) guide.last.focus({ preventScroll: true });
+}
+document.getElementById("guideNext").addEventListener("click", () => { if (guide.i < GUIDES[guide.step].length - 1) { guide.i++; guidePlace(); } else guideClose(false); });
+document.getElementById("guideSkip").addEventListener("click", () => guideClose(true));
+document.getElementById("guide").addEventListener("keydown", e => {
+  if (e.key === "Escape") guideClose(true);
+  if (e.key === "Tab") { const b = [document.getElementById("guideSkip"), document.getElementById("guideNext")], k = b.indexOf(document.activeElement); e.preventDefault(); b[(k + 1) % 2].focus(); }
+});
+addEventListener("resize", () => { if (guide.open) guidePlace(); });
+document.getElementById("guideAgain").addEventListener("click", () => {
+  try { localStorage.removeItem(GUIDE_KEY); } catch (e) { /* 略過 */ }
+  const step = !document.getElementById("afterReveal").hidden && state.step === 4 ? 4 : state.step;
+  window.scrollTo({ top: 0 }); setTimeout(() => guideStart(GUIDES[step] ? step : 1), 50);
+});
+// 第一步：等載入動畫結束、布架準備好之後再出現
+(window.__loaderDone || Promise.resolve()).then(() => {
+  const wait = () => document.querySelector("#fabricOpts input") ? guideMaybe(1) : setTimeout(wait, 150);
+  wait();
+});
 requestAnimationFrame(() => setTimeout(init, 0));
 
 if (location.hash === "#test") window.__dye = { state, renderCloth, show, setCardMode, rack: () => rack, selectTool, setOpt };
