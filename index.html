@@ -173,7 +173,7 @@ a { color: var(--indigo); }
 .pick input:focus-visible + label { outline: 3px solid var(--focus); outline-offset: 2px; }
 .pick input:disabled + label { opacity: .45; cursor: not-allowed; }
 .pick img { display: block; width: 100%; height: auto; }
-.pick.tool { flex: 1 1 calc(50% - 6px); } .pick.tool img { max-width: 76px; }
+
 .pick.dish, .pick.swatch, .pick.board { flex: 1 1 0; } .pick.dish img { max-width: 80px; } .pick.swatch img { max-width: 72px; } .pick.board img { max-width: 56px; border-radius: 6px; }
 .pick.ring label, .pick.peg label { padding: 2px; } .pick.ring img { width: 40px; } .pick.peg img { width: 44px; }
 .pick.ring input:checked + label, .pick.peg input:checked + label { border-color: transparent; background: rgba(255,240,210,.24); }
@@ -281,7 +281,7 @@ a { color: var(--indigo); }
 .cloth img { display: block; width: 100%; aspect-ratio: 3 / 4; object-fit: cover; border-radius: 0 0 4px 4px; box-shadow: 0 8px 18px rgba(0, 0, 0, .35); }
 .cloth::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 16px; background: linear-gradient(rgba(0,0,0,.38), rgba(0,0,0,.08)); pointer-events: none; }
 .cloth::after { content: ""; position: absolute; top: -4px; left: 50%; width: 10px; height: 22px; margin-left: -5px; border-radius: 3px; background: var(--bamboo); box-shadow: 0 1px 2px rgba(0,0,0,.4); }
-.cloth .nm { display: block; font-size: 13px; margin-top: 8px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cloth .nm { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }   /* 作品名不顯示在晾布架上，點開才看得到 */
 .cloth:hover, .cloth:focus-visible { transform: rotate(1.2deg); }
 .cloth.current img { outline: 3px solid var(--indigo); outline-offset: 2px; }
 .cloth.empty { cursor: default; }
@@ -303,6 +303,101 @@ a { color: var(--indigo); }
 @media (prefers-reduced-motion: reduce) { .cloth.new { animation: none; } .cloth { transition: none; } }
 
 .toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 18px; border-radius: 999px; font-size: 14px; z-index: 10; max-width: calc(100% - 32px); text-align: center; }
+
+/* ---------- 進度條：一條染布，染過的段落是深藍 ---------- */
+.steps { gap: 0; border-radius: 6px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,.35), inset 0 0 0 1px rgba(0,0,0,.15);
+  background: repeating-linear-gradient(90deg, rgba(0,0,0,.035) 0 1px, transparent 1px 4px), repeating-linear-gradient(0deg, rgba(0,0,0,.03) 0 1px, transparent 1px 4px), #ece8dc; }
+.steps li { position: relative; display: block; }
+.steps li + li button { box-shadow: inset 1px 0 0 rgba(0,0,0,.04); }
+.steps li + li::before { content: ""; position: absolute; left: 0; top: 4px; bottom: 4px; border-left: 1.5px dashed rgba(110,84,48,.45); z-index: 1; pointer-events: none; }   /* 段與段之間的縫線 */
+.steps button { display: block; position: relative; height: 28px; padding: 0 4px; border: 0; text-align: center; font-size: 13px; letter-spacing: .12em; color: #6f6a5e; background: transparent; transition: background-color .6s, color .4s; }
+.steps button.past { color: #f1efe6; background:
+  radial-gradient(60% 90% at 30% 30%, rgba(60,92,150,.45), transparent 70%),
+  radial-gradient(50% 80% at 80% 70%, rgba(10,20,46,.45), transparent 70%), #1f3566; }
+.steps button.current { color: #f6f4ee; font-weight: 700; background: #4a68a6; }   /* 目前這一步：比深藍淺一階的實色 */
+.steps button.done { cursor: pointer; }
+.steps button.done:hover { filter: brightness(1.15); }
+.steps button:focus-visible { outline: 3px solid var(--focus); outline-offset: -3px; }
+@media (prefers-reduced-motion: reduce) { .steps button { transition: none; } }
+/* 手機：進度條放到布面上方 */
+@media (max-width: 900px) {
+  .top { flex-wrap: nowrap; align-items: center; gap: 12px; }
+  .top h1 { font-size: 22px; flex: none; }
+  .top .steps { flex: 1; min-width: 0; }
+  .top .steps button { letter-spacing: .04em; }
+  .rail { display: contents; }
+  .app > .stage { order: 1; }
+  .rail > .steps { order: 0; }
+  .rail > .step { order: 2; }
+}
+
+/* ---------- 工具盤：上排選工具，下面直接接這個工具的選項 ---------- */
+.tray > .in { gap: 0; }
+.picks.tools { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.picks.tools .pick label { gap: 0; padding: 8px 2px; font-size: 14px; border-radius: 8px; letter-spacing: .06em; }
+.picks.tools .pick input:checked + label { background: rgba(255,240,210,.42); border-radius: 8px 8px 0 0; padding-bottom: 10px; margin-bottom: -6px; position: relative; z-index: 1; }
+.tray-detail { background: rgba(255,240,210,.42); border-radius: 10px; padding: 10px; display: grid; gap: 10px; margin-top: 6px; }
+.tray-detail .pick label { background: rgba(80,52,22,.10); }
+.tray-detail .pick label:hover { background: rgba(80,52,22,.18); }
+.tray-detail .pick input:checked + label { background: rgba(255,250,236,.85); border-color: #fff; }
+.tray .detail + .detail { margin-top: 2px; }
+.tray-detail .detail.rings .picks { flex-wrap: nowrap; } .tray-detail .pick.ring { flex: 1 1 0; } .tray-detail .pick.ring img { width: 100%; max-width: 40px; }   /* 綁幾圈：五個圈排成一排 */
+@media (max-width: 900px) {
+  .picks.tools .pick label { font-size: 13px; padding: 7px 2px; }
+  .tray-detail .picks { flex-wrap: nowrap; }
+  .tray-detail .pick { flex: 1 1 0; }
+  .tray-detail .pick.dish img, .tray-detail .pick.swatch img, .tray-detail .pick.board img { max-width: 44px; }
+  .tray-detail .detail.cores .picks { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px; }   /* 手機：六種內包物排成一排 */
+  .tray-detail .pick label { font-size: 11px; padding: 3px 1px; }
+}
+
+
+/* ---------- 布面右上角：復原、刪除選取、清空 ---------- */
+.stage-tools { position: absolute; bottom: 12px; right: 12px; z-index: 3; display: flex; align-items: center; gap: 6px; }   /* 和左下角說明文字同一條線 */
+.stage:not(.drawing) .stage-tools { display: none; }
+.stage-tools button { width: 32px; height: 32px; border-radius: 50%; border: 0; padding: 0; display: grid; place-items: center; cursor: pointer;
+  background: rgba(19,33,63,.34); color: #fff; border: 1px solid rgba(255,255,255,.45); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); box-shadow: 0 2px 6px rgba(0,0,0,.18); }
+.stage-tools button[hidden] { display: none; }
+.stage-tools button:disabled { opacity: .35; cursor: default; }
+.stage-tools button:not(:disabled):hover { background: rgba(19,33,63,.6); }
+.stage-tools button:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.stage-tools button.txt { width: auto; border-radius: 999px; padding: 0 12px; font: 500 13px var(--font-body); letter-spacing: .04em; }
+.stage.drawing .cap { max-width: calc(100% - 170px); }
+.stage-tools svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+/* 選到的記號旁：刪除 ✕ 和拖曳把手 */
+.sel-layer { position: absolute; inset: 4.5%; z-index: 3; pointer-events: none; }
+.stage:not(.drawing) .sel-layer { display: none; }
+.sel-box { position: absolute; border: 1.5px dashed rgba(19,33,63,.85); outline: 1px dashed rgba(255,255,255,.9); outline-offset: 0; pointer-events: none; }
+.sel-box[hidden], .sel-box.nosize .sel-c { display: none; }
+.sel-c { position: absolute; width: 12px; height: 12px; background: #fff; border: 2px solid #13213f; pointer-events: auto; touch-action: none; transform: translate(-50%, -50%); }
+.sel-c::before { content: ""; position: absolute; inset: -12px; }   /* 手機上點擊範圍放大到約 36px */
+.sel-c[data-c="nw"] { left: 0; top: 0; cursor: nwse-resize; } .sel-c[data-c="se"] { left: 100%; top: 100%; cursor: nwse-resize; }
+.sel-c[data-c="ne"] { left: 100%; top: 0; cursor: nesw-resize; } .sel-c[data-c="sw"] { left: 0; top: 100%; cursor: nesw-resize; }
+.sel-del { position: absolute; pointer-events: auto; width: 30px; height: 30px; border-radius: 50%; border: 2px solid #fff; padding: 0; display: grid; place-items: center; cursor: pointer; background: rgba(19,33,63,.78); color: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.3); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
+.sel-del:hover { background: rgba(19,33,63,.95); }
+.sel-del::before { content: ""; position: absolute; inset: -6px; }
+.sel-del svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.sel-del[hidden] { display: none; }
+.sel-del:focus-visible, .sel-c:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+#sizeRow { display: none !important; }   /* 大小改成直接拖選取記號的把手 */
+@media (min-width: 901px) {
+  .stage .cap { bottom: max(4px, calc(2.25% - 15px)); left: 4.5%; }
+  .stage-tools { bottom: max(4px, calc(2.25% - 16px)); right: 4.5%; }
+}
+/* ---------- 浸染：點布就浸 ---------- */
+#bindTip { display: flex; gap: 8px; align-items: flex-start; }
+#bindTip img { flex: none; width: 34px; height: auto; margin-top: -2px; }
+.sr-only { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.dip-hint { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0; font-size: 14px; color: var(--ink); }
+.dip-hint .btn { flex: none; }
+
+/* ---------- 晾布架說明：點問號才出現 ---------- */
+.rack-head { position: relative; }
+.rack-head h2 { display: flex; align-items: center; gap: 8px; }
+.qmark { width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid var(--muted); background: transparent; color: var(--muted); font: 700 14px var(--font-body); line-height: 1; cursor: pointer; padding: 0; display: inline-grid; place-items: center; }
+.qmark:hover, .qmark[aria-expanded="true"] { color: var(--on-indigo); background: var(--indigo); border-color: var(--indigo); }
+.qmark:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.rack-note { position: absolute; left: 0; top: calc(100% + 8px); z-index: 5; width: min(360px, 100%); margin: 0; padding: 12px 14px; border-radius: 10px; background: var(--indigo); color: var(--on-indigo); font-size: 14px; line-height: 1.7; box-shadow: 0 10px 24px rgba(0,0,0,.4); }
 /* ---------- 第一次使用的引導 ---------- */
 .guide { position: fixed; inset: 0; z-index: 40; }
 .guide[hidden] { display: none; }
@@ -608,7 +703,6 @@ a { color: var(--indigo); }
 <div class="wrap">
   <header class="top">
     <h1>島宇染坊</h1>
-    <a href="culture.html">藍染的故事 →</a>
   </header>
 
   <main class="app">
@@ -616,6 +710,17 @@ a { color: var(--indigo); }
       <canvas id="stage" width="900" height="900" aria-label="染布工作台"></canvas>
       <img class="card-img" id="cardImg" alt="" hidden>
       <p class="cap" id="caption" aria-live="polite"></p>
+      <div class="sel-layer" id="selLayer">
+        <div class="sel-box" id="selBox" hidden>
+          <span class="sel-c" data-c="nw" aria-hidden="true"></span><span class="sel-c" data-c="ne" aria-hidden="true"></span>
+          <span class="sel-c" data-c="sw" aria-hidden="true"></span><span class="sel-c" data-c="se" id="selHandle" role="slider" tabindex="0" aria-label="調整大小" aria-valuemin="40" aria-valuemax="170"></span>
+        </div>
+        <button type="button" class="sel-del" id="delBtn" title="刪除這個記號" aria-label="刪除選取的記號" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 12.5h9l1-12.5M10 11v5.5M14 11v5.5"/></svg></button>
+      </div>
+      <div class="stage-tools" id="stageTools" role="toolbar" aria-label="記號">
+        <button type="button" id="undoBtn" title="復原" aria-label="復原"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></button>
+        <button type="button" id="clearBtn" class="txt">全部清空</button>
+      </div>
     </div>
 
     <aside class="rail">
@@ -627,7 +732,6 @@ a { color: var(--indigo); }
       </ol>
 
       <section class="step" id="step1">
-        <p class="label">布架</p>
         <div class="shelf" id="fabricOpts" role="radiogroup" aria-label="布料"></div>
         <p class="tip" id="fabricTip"></p>
         <div class="actions"><button class="btn wide" type="button" id="to2">就用這塊布</button></div>
@@ -635,19 +739,13 @@ a { color: var(--indigo); }
 
       <section class="step" id="step2" hidden>
         <p class="tip" id="redyeNote" hidden></p>
-        <div class="wood"><div class="in">
-          <p class="wlabel">工具盤<small>點工具就是拿起來</small></p>
-          <div class="picks" id="toolOpts" role="radiogroup" aria-label="綁法"></div>
+        <div class="wood tray"><div class="in">
+          <div class="picks tools" id="toolOpts" role="radiogroup" aria-label="綁法"></div>
+          <div class="tray-detail" id="toolDetail">
+            <div class="opts" id="toolSettings"></div>
+            <div class="range ruler" id="sizeRow"><label for="penSize" id="sizeLabel">大小</label><input type="range" id="penSize" min="40" max="170" value="95"></div>
+          </div>
         </div></div>
-        <div class="wood"><div class="in" id="toolDetail">
-          <div class="opts" id="toolSettings"></div>
-          <div class="range ruler" id="sizeRow"><label for="penSize" id="sizeLabel">大小</label><input type="range" id="penSize" min="40" max="170" value="95"></div>
-        </div></div>
-        <div class="actions">
-          <button class="btn ghost small" type="button" id="undoBtn">復原</button>
-          <button class="btn ghost small" type="button" id="delBtn">刪除選取</button>
-          <button class="btn ghost small" type="button" id="clearBtn">清除</button>
-        </div>
         <p class="tip" id="bindTip"></p>
         <div class="actions">
           <button class="btn wide" type="button" id="to3">綁好了，下缸</button>
@@ -656,23 +754,23 @@ a { color: var(--indigo); }
       </section>
 
       <section class="step" id="step3" hidden>
-        <div>
-          <p class="label">染缸<small style="margin-left:8px;letter-spacing:0">點畫面上的缸，或點這裡</small></p>
+        <div class="sr-only">
+          <p class="label">染缸</p>
           <div class="picks" id="dyeOpts" role="radiogroup" aria-label="染缸"></div>
         </div>
         <div class="raw"><p class="label" id="rawTitle" style="margin:0">原料</p><ol class="flow" id="rawFlow"></ol></div>
-        <div class="wood"><div class="in">
+        <div class="sr-only">
           <p class="wlabel">要舀幾杓染料？</p>
           <div class="picks" id="strengthOpts" role="radiogroup" aria-label="染液濃淡"></div>
-        </div></div>
+        </div>
         <div class="meter">
           <div class="row"><span class="label" style="margin:0">已經浸了幾次</span><span class="count" id="dipCount">0 / 8 次</span></div>
           <div class="strips" id="dipBar" style="margin-block:6px 20px"></div>
         </div>
         <p class="tip" id="dipTip"></p>
+        <p class="dip-hint">點缸換色、點杓子選濃淡，點布浸入染缸<button class="btn ghost small" type="button" id="dipBtn" aria-label="浸入染缸一次">浸一次</button></p>
         <div class="actions">
-          <button class="btn wide" type="button" id="dipBtn">浸入染缸</button>
-          <button class="btn ghost" type="button" id="to4" disabled>拆開看看</button>
+          <button class="btn wide" type="button" id="to4" disabled>拆開看看</button>
         </div>
       </section>
 
@@ -727,18 +825,21 @@ a { color: var(--indigo); }
   </main>
 
   <section class="rack-sec" aria-label="晾布架">
-    <div class="rack-head"><h2>晾布架</h2><span id="rackCount">0 / 6</span></div>
+    <div class="rack-head">
+      <h2>晾布架<button type="button" class="qmark" id="rackHelp" aria-label="晾布架說明" aria-expanded="false" aria-controls="rackNote">?</button></h2>
+      <span id="rackCount">0 / 6</span>
+      <p class="rack-note" id="rackNote" hidden>染好的布會掛在這裡，存在這個瀏覽器中，最多 6 塊；再染新的會自動收下最舊的一塊。點一塊布可以再看一次、做成小卡，還沒染到最深的布也可以再染一回。</p>
+    </div>
     <div class="rack-choose" id="rackChoose" hidden>
       <p>晾布架滿了，選一塊收下來，換上新染好的布。</p>
       <button class="btn ghost small" type="button" id="skipHang">這塊先不掛</button>
     </div>
     <div class="rack"><div class="rack-inner"><div class="pole"></div><div class="slots" id="slots"></div></div></div>
-    <p class="tip">染好的布會掛在這裡，存在這個瀏覽器中，最多 6 塊；再染新的會自動收下最舊的一塊。點一塊布可以再看一次、做成小卡，還沒染到最深的布也可以再染一回。</p>
   </section>
 
   <footer class="foot">
     <span>圖案依照你的布、綁法與浸染，由程式即時生成，每一塊都不一樣。</span>
-    <span><button type="button" class="guide-again" id="guideAgain">再看一次教學</button>　<a href="culture.html">藍染的故事 →</a></span>
+    <span><button type="button" class="guide-again" id="guideAgain">再看一次教學</button>　<a href="culture.html">關於藍染 →</a></span>
   </footer>
 </div>
 <div class="guide" id="guide" hidden>
@@ -764,6 +865,7 @@ const S = 900;                       // 畫布邊長（像素）
 const MAX_DIPS = 8;                  // 一塊布最多累積浸染次數
 const MAX_ROUNDS = 3;                // 最多染三回
 const REDUCED = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+let clearSnap = null;   // 按「清空」前的記號，讓「復原」可以救回來
 
 /* ---------- 資料 ---------- */
 const FABRICS = {
@@ -1544,7 +1646,7 @@ function buildOptions() {
   document.getElementById("fabricOpts").innerHTML = Object.entries(FABRICS).map(([k, f]) =>
     radioHTML("fabric", k, "fabric-" + k, `<span class="boltwrap"><span class="boltbox"><img class="tail" src="${tailIcon(k)}" alt=""><img class="roll" src="${boltIcon(k)}" alt=""><span class="sheen"></span><span class="cap"><span class="squash"><img class="rot" src="${capIcon(k)}" alt=""></span></span><span class="axle-front"></span></span></span><span>${f.name}</span>`, k === state.fabric, "bolt")).join("");
   document.getElementById("toolOpts").innerHTML = Object.entries(TECHS).map(([k, t]) =>
-    radioHTML("tool", k, "tool-" + k, `<img src="${ICON.tool[k]}" alt=""><span>${t.name}</span>`, k === state.tool, "tool")).join("");
+    radioHTML("tool", k, "tool-" + k, `<span>${t.name}</span>`, k === state.tool, "tool")).join("");
   document.getElementById("dyeOpts").innerHTML = ["shulang", "indigo", "turmeric"].map(k =>
     radioHTML("dye", k, "dye-" + k, `<i style="background:${DYES[k].chip}"></i>${DYES[k].name}`, k === state.dye, "chipv")).join("");
   document.getElementById("strengthOpts").innerHTML = Object.entries(STRENGTH).map(([k, s], i) =>
@@ -1625,12 +1727,16 @@ function vatLayout(dye) {
 }
 const VATS = vatLayout("indigo");
 // 換缸：選到的缸滑到正中間
+// 三個缸放在同一個轉盤上：正前方角度 0，左右各 ±120 度
+const vatAtAngle = a => { const c = (1 - Math.cos(a)) / 1.5; return { x: 450 + 325.6 * Math.sin(a), y: 555 + 30 * c, s: 1 - 0.28 * c }; };
+const vatAngle = v => Math.abs(v.x - 450) < 1 ? 0 : (v.x < 450 ? -2 * Math.PI / 3 : 2 * Math.PI / 3);
 async function moveVats(dye) {
-  const from = JSON.parse(JSON.stringify(VATS)), to = vatLayout(dye);
+  const to = vatLayout(dye), from = {}, delta = -vatAngle(VATS[dye]);   // 整個轉盤一起轉，選到的缸轉到正前方
+  for (const k of VAT_ORDER) from[k] = vatAngle(VATS[k]);
   state.busy = true; updateMeter();
-  await animate(550, t => {
+  await animate(650, t => {
     const e = ease(t);
-    for (const k of VAT_ORDER) for (const p of ["x", "y", "s"]) VATS[k][p] = from[k][p] + (to[k][p] - from[k][p]) * e;
+    for (const k of VAT_ORDER) Object.assign(VATS[k], vatAtAngle(from[k] + delta * e));
     drawDyeScene(outerColor(state.dips), 330, 0);
   });
   Object.assign(VATS, to);
@@ -1676,10 +1782,69 @@ function drawRawItems(ctx) {
     ctx.textAlign = "left";
   }
 }
+const TT = { cx: 450, cy: 718, rx: 436, ry: 112 };
+const TT_ARROWS = [["L", Math.PI * 0.82, Math.PI * 0.6], ["R", Math.PI * 0.18, Math.PI * 0.4]];
+var arrowHover = null;
+function arrowAt(x, y) {   // 點到哪一個轉盤箭頭（範圍比畫出來的稍大，手指好點）
+  const u = (x - TT.cx) / TT.rx, v = (y - TT.cy) / TT.ry, r = Math.hypot(u, v), a = Math.atan2(v, u);
+  if (r < 0.74 || r > 1.04) return null;
+  for (const [side, a0, a1] of TT_ARROWS) if (a >= Math.min(a0, a1) - 0.05 && a <= Math.max(a0, a1) + 0.05) return side;
+  return null;
+}
+/* 缸底下的大轉盤：深色半透明，前緣左右各一個扁平弧形箭頭，表示可以轉 */
+function drawTurntable(ctx) {
+  const { cx, cy, rx, ry } = TT;
+  ctx.save();
+  ctx.fillStyle = "rgba(10,6,2,0.26)"; ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = "rgba(10,6,2,0.14)"; ctx.beginPath(); ctx.ellipse(cx, cy + 6, rx + 10, ry + 8, 0, 0, Math.PI * 2); ctx.fill();
+  // 雙向弧形箭頭：貼著盤面前緣，左右各一個；滑鼠移過去會變亮
+  for (const [side, a0, a1] of TT_ARROWS) {
+    const ri = 0.855, ro = 0.915, mid = (ri + ro) / 2, n = 24, P = (a, k) => [cx + Math.cos(a) * rx * k, cy + Math.sin(a) * ry * k], hw = 0.085, head = 0.07;
+    const s0 = a0 + Math.sign(a1 - a0) * head, s1 = a1 - Math.sign(a1 - a0) * head;
+    ctx.beginPath();
+    { const [x, y] = P(a0, mid); ctx.moveTo(x, y); }
+    { const [x, y] = P(s0, mid + hw); ctx.lineTo(x, y); }
+    for (let i = 0; i <= n; i++) { const [x, y] = P(s0 + (s1 - s0) * i / n, ro); ctx.lineTo(x, y); }
+    { const [x, y] = P(s1, mid + hw); ctx.lineTo(x, y); }
+    { const [x, y] = P(a1, mid); ctx.lineTo(x, y); }
+    { const [x, y] = P(s1, mid - hw); ctx.lineTo(x, y); }
+    for (let i = n; i >= 0; i--) { const [x, y] = P(s0 + (s1 - s0) * i / n, ri); ctx.lineTo(x, y); }
+    { const [x, y] = P(s0, mid - hw); ctx.lineTo(x, y); }
+    ctx.closePath(); ctx.fillStyle = arrowHover === side ? "rgba(255,244,222,0.62)" : "rgba(0,0,0,0.42)"; ctx.fill();
+  }
+  ctx.restore();
+}
+/* 左上角的杓架：點一支杓子就決定要舀幾杓（濃淡） */
+const LADLE_RACK = { x: 20, y: 20, w: 128, h: 118, gap: 8 };   // 沿左側直排；手機上每格約 50×46px，手指好點
+const ladleSlots = () => Object.keys(STRENGTH).map((k, i) => ({ k, x: LADLE_RACK.x, y: LADLE_RACK.y + i * (LADLE_RACK.h + LADLE_RACK.gap), w: LADLE_RACK.w, h: LADLE_RACK.h }));
+function ladleAt(x, y) { return (ladleSlots().find(s => x >= s.x && x <= s.x + s.w && y >= s.y && y <= s.y + s.h) || {}).k || null; }
+function drawLadleRack(ctx) {
+  const slots = ladleSlots(), L = slots[slots.length - 1];
+  ctx.save();
+  ctx.fillStyle = "rgba(30,18,8,0.28)"; ctx.beginPath(); ctx.roundRect(LADLE_RACK.x - 8, LADLE_RACK.y - 8, LADLE_RACK.w + 16, L.y + L.h - LADLE_RACK.y + 16, 16); ctx.fill();
+  slots.forEach((s, i) => {
+    const on = s.k === state.strength;
+    ctx.fillStyle = on ? "rgba(255,244,222,0.9)" : "rgba(255,240,210,0.16)"; ctx.beginPath(); ctx.roundRect(s.x, s.y, s.w, s.h, 12); ctx.fill();
+    if (on) { ctx.strokeStyle = "#fff8ea"; ctx.lineWidth = 3; ctx.stroke(); }
+    // 杓子：1～3 支交疊
+    for (let n = 0; n <= i; n++) {
+      ctx.save(); ctx.translate(s.x + 46 + n * 13, s.y + 46 + n * 6); ctx.rotate(-0.55); ctx.scale(1.05, 1.05);
+      ctx.fillStyle = "#c8a46e"; ctx.beginPath(); ctx.roundRect(4, -4, 56, 8, 4); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(-8, 0, 17, 12, 0, 0, Math.PI * 2); ctx.fillStyle = "#9c7646"; ctx.fill();
+      ctx.beginPath(); ctx.ellipse(-8, -2, 12, 7, 0, 0, Math.PI * 2); ctx.fillStyle = "#5f4426"; ctx.fill();
+      ctx.restore();
+    }
+    ctx.font = `${on ? 700 : 500} 30px "Noto Sans TC", sans-serif`; ctx.textAlign = "center";
+    ctx.fillStyle = on ? "#3a2510" : "rgba(255,244,222,0.92)"; ctx.fillText(STRENGTH[s.k].name, s.x + s.w / 2, s.y + s.h - 14);   // 只留淡、中、濃，杓子支數已經看得出幾杓
+  });
+  ctx.textAlign = "left"; ctx.restore();
+}
 function drawDyeScene(color, by, ripple, drops) {
   clearStage();
-  for (const k of VAT_ORDER.filter(x => x !== state.dye).concat([state.dye])) drawVat(sctx, k, k === state.dye, k === state.dye ? ripple : 0);
+  drawTurntable(sctx);
+  for (const k of VAT_ORDER.slice().sort((a, b) => VATS[a].s - VATS[b].s)) drawVat(sctx, k, k === state.dye, k === state.dye ? ripple : 0);   // 後面的缸先畫
   drawRawItems(sctx);
+  drawLadleRack(sctx);
   const v = vatOf();
   sctx.strokeStyle = "rgba(217,205,181,0.8)"; sctx.lineWidth = 2; sctx.beginPath(); sctx.moveTo(v.x, 0); sctx.lineTo(v.x, Math.max(0, by - 110)); sctx.stroke();
   sctx.save(); sctx.beginPath(); sctx.rect(0, 0, S, v.y); sctx.clip();
@@ -2103,11 +2268,70 @@ async function crumpleAnim(m) {
 }
 
 function drawFabricScene(live) {
-  if (state.step === 2 && state.tool === "itajime") { drawFoldView(live && live.type === "itajime" ? live : null); return; }
+  liveNow = !!live;
+  if (state.step === 2 && state.tool === "itajime") { drawFoldView(live && live.type === "itajime" ? live : null); placeSelUI(); return; }
   clearStage();
   sctx.drawImage(flatImage(), 0, 0);
   if (state.step === 2) drawMarks(sctx, state.marks, { live, sel: state.sel });
+  placeSelUI();
 }
+/* ---------- 選到的記號：右上角刪除 ✕，右下角拖曳把手（捆紮＝揪起深度、揉皺＝範圍大小） ---------- */
+var liveNow = false;
+function selBox(m) {
+  if (m.type === "kumo") return { cx: m.x, cy: m.y, r: m.R };
+  if (m.type === "itajime" && m.u != null) { const x = PV.x + m.u * PV.w, y = PV.y + m.v * PV.w, r = m.r * PV.w; return { cx: x, cy: y, r }; }
+  if (!m.pts) return null;
+  const pad = m.type === "arashi" && !m.pole ? m.w / 2 : 14, xs = m.pts.map(p => p[0]), ys = m.pts.map(p => p[1]);
+  const x0 = Math.min(...xs) - pad, x1 = Math.max(...xs) + pad, y0 = Math.min(...ys) - pad, y1 = Math.max(...ys) + pad;
+  return { x0, y0, x1, y1, cx: (x0 + x1) / 2, cy: (y0 + y1) / 2 };
+}
+const sizable = m => m.type === "kumo" || (m.type === "arashi" && !m.pole);
+function placeSelUI() {
+  const del = document.getElementById("delBtn"), box = document.getElementById("selBox"), hd = document.getElementById("selHandle");
+  const m = state.sel >= 0 ? state.marks[state.sel] : null;
+  const show = m && state.step === 2 && !liveNow && !state.busy && (m.type !== "itajime" || state.tool === "itajime") && (state.tool !== "itajime" || m.type === "itajime");
+  if (!show) { del.hidden = true; box.hidden = true; return; }
+  const b = selBox(m); if (!b) { del.hidden = true; box.hidden = true; return; }
+  let x0, y0, x1, y1;
+  if (b.r != null) { x0 = b.cx - b.r; x1 = b.cx + b.r; y0 = b.cy - b.r; y1 = b.cy + b.r; } else ({ x0, y0, x1, y1 } = b);
+  x0 = clamp(x0, 4, S - 4); x1 = clamp(x1, 4, S - 4); y0 = clamp(y0, 4, S - 4); y1 = clamp(y1, 4, S - 4);
+  const P = v => (v / S * 100) + "%";
+  box.hidden = false; box.style.left = P(x0); box.style.top = P(y0); box.style.width = P(x1 - x0); box.style.height = P(y1 - y0);
+  box.classList.toggle("nosize", !sizable(m));
+  // 垃圾桶：放在方框右上角外側；太靠上就放到方框下面，太靠右就放到左邊
+  const up = y0 > 70, right = x1 < S - 50;
+  del.hidden = false;
+  del.style.left = P(right ? x1 : x0); del.style.top = P(up ? y0 : y1);
+  del.style.transform = `translate(${right ? "4px" : "calc(-100% - 4px)"}, ${up ? "calc(-100% - 8px)" : "8px"})`;
+  if (sizable(m)) { const val = m.type === "kumo" ? m.R : Math.round(m.w / 1.1); hd.setAttribute("aria-valuenow", val); hd.setAttribute("aria-label", m.type === "kumo" ? "揪起的深度" : "範圍大小"); }
+}
+(() => {
+  let drag = null;
+  const setSize = (m, v) => {
+    v = Math.round(clamp(v, 40, 170));
+    if (m.type === "kumo") m.R = v; else m.w = Math.round(v * 1.1);
+    document.getElementById("penSize").value = v;   // 新的記號沿用這次調好的大小
+    drawFabricScene();
+  };
+  const center = m => { if (m.type === "kumo") return [m.x, m.y]; const b = selBox(m); return [b.cx, b.cy]; };
+  document.querySelectorAll("#selBox .sel-c").forEach(hd => {
+    hd.addEventListener("pointerdown", e => {
+      const m = state.marks[state.sel]; if (!m || state.busy || !sizable(m)) return;
+      e.preventDefault(); e.stopPropagation(); hd.setPointerCapture(e.pointerId);
+      const [x, y] = toCanvas(e), c = center(m);
+      drag = { m, c, d0: Math.max(10, Math.hypot(x - c[0], y - c[1])), v0: m.type === "kumo" ? m.R : m.w / 1.1 };
+    });
+    hd.addEventListener("pointermove", e => { if (!drag) return; const [x, y] = toCanvas(e); setSize(drag.m, drag.v0 * Math.hypot(x - drag.c[0], y - drag.c[1]) / drag.d0); });
+    const end = () => { if (drag) { drag = null; updateBind(); } };
+    hd.addEventListener("pointerup", end); hd.addEventListener("pointercancel", end);
+  });
+  document.getElementById("selHandle").addEventListener("keydown", e => {   // 鍵盤：方向鍵調整大小
+    const m = state.marks[state.sel]; if (!m || !sizable(m)) return;
+    const cur = m.type === "kumo" ? m.R : m.w / 1.1, st = e.shiftKey ? 15 : 5;
+    if (e.key === "ArrowRight" || e.key === "ArrowUp") { e.preventDefault(); setSize(m, cur + st); }
+    if (e.key === "ArrowLeft" || e.key === "ArrowDown") { e.preventDefault(); setSize(m, cur - st); }
+  });
+})();
 
 /* ---------- 綁好的樣子（下缸、拆布用） ---------- */
 function drawBundle(ctx, tech, color, opt = {}) { return drawCustomBundle(ctx, color, opt); }
@@ -2266,9 +2490,20 @@ stage.addEventListener("pointerdown", e => {
 });
 stage.addEventListener("click", e => {
   if (state.step !== 3 || state.busy || state.viewing || state.cardMode) return;
-  const [x, y] = toCanvas(e), k = vatAt(x, y);
+  const [x, y] = toCanvas(e), v = vatOf(), ld = ladleAt(x, y), arw = arrowAt(x, y);
+  const k = arw ? VAT_ORDER.find(q => arw === "L" ? VATS[q].x < 400 : VATS[q].x > 500) : vatAt(x, y);   // 點箭頭：轉到那一側的缸
+  if (ld) { if (ld !== state.strength) { const el = document.getElementById("st-" + ld); if (el) { el.checked = true; el.dispatchEvent(new Event("change", { bubbles: true })); } } return; }   // 點杓子：選濃淡
+  // 點吊著的布或選中的缸：浸一次；點別的缸：換缸
+  const onCloth = Math.abs(x - v.x) < 170 && y > 120 && y < v.y;
   if (k && k !== state.dye) { const el = document.getElementById("dye-" + k); if (el) { el.checked = true; el.dispatchEvent(new Event("change", { bubbles: true })); } }
+  else if (onCloth || k === state.dye) { if (!document.getElementById("dipBtn").disabled) dip(); }
 });
+stage.addEventListener("pointermove", e => {   // 浸染：滑鼠移到轉盤箭頭上時變亮
+  if (state.step !== 3 || state.busy || e.pointerType === "touch") return;
+  const [x, y] = toCanvas(e), h = arrowAt(x, y);
+  if (h !== arrowHover) { arrowHover = h; drawDyeScene(outerColor(state.dips), 330, 0); }
+});
+stage.addEventListener("pointerleave", () => { if (arrowHover && state.step === 3 && !state.busy) { arrowHover = null; drawDyeScene(outerColor(state.dips), 330, 0); } });
 stage.addEventListener("pointermove", e => {
   if (!live || e.pointerId !== penId) return;
   const [x, y] = toCanvas(e);
@@ -2338,7 +2573,7 @@ function show(step) {
   updateRail();
   document.querySelectorAll("#steps button").forEach(b => {
     const n = +b.dataset.go, ok = n < step && canGo(n);
-    b.classList.toggle("current", n === step); b.classList.toggle("done", ok); b.disabled = !ok;
+    b.classList.toggle("current", n === step); b.classList.toggle("done", ok); b.classList.toggle("past", n < step); b.disabled = !ok;
     if (n === step) b.setAttribute("aria-current", "step"); else b.removeAttribute("aria-current");
   });
   stageBox.classList.toggle("drawing", step === 2);
@@ -2348,21 +2583,22 @@ function show(step) {
   updateCursor();
   if (step === 1) { drawFabricScene(); say(""); }
   if (step === 2) { renderSettings(); updateBind(); }
-  if (step === 3) { drawDyeScene(outerColor(state.dips), 330, 0); updateMeter(); drawRaw(); say(state.dips.length ? "" : (state.dye === "indigo" ? DYES.indigo.desc.replace(/。$/, "") : "染缸準備好了。")); }
+  if (step === 3) { drawDyeScene(outerColor(state.dips), 330, 0); updateMeter(); drawRaw(); say(state.dips.length ? "" : "點一下布，浸入染缸"); }
   if (step === 4) { clearStage(); if (state.work) sctx.drawImage(state.work.cloth, 0, 0); else drawCustomBundle(sctx, outerColor(state.dips)); }
 }
 
 /* ---------- 綁布：細部設定 ---------- */
 function updateBind() {
   const n = state.marks.length, foldBoards = state.marks.filter(m => m.type === "itajime" && m.u != null).length;
-  document.getElementById("undoBtn").disabled = !n;
+  document.getElementById("undoBtn").disabled = !n && !clearSnap;
   document.getElementById("clearBtn").disabled = !n && !state.ita.bands;
-  document.getElementById("delBtn").disabled = state.sel < 0;
+  document.getElementById("delBtn").disabled = state.sel < 0; placeSelUI();   // 選到記號時，旁邊才出現刪除和把手
   document.getElementById("to3").disabled = !n && !state.ita.bands && !state.prev;
   const o = curOpts(), t = state.tool;
   const key = t === "kumo" ? "core_" + (o.core || "none") : t === "itajime" ? o.board : t === "nui" ? o.stitch : o.style;
   const how = t === "arashi" && o.group === "pole" ? "在布上拉一條線，代表棍子的方向。" : t === "itajime" ? "布已經摺好了：從中心往外拉出夾板。" : TECHS[t].tool;
-  document.getElementById("bindTip").textContent = (state.sel >= 0 ? "已選取：調整上面的設定，或刪除。" : how) + (OPT_TIPS[key] || "");
+  const tipEl = document.getElementById("bindTip");   // 說明前面放這個工具的小圖示
+  tipEl.innerHTML = `<img src="${ICON.tool[t]}" alt="">`; tipEl.append((state.sel >= 0 ? "已選取：調整上面的設定，或刪除。" : how) + (OPT_TIPS[key] || ""));
   document.getElementById("back1").hidden = !!state.prev;
   const rn = document.getElementById("redyeNote");
   rn.hidden = !state.prev;
@@ -2484,7 +2720,7 @@ function showResult() {
   fillInfo(state.work, { name: "resultName", rare: "rareBadge", serial: "serial", facts: "facts" });
   document.getElementById("redyeBtn").hidden = !canRedye(state.work);
   say(state.rare && !state.prev ? "出現了罕見的紋樣！" : "");
-  document.querySelectorAll("#steps button").forEach(b => { b.disabled = true; b.classList.remove("done"); });
+  document.querySelectorAll("#steps button").forEach(b => { b.disabled = true; b.classList.remove("done", "current"); b.classList.add("past"); });   // 拆完布：整條都染好了
   guideMaybe(4);   // 第一次拆完布，介紹分享和晾布架
 }
 
@@ -2581,7 +2817,7 @@ function startRedye(it) {
   pendingHang = null;
   const r = it.recipe;
   setCardMode(false);
-  Object.assign(state, { fabric: r.fabric, seed: r.seed, rare: r.rare, marks: [], dips: [], sel: -1, work: null, viewing: null, revealed: false, ita: { fold: "sq3", bands: 0 }, tool: "kumo" });
+  Object.assign(state, { fabric: r.fabric, seed: r.seed, rare: r.rare, marks: [], dips: [], sel: -1, work: null, viewing: null, revealed: false, ita: { fold: "sq3", bands: 0 }, tool: "kumo" }); clearSnap = null;
   { const te = document.getElementById("tool-kumo"); if (te) te.checked = true; }
   state.prev = { id: it.id, name: it.name, rounds: r.rounds, baseImg: renderCloth(r) };
   document.getElementById("beforeReveal").hidden = false;
@@ -2596,8 +2832,10 @@ function resetAll() {
   if (state.busy) return;
   pendingHang = null;
   setCardMode(false);
-  Object.assign(state, { dips: [], marks: [], sel: -1, seed: newSeed(), work: null, viewing: null, revealed: false, prev: null, ita: { fold: "sq3", bands: 0 }, tool: "kumo" });
+  Object.assign(state, { dips: [], marks: [], sel: -1, seed: newSeed(), work: null, viewing: null, revealed: false, prev: null, ita: { fold: "sq3", bands: 0 }, tool: "kumo", strength: "light" });
   { const te = document.getElementById("tool-kumo"); if (te) te.checked = true; }
+  { const se = document.getElementById("st-light"); if (se) se.checked = true; }   // 染新的一塊：濃淡從「淡」開始
+  clearSnap = null;
   state.rare = mulberry32(state.seed + 1)() < 0.12;
   fTitle.value = ""; cardSrcId = null; renderRack();
   document.getElementById("beforeReveal").hidden = false;
@@ -2802,7 +3040,7 @@ document.addEventListener("change", e => {
   if (t.name === "tool") selectTool(t.value);
   if (t.name && t.name.startsWith("opt-")) setOpt(t.dataset.key, t.value);
   if (t.name === "dye") { if (state.busy) { const cur = document.getElementById("dye-" + state.dye); if (cur) cur.checked = true; return; } state.dye = t.value; drawRaw(); moveVats(t.value); say(t.value === "indigo" ? DYES.indigo.desc.replace(/。$/, "") : `換到${DYES[t.value].name}的染缸`); }
-  if (t.name === "strength") { state.strength = t.value; say(`染液：${STRENGTH[t.value].name}`); }
+  if (t.name === "strength") { state.strength = t.value; say(`舀 ${Object.keys(STRENGTH).indexOf(t.value) + 1} 杓・${STRENGTH[t.value].name}`); if (state.step === 3 && !state.busy) drawDyeScene(outerColor(state.dips), 330, 0); }
   if (t.name === "layout") { state.layout = t.value; refreshCard(); }
   if (t.name === "product") { state.product = t.value; document.getElementById("cardForm").classList.toggle("notcard", t.value !== "card"); refreshCard(); }
 });
@@ -2822,9 +3060,14 @@ document.getElementById("to3").onclick = async () => {
   state.busy = false;
   show(3);
 };
-document.getElementById("undoBtn").onclick = () => { if (state.busy) return; state.marks.pop(); state.sel = -1; renderSettings(); updateBind(); };
+document.getElementById("undoBtn").onclick = () => {
+  if (state.busy) return;
+  if (!state.marks.length && !state.ita.bands && clearSnap) { state.marks = clearSnap.marks; state.ita.bands = clearSnap.bands; clearSnap = null; toast("已復原清空前的記號"); }
+  else state.marks.pop();
+  state.sel = -1; renderSettings(); updateBind(); drawFabricScene();
+};
 document.getElementById("delBtn").onclick = () => { if (state.sel >= 0) { state.marks.splice(state.sel, 1); state.sel = -1; renderSettings(); updateBind(); } };
-document.getElementById("clearBtn").onclick = () => { if (state.busy) return; state.marks = []; state.ita.bands = 0; state.sel = -1; renderSettings(); updateBind(); };
+document.getElementById("clearBtn").onclick = () => { if (state.busy) return; if (state.marks.length || state.ita.bands) clearSnap = { marks: state.marks, bands: state.ita.bands }; state.marks = []; state.ita.bands = 0; state.sel = -1; renderSettings(); updateBind(); drawFabricScene(); toast("已清空，可以按復原找回"); };
 document.getElementById("dipBtn").onclick = dip;
 document.getElementById("to4").onclick = () => { if (state.busy) return; show(4); reveal(); };
 document.getElementById("again").onclick = resetAll;
@@ -2858,20 +3101,33 @@ async function init() {
   await step(99, () => show(1));
   if (window.__startLoader) window.__startLoader();
 }
+/* 手機：進度條搬到「島宇染坊」同一列；桌機放回右側面板最上方 */
+(() => {
+  const steps = document.getElementById("steps"), top = document.querySelector(".top"), rail = document.querySelector(".rail"), mq = matchMedia("(max-width: 900px)");
+  const place = () => { if (mq.matches) { if (steps.parentNode !== top) top.appendChild(steps); } else if (steps.parentNode !== rail) rail.insertBefore(steps, rail.firstChild); };
+  place(); mq.addEventListener("change", place);
+})();
+/* 晾布架說明：點問號展開，點外面或再點一次收起 */
+(() => {
+  const btn = document.getElementById("rackHelp"), note = document.getElementById("rackNote");
+  const set = open => { note.hidden = !open; btn.setAttribute("aria-expanded", String(open)); };
+  btn.addEventListener("click", e => { e.stopPropagation(); set(note.hidden); });
+  document.addEventListener("click", e => { if (!note.hidden && !note.contains(e.target)) set(false); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && !note.hidden) { set(false); btn.focus(); } });
+})();
 /* ---------- 第一次使用的引導：進到每一步時，才指出這一步要做什麼 ---------- */
 const GUIDE_KEY = "jinglan-guide-v1";
 const GUIDES = {
   1: [{ el: "#fabricOpts", t: "先挑一塊布", p: "點一卷布，布尾垂下來就是選好了。三種布吃色的感覺不太一樣。" },
       { el: "#to2", t: "開始綁布", p: "選好之後按這裡，進到下一步。" }],
-  2: [{ el: "#toolOpts", t: "選一種綁法", p: "捆紮、縫紮、夾染、揉皺，可以混著用。" },
-      { el: "#stageBox", t: "直接在布上點或畫", p: "綁住、縫住、夾住的地方吃不到顏色，拆開後就會留白。點一下已經畫好的記號可以修改。" },
-      { el: "#toolDetail", t: "調整細節", p: "每種綁法都可以再調整，例如在捆紮裡包進豆子、換一種縫法。" },
+  2: [{ el: "#toolOpts", t: "選一種綁法", p: "捆紮、縫紮、夾染、揉皺，可以混著用。選好的工具下面，就是它可以用的內包物和細節。" },
+      { el: "#stageBox", t: "直接在布上點或畫", p: "綁住、縫住、夾住的地方吃不到顏色，拆開後就會留白。點一下畫好的記號，拖方框的角可以調大小，按垃圾桶可以刪除；右下角可以復原或全部清空。" },
       { el: "#to3", t: "綁好就去浸染", p: "不用一次綁很多，簡單幾個也很好看。" }],
-  3: [{ el: "#dyeOpts", t: "選一個染缸", p: "也可以直接點畫面上的缸。不同染料染出不同的顏色。" },
-      { el: "#dipBtn", t: "浸一次、再浸一次", p: "每按一次就浸一次，次數越多顏色越深。" },
+  3: [{ el: "#stageBox", t: "選缸、選濃淡", p: "點旁邊的缸或轉盤上的箭頭換染料；左邊的杓子決定濃淡，杓數越多染液越濃。" },
+      { el: "#stageBox", t: "點布，浸一次", p: "直接點畫面上吊著的布就會浸進染缸。點越多次顏色越深。" },
       { el: "#to4", t: "拆開看看", p: "顏色夠了就拆布，看看染出什麼花樣。" }],
   4: [{ el: "#toCard", t: "分享你的作品", p: "做成小卡、杯墊、束口袋或 T 恤的樣子，存下來傳給朋友。" },
-      { el: ".rack-sec", t: "晾布架", p: "染好的布會自動晾在這裡，最多 6 塊。點一塊布可以再看一次，或拿去重染。" }]
+      { el: ".rack-sec", t: "晾布架", p: "染好的布會自動晾在這裡，最多 6 塊。點一塊布可以再看一次，或拿去重染；不清楚時點標題旁的問號。" }]
 };
 const guide = { step: 0, i: 0, open: false };
 function guideSeen() { try { return JSON.parse(localStorage.getItem(GUIDE_KEY) || "{}"); } catch (e) { return {}; } }
