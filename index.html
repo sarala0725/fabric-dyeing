@@ -400,6 +400,29 @@ a { color: var(--indigo); }
 .qmark:hover, .qmark[aria-expanded="true"] { color: var(--on-indigo); background: var(--indigo); border-color: var(--indigo); }
 .qmark:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 .rack-note { position: absolute; left: 0; top: calc(100% + 8px); z-index: 5; width: min(360px, 100%); margin: 0; padding: 12px 14px; border-radius: 10px; background: var(--indigo); color: var(--on-indigo); font-size: 14px; line-height: 1.7; box-shadow: 0 10px 24px rgba(0,0,0,.4); }
+
+/* ---------- 解鎖：未解鎖的材料、解鎖小卡 ---------- */
+.pick.locked label { opacity: .55; filter: grayscale(.8); position: relative; }
+.pick.locked label .lock { position: absolute; top: 2px; right: 2px; width: 18px !important; max-width: 18px !important; height: 18px; filter: none; }
+.pick.locked label .lock-tip { display: block; font-size: 10px; line-height: 1.2; color: var(--w-muted, var(--muted)); }
+.unlock { position: fixed; inset: 0; z-index: 45; display: grid; place-items: center; padding: 16px; background: rgba(8,14,32,.62); }
+.unlock[hidden] { display: none; }
+.unlock-card { width: min(340px, 100%); background: var(--indigo); color: var(--on-indigo); border-radius: 16px; padding: 22px 20px 18px; text-align: center; box-shadow: 0 16px 40px rgba(0,0,0,.5); animation: unlock-in .45s ease-out; }
+.unlock-kicker { margin: 0; font-size: 13px; letter-spacing: .2em; color: #5a6a8f; }
+.unlock-card img { width: 132px; height: 104px; object-fit: contain; margin: 8px auto 2px; display: block; }
+.unlock-card h3 { margin: 0 0 6px; font: 700 22px var(--font-display); letter-spacing: .06em; }
+.unlock-card p { margin: 0; font-size: 15px; line-height: 1.7; }
+.unlock-acts { display: grid; gap: 8px; margin-top: 16px; }
+.unlock-acts .btn.wide { background: var(--on-indigo); color: var(--indigo); }
+.unlock-acts .btn.ghost { color: var(--on-indigo); border-color: rgba(19,33,63,.4); }
+@keyframes unlock-in { from { transform: scale(.9); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .unlock-card { animation: none; } }
+/* ---------- 到 7-11 列印 ---------- */
+.print-box { display: grid; gap: 10px; }
+.print-steps { display: grid; gap: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; }
+.print-steps[hidden] { display: none; }
+.print-steps ol { margin: 0; padding-left: 1.3em; display: grid; gap: 4px; font-size: 14px; line-height: 1.6; }
+.print-steps a { font-size: 14px; }
 /* ---------- 第一次使用的引導 ---------- */
 .guide { position: fixed; inset: 0; z-index: 40; }
 .guide[hidden] { display: none; }
@@ -820,6 +843,19 @@ a { color: var(--indigo); }
             <button class="btn ghost" type="button" id="shareBtn" hidden>分享</button>
           </div>
           <p class="tip" id="prodTip">手機可長按圖片儲存，電腦可按右鍵另存。</p>
+          <div class="card-only print-box">
+            <button class="btn ghost" type="button" id="printBtn" aria-expanded="false" aria-controls="printSteps">到 7-11 列印</button>
+            <div class="print-steps" id="printSteps" hidden>
+              <ol>
+                <li>下載 4×6 吋的列印檔。</li>
+                <li>到 ibon 雲端列印網上傳檔案，取得列印碼（檔案保留 3 天）。</li>
+                <li>到 7-ELEVEN 門市的 ibon 機台輸入列印碼，選 4×6 尺寸彩色列印。</li>
+              </ol>
+              <button class="btn wide" type="button" id="printDl">下載 4×6 列印檔</button>
+              <a href="https://print.ibon.com.tw/" target="_blank" rel="noopener">開啟 ibon 雲端列印網 ↗</a>
+              <p class="tip" style="margin:0">列印檔是 1200×1800 像素的 JPG，印成 4×6 吋剛好是 300dpi。紙張種類與價格以門市機台為準。</p>
+            </div>
+          </div>
           <button class="btn ghost small" type="button" id="backWork">← 回到作品</button>
       </form>
     </aside>
@@ -842,6 +878,15 @@ a { color: var(--indigo); }
     <span>圖案依照你的布、綁法與浸染，由程式即時生成，每一塊都不一樣。</span>
     <span><button type="button" class="guide-again" id="guideAgain">再看一次教學</button>　<a href="culture.html">關於藍染 →</a></span>
   </footer>
+</div>
+<div class="unlock" id="unlock" hidden>
+  <div class="unlock-card" role="dialog" aria-modal="true" aria-labelledby="unlockName">
+    <p class="unlock-kicker">解鎖新材料</p>
+    <img id="unlockImg" alt="">
+    <h3 id="unlockName"></h3>
+    <p id="unlockDesc"></p>
+    <div class="unlock-acts"><button type="button" class="btn wide" id="unlockGo">再染一塊試試看</button><button type="button" class="btn ghost" id="unlockLater">晚點再說</button></div>
+  </div>
 </div>
 <div class="guide" id="guide" hidden>
   <div class="guide-hole" id="guideHole"></div>
@@ -907,14 +952,28 @@ const ARASHI_STYLES = {
 const STYLE_NAME = Object.fromEntries(Object.values(ARASHI_STYLES).flat());
 const STITCH_NAME = { hira: "平針縫", ori: "摺縫", maki: "捲針縫", gather: "抽褶縫" };
 const OPT_TIPS = {
-  core_none: "布揪起後直接綁，中心會散出放射線。", core_bean: "包一把豆子再綁，染出一群小圓點。", core_marble: "包一顆彈珠再綁，中心留下圓圓的白點。", core_coin: "包一枚硬幣再綁，染出邊緣清楚的扁圓和一圈細環。", core_chop: "包一段竹筷再綁，染出長條形的紋。", core_stone: "包一顆小石頭再綁，中心留下不規則的圓。",
-  bean: "包一把豆子再綁，染出一群小圓點。", coin: "包一枚硬幣再綁，染出邊緣清楚的扁圓和一圈細環。", chop: "包一段竹筷再綁，染出長條形的紋。",
+  core_none: "布揪起後直接綁，中心會散出放射線。", core_bean: "包一把豆子再綁，染出一群小圓點。", core_marble: "包一顆彈珠再綁，中心留下圓圓的白點。", core_button: "包一顆鈕扣再綁，染出扁圓和一圈細環，四個小洞會滲進一點藍。", star: "星星形狀的壓克力片，夾在摺好的布上，攤開會出現好幾顆對稱的星星。", core_coin: "包一枚硬幣再綁，染出邊緣清楚的扁圓和一圈細環。", core_chop: "包一段竹筷再綁，染出長條形的紋。", core_stone: "包一顆小石頭再綁，中心留下不規則的圓。",
+  bean: "包一把豆子再綁，染出一群小圓點。", button: "包一顆鈕扣再綁，染出扁圓和一圈細環，四個小洞會滲進一點藍。", coin: "包一枚硬幣再綁，染出邊緣清楚的扁圓和一圈細環。", chop: "包一段竹筷再綁，染出長條形的紋。",
   none: "布揪起後直接綁，中心會散出放射線。", stone: "包一顆小石頭再綁，中心留下不規則的圓。", marble: "包一顆彈珠再綁，中心留下圓圓的白點。",
   circle: "圓形木片夾住的地方留白。", square: "方形木片夾住的地方留白。", tri: "三角木片夾住的地方留白。", carved: "雕刻了花紋的木板，夾住後染出花樣。",
   hira: "一排平針縫好抽緊，染出像木紋的直皺。", ori: "把布摺起來沿摺線縫，染出一串菱形。", maki: "沿著布邊繞圈縫，染出斜斜的短紋。", gather: "縫好幾排平行的針腳再抽緊，皺褶比較寬。",
   marble: "揉成一團用繩子綁住，紋路像大理石。", lightning: "揉得更緊，留下尖銳的閃電狀白紋。", ice: "裝進網袋或絲襪壓緊，留下細碎的裂紋。", cloud: "鬆鬆地壓進網袋，顏色深淺像雲霧。",
   storm: "捲在棍子上纏線、往下推擠，染出細細的斜線。", wood: "捲在棍子上推擠，紋路像木紋。", ripple: "捲在棍子上輕輕推擠，紋路像水波。"
 };
+// 解鎖：染完幾塊布（拆開看看一次算一塊，重染也算）後拿到新材料
+const PROG_KEY = "jinglan-progress-v1";
+const UNLOCKS = [
+  { key: "button", kind: "core", need: 1, name: "鈕扣", desc: "包進捆紮裡，染出扁圓和一圈細環，四個小洞會滲進一點藍。" },
+  { key: "star", kind: "board", need: 3, name: "星星壓克力", desc: "夾在摺好的布上，攤開會出現好幾顆對稱的星星。" }
+];
+function madeCount() { try { return (JSON.parse(localStorage.getItem(PROG_KEY) || "{}").made) || 0; } catch (e) { return 0; } }
+function bumpMade() {   // 回傳這次剛解鎖的材料
+  const before = madeCount(), after = before + 1;
+  try { localStorage.setItem(PROG_KEY, JSON.stringify({ made: after })); } catch (e) { /* 瀏覽器不允許暫存就算了 */ }
+  return UNLOCKS.filter(u => before < u.need && after >= u.need);
+}
+function isLocked(v) { const u = UNLOCKS.find(x => x.key === v); return !!u && madeCount() < u.need; }
+function lockBadge(v) { if (!isLocked(v)) return ""; const u = UNLOCKS.find(x => x.key === v), left = u.need - madeCount(); return `<img class="lock" src="${ICON.lock}" alt="未解鎖：再染 ${left} 塊布"><small class="lock-tip">再染 ${left} 塊</small>`; }
 // 色階：0 = 布的原色，1 = 最深
 const DYES = {
   indigo:   { name: "大菁藍", desc: "藍染缸的染液是黃綠色的，布出缸後碰到空氣才會變藍。", liquid: [96, 106, 40],  chip: "#2b4c86", stops: [[0.22, [176, 203, 224]], [0.5, [86, 128, 175]], [0.78, [37, 64, 115]], [1, [18, 29, 62]]], oxidize: true,
@@ -1517,6 +1576,14 @@ function drawSpool(c, x, y, s) {
   c.strokeStyle = "rgba(0,0,0,0.14)"; c.lineWidth = 1; for (let i = -s * 0.55; i < s * 0.6; i += 4) { c.beginPath(); c.moveTo(x - s * 0.42, y + i); c.lineTo(x + s * 0.42, y + i + 2); c.stroke(); }
 }
 function drawWoodPiece(c, x, y, shape, r) {
+  if (shape === "star") {   // 星星壓克力：透明的板子，亮亮的邊
+    c.save(); c.shadowColor = "rgba(0,0,0,0.25)"; c.shadowBlur = 5; c.shadowOffsetY = 3; c.beginPath();
+    for (let i = 0; i <= 10; i++) { const a = i / 10 * Math.PI * 2 - Math.PI / 2, rr = i % 2 ? r * 0.5 : r * 1.12; i ? c.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr) : c.moveTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); }
+    c.closePath(); const g = c.createLinearGradient(x - r, y - r, x + r, y + r); g.addColorStop(0, "rgba(235,246,252,0.95)"); g.addColorStop(1, "rgba(170,205,225,0.85)"); c.fillStyle = g; c.fill(); c.restore();
+    c.strokeStyle = "#ffffff"; c.lineWidth = Math.max(1.5, r * 0.07); c.stroke();
+    c.strokeStyle = "rgba(255,255,255,0.8)"; c.lineWidth = Math.max(1, r * 0.05); c.beginPath(); c.moveTo(x - r * 0.35, y - r * 0.2); c.lineTo(x - r * 0.1, y - r * 0.45); c.stroke();
+    return;
+  }
   c.save(); c.shadowColor = "rgba(0,0,0,0.35)"; c.shadowBlur = 5; c.shadowOffsetY = 3;
   const g = c.createLinearGradient(x - r, y - r, x + r, y + r); g.addColorStop(0, "#d8b57e"); g.addColorStop(1, "#a9834e");
   c.fillStyle = g; c.beginPath();
@@ -1561,7 +1628,7 @@ function buildIcons() {
     arashi: makeIcon(sq, sq, c => { drawNet(c, 58, 82, 36); drawPole(c, 112, 80, 110, -1.0); })
   };
   ICON.core = {};
-  for (const k of ["none", "bean", "marble", "coin", "chop", "stone"]) ICON.core[k] = makeIcon(sq, 110, c => {
+  for (const k of ["none", "bean", "marble", "button", "chop", "stone"]) ICON.core[k] = makeIcon(sq, 110, c => {
     drawDish(c, 80, 62, 62);
     if (k === "none") { c.fillStyle = "#3b2a17"; c.font = '600 20px "Noto Sans TC", sans-serif'; c.textAlign = "center"; c.fillText("空", 80, 68); }
     else drawCore(c, k, 80, 58, 20);
@@ -1579,7 +1646,8 @@ function buildIcons() {
     if (k === "gather") { c.setLineDash([10, 7]); for (const y of [32, 50, 68]) { c.beginPath(); c.moveTo(14, y); c.lineTo(146, y); c.stroke(); } c.setLineDash([]); }
   });
   ICON.board = {};
-  for (const k of ["circle", "square", "tri", "carved"]) ICON.board[k] = makeIcon(120, 120, c => drawWoodPiece(c, 60, 62, k, 36));
+  for (const k of ["circle", "square", "tri", "carved", "star"]) ICON.board[k] = makeIcon(120, 120, c => drawWoodPiece(c, 60, 62, k, 36));
+  ICON.lock = makeIcon(40, 40, c => { c.fillStyle = "rgba(19,33,63,0.9)"; c.beginPath(); c.arc(20, 20, 19, 0, Math.PI * 2); c.fill(); c.strokeStyle = "#f1efe6"; c.lineWidth = 3; c.beginPath(); c.arc(20, 17, 6, Math.PI, 0); c.stroke(); c.fillStyle = "#f1efe6"; c.fillRect(11, 17, 18, 13); });
   ICON.fold = {};
   for (const f of ["sq2", "sq3", "sq4", "tri"]) ICON.fold[f] = makeIcon(120, 110, c => {
     const n = f === "tri" ? 3 : foldN(f);
@@ -1629,6 +1697,7 @@ function buildIcons() {
     marble: cur(c => drawMarble(c, 22, 22, 10), 22, 22),
     bean: cur(c => drawCore(c, "bean", 22, 22, 12), 22, 22),
     coin: cur(c => drawCore(c, "coin", 22, 22, 12), 22, 22),
+    button: cur(c => drawCore(c, "button", 22, 22, 12), 22, 22),
     chop: cur(c => drawCore(c, "chop", 22, 22, 11), 22, 22),
     pole: cur(c => drawPole(c, 22, 22, 40, -0.8), 22, 22),
     nui: cur(c => drawNeedle(c, 4, 40, -0.8, 50), 4, 40),
@@ -1665,17 +1734,17 @@ const curOpts = () => state.sel >= 0 ? state.marks[state.sel].o : state.opts[sta
 function renderSettings() {
   const tool = state.tool, o = curOpts(), el = document.getElementById("toolSettings");
   const group = (title, hint, html, cls = "") => `<div class="detail ${cls}"><p class="wlabel">${title}${hint ? `<small>${hint}</small>` : ""}</p><div class="picks" role="radiogroup" aria-label="${title}">${html}</div></div>`;
-  const pick = (key, v, inner, cls) => radioHTML("opt-" + key, v, `opt-${key}-${v}`, inner, String(o[key]) === String(v), cls).replace("<input ", `<input data-key="${key}" `);
+  const pick = (key, v, inner, cls) => radioHTML("opt-" + key, v, `opt-${key}-${v}`, inner, String(o[key]) === String(v), cls + (isLocked(v) ? " locked" : "")).replace("<input ", `<input data-key="${key}" `);
   let html = "";
   if (tool === "kumo") {
-    html += group("內包物", "點碟子，再點布上的角", ["none", "bean", "marble", "coin", "chop", "stone"].map(v => pick("core", v, `<img src="${ICON.core[v]}" alt=""><span>${CORE_NAME[v]}</span>`, "dish")).join(""), "cores");
+    html += group("內包物", "點碟子，再點布上的角", ["none", "bean", "marble", "button", "chop", "stone"].map(v => pick("core", v, `<img src="${ICON.core[v]}" alt=""><span>${CORE_NAME[v]}</span>${lockBadge(v)}`, "dish")).join(""), "cores");
     html += group("綁幾圈", `${o.bands} 圈`, [1, 2, 3, 4, 5].map(v => pick("bands", v, `<img src="${v <= o.bands ? ICON.ringOn : ICON.ringOff}" alt="${v} 圈">`, "ring")).join(""), "rings");
   } else if (tool === "nui") {
     html += group("針法", "點一塊樣布", ["hira", "ori", "maki", "gather"].map(v => pick("stitch", v, `<img src="${ICON.stitch[v]}" alt=""><span>${STITCH_NAME[v]}</span>`, "swatch")).join(""));
   } else if (tool === "itajime") {
     const ita = state.ita, pickI = (key, v, inner, cls) => radioHTML("opt-" + key, v, `opt-${key}-${v}`, inner, String(ita[key]) === String(v), cls).replace("<input ", `<input data-key="${key}" `);
     html += group("摺法", "整塊布一起摺", ["sq2", "sq3", "sq4", "tri"].map(v => pickI("fold", v, `<img src="${ICON.fold[v]}" alt=""><span>${FOLD_NAME[v]}</span>`, "board")).join(""));
-    html += group("夾板", "從中心往外拉", ["circle", "square", "tri", "carved"].map(v => pick("board", v, `<img src="${ICON.board[v]}" alt=""><span>${BOARD_NAME[v]}</span>`, "board")).join(""));
+    html += group("夾板", "從中心往外拉", ["circle", "square", "tri", "carved", "star"].map(v => pick("board", v, `<img src="${ICON.board[v]}" alt=""><span>${BOARD_NAME[v]}</span>${lockBadge(v)}`, "board")).join(""));
     html += group("橡皮筋", `${ita.bands ? ita.bands + " 條" : "不綁"}`, [0, 1, 2, 3, 4].map(v => pickI("bands", v, `<img src="${ICON.pegs[v]}" alt="${v ? v + " 條" : "不綁"}">`, "peg")).join(""));
   } else {
     html += group("用什麼綁", "", ["rope", "net", "pole"].map(v => pick("group", v, `<img src="${ICON.group[v]}" alt=""><span>${{ rope: "繩子", net: "網袋／絲襪", pole: "木棍" }[v]}</span>`, "board")).join(""));
@@ -1694,6 +1763,7 @@ function updateCursor() {
 }
 function setOpt(key, raw) {
   if (state.busy) return;
+  if (isLocked(raw)) { const u = UNLOCKS.find(x => x.key === raw), left = u.need - madeCount(); toast(`再染 ${left} 塊布就能解鎖${u.name}`); renderSettings(); return; }   // 還沒解鎖
   if (state.tool === "itajime" && (key === "fold" || key === "bands")) {
     state.ita[key] = key === "bands" ? +raw : raw;
     renderSettings(); updateBind(); return;
@@ -1877,8 +1947,15 @@ function renderStrips() {
 /* ============================================================
    綁布引擎（第二版）：內包物、整塊摺布的夾染、棒捲與揉皺
    ============================================================ */
-const CORE_NAME = { none: "不包", bean: "豆子", marble: "彈珠", coin: "硬幣", chop: "竹筷", stone: "小石頭" };
-const BOARD_NAME = { circle: "圓木片", square: "方木片", tri: "三角木片", carved: "雕版" };
+const CORE_NAME = { none: "不包", bean: "豆子", marble: "彈珠", coin: "硬幣", button: "鈕扣", chop: "竹筷", stone: "小石頭" };   // 硬幣已不在工具盤，保留給舊作品
+const BOARD_NAME = { circle: "圓木片", square: "方木片", tri: "三角木片", carved: "雕版", star: "星星壓克力" };
+// 星星：五個尖角，r 是外接圓半徑
+const starRadius = (a, r) => {   // 五角星（直線邊）在角度 a 方向的邊界距離
+  const sec = Math.PI * 2 / 5, rel = (((a + Math.PI / 2) % sec) + sec) % sec, half = sec / 2, ri = r * 0.44;
+  const t = rel > half ? sec - rel : rel;   // 對稱：只算尖角到凹角這一半
+  const ox = r, oy = 0, ix = ri * Math.cos(half), iy = ri * Math.sin(half), ex = ix - ox, ey = iy - oy, dx = Math.cos(t), dy = Math.sin(t);
+  return (ox * ey - oy * ex) / (dx * ey - dy * ex);
+};
 const FOLD_NAME = { sq2: "方摺 2×2", sq3: "方摺 3×3", sq4: "方摺 4×4", tri: "三角摺" };
 const foldN = f => f === "sq2" ? 2 : f === "sq4" ? 4 : 3;
 
@@ -1909,6 +1986,11 @@ function applyKumo(m, rare, N, put) {
       center = 1 - smooth(0.26, 0.272, f);
       const zr = (f - 0.335) / 0.011; center = Math.max(center, Math.exp(-zr * zr) * 0.92);
       const zv = (f - 0.3) / 0.009; vein = Math.exp(-zv * zv) * 0.75;
+    } else if (core === "button") {         // 鈕扣：扁圓加一圈細環，四個小洞會滲進一點藍
+      center = 1 - smooth(0.25, 0.262, f);
+      const zr = (f - 0.325) / 0.011; center = Math.max(center, Math.exp(-zr * zr) * 0.9);
+      for (const [hx, hy] of [[-0.07, -0.07], [0.07, -0.07], [-0.07, 0.07], [0.07, 0.07]]) { const dh = Math.hypot(lu / m.R - hx, ac / m.R - hy); center *= smooth(0.02, 0.034, dh); }
+      const zv = (f - 0.29) / 0.009; vein = Math.exp(-zv * zv) * 0.7;
     } else if (core === "bean") {           // 一把豆子：一群小圓點
       for (const [bx, by, br] of beans) {
         const db = Math.hypot(lu / m.R - bx, ac / m.R - by);
@@ -1933,6 +2015,7 @@ function applyKumo(m, rare, N, put) {
 function boardShape(shape, du, dv, r, wick) {
   if (shape === "square") return 1 - smooth(r * 0.92, r * 1.04, Math.max(Math.abs(du), Math.abs(dv)) + wick);
   if (shape === "tri") { const d = Math.max(Math.abs(du) * 0.866 + dv * 0.5, -dv) * 1.15; return 1 - smooth(r * 0.9, r * 1.04, d + wick); }
+  if (shape === "star") { const rr = Math.hypot(du, dv), R = starRadius(Math.atan2(dv, du), r * 1.12); return 1 - smooth(R - r * 0.03, R + r * 0.02, rr + wick * 0.4); }   // 壓克力邊緣俐落
   if (shape === "carved") {
     const rr = Math.hypot(du, dv), a = Math.atan2(dv, du), petal = r * (0.6 + 0.4 * Math.abs(Math.cos(a * 2.5)));
     const flower = (1 - smooth(petal * 0.94, petal * 1.06, rr + wick * 0.6)) * smooth(r * 0.1, r * 0.16, rr);
@@ -2022,6 +2105,7 @@ function texPatterns(ctx) {
 function drawCore(ctx, core, x, y, s) {
   if (core === "bean") { const r = mulberry32(5); for (let i = 0; i < 6; i++) { const a = r() * 6.28, d = r() * s * 0.8; ctx.fillStyle = "#8a5a2e"; ctx.beginPath(); ctx.ellipse(x + Math.cos(a) * d, y + Math.sin(a) * d, s * 0.32, s * 0.22, a, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = "#e9d8b8"; ctx.fillRect(x + Math.cos(a) * d - 1, y + Math.sin(a) * d - s * 0.05, 2, s * 0.1); } }
   else if (core === "marble") drawMarble(ctx, x, y, s * 0.8);
+  else if (core === "button") { ctx.fillStyle = "#efe3c8"; ctx.beginPath(); ctx.arc(x, y, s * 0.85, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = "#a88a5c"; ctx.lineWidth = Math.max(1.5, s * 0.1); ctx.beginPath(); ctx.arc(x, y, s * 0.66, 0, Math.PI * 2); ctx.stroke(); ctx.fillStyle = "#8a6c40"; for (const [hx, hy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { ctx.beginPath(); ctx.arc(x + hx * s * 0.22, y + hy * s * 0.22, Math.max(1.4, s * 0.1), 0, Math.PI * 2); ctx.fill(); } }
   else if (core === "coin") { ctx.fillStyle = "#c9a24c"; ctx.beginPath(); ctx.arc(x, y, s * 0.85, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = "#8f6d22"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, s * 0.6, 0, Math.PI * 2); ctx.stroke(); }
   else if (core === "chop") { ctx.save(); ctx.translate(x, y); ctx.rotate(-0.5); ctx.fillStyle = "#d8bb8a"; ctx.fillRect(-s * 1.6, -s * 0.16, s * 3.2, s * 0.14); ctx.fillRect(-s * 1.6, s * 0.06, s * 3.2, s * 0.14); ctx.restore(); }
   else if (core === "stone") drawStone(ctx, x, y, s * 0.8);
@@ -2152,9 +2236,11 @@ function drawBoardShape(ctx, shape, cx, cy, r, sel) {
   ctx.fillStyle = g; ctx.beginPath();
   if (shape === "square") ctx.rect(cx - r, cy - r, r * 2, r * 2);
   else if (shape === "tri") { ctx.moveTo(cx - r * 1.16, cy + r * 0.67); ctx.lineTo(cx + r * 1.16, cy + r * 0.67); ctx.lineTo(cx, cy - r * 1.33); ctx.closePath(); }
+  else if (shape === "star") { for (let i = 0; i <= 10; i++) { const a = i / 10 * Math.PI * 2 - Math.PI / 2, rr = i % 2 ? r * 1.12 * 0.44 : r * 1.12; const x = cx + Math.cos(a) * rr, y = cy + Math.sin(a) * rr; if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y); } ctx.closePath(); ctx.fillStyle = "rgba(214,232,244,0.62)"; }
   else if (shape === "carved") { for (let i = 0; i <= 60; i++) { const a = i / 60 * Math.PI * 2, rr = r * (0.6 + 0.4 * Math.abs(Math.cos(a * 2.5))); const x = cx + Math.cos(a) * rr, y = cy + Math.sin(a) * rr; if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y); } ctx.closePath(); }
   else ctx.arc(cx, cy, r, 0, Math.PI * 2);
   ctx.fill(); ctx.restore();
+  if (shape === "star") { ctx.strokeStyle = "rgba(255,255,255,0.95)"; ctx.lineWidth = 2.5; ctx.stroke(); return; }   // 壓克力：透明感加亮邊，不畫木紋
   ctx.strokeStyle = "#7d5d30"; ctx.lineWidth = 1.5;
   if (shape === "carved") { ctx.beginPath(); ctx.arc(cx, cy, r * 0.12, 0, Math.PI * 2); ctx.stroke(); for (let i = 0; i < 5; i++) { const a = i / 5 * Math.PI * 2 + 0.6; ctx.beginPath(); ctx.moveTo(cx + Math.cos(a) * r * 0.18, cy + Math.sin(a) * r * 0.18); ctx.lineTo(cx + Math.cos(a) * r * 0.5, cy + Math.sin(a) * r * 0.5); ctx.stroke(); } }
   else for (let i = -1; i <= 1; i++) { ctx.beginPath(); ctx.moveTo(cx - r * 0.5, cy + i * r * 0.3); ctx.lineTo(cx + r * 0.5, cy + i * r * 0.3); ctx.stroke(); }
@@ -2430,7 +2516,7 @@ function drawCustomBundle(ctx, color, opt = {}) {
     softShadow(ctx, 10, 4);
     ctx.beginPath();
     if (core === "marble") { ctx.ellipse(0, -kr * 0.6, kr * 0.5, kr * 0.62, 0, 0, Math.PI * 2); ctx.rect(-kr * 0.22, -kr * 0.2, kr * 0.44, kr * 0.35); }
-    else if (core === "coin") { ctx.ellipse(0, -kr * 0.62, kr * 0.72, kr * 0.4, 0, 0, Math.PI * 2); ctx.rect(-kr * 0.22, -kr * 0.3, kr * 0.44, kr * 0.4); }
+    else if (core === "coin" || core === "button") { ctx.ellipse(0, -kr * 0.62, kr * 0.72, kr * 0.4, 0, 0, Math.PI * 2); ctx.rect(-kr * 0.22, -kr * 0.3, kr * 0.44, kr * 0.4); }
     else if (core === "chop") { ctx.ellipse(0, -kr * 0.8, kr * 0.3, kr * 1.05, 0, 0, Math.PI * 2); }
     else blobPath(ctx, 0, -kr * 0.55, kr * 0.62, kr, rnd, core === "bean" ? 13 : core === "stone" ? 9 : 7, core === "bean" ? 0.42 : core === "stone" ? 0.35 : 0.2);
     fillCloth(ctx, color, 0, -kr * 0.55, kr); noShadow(ctx);
@@ -2707,8 +2793,10 @@ async function reveal() {
   const id = state.prev ? state.prev.id : state.seed + "-" + Date.now();
   state.work = { id, cloth, name: pickName(), seed: state.seed, rare: state.rare, date: cardDate(), recipe,
     labels: { fabric: FABRICS[state.fabric].name, tech: techLabel(rounds), dye: rounds.map(r => dyeLabel(r.dips)).join(" → "), round: rounds.length } };
-  showResult();
+  const newly = bumpMade();   // 染完一塊：計數，看看有沒有解鎖新材料
+  showResult(newly.length > 0);
   const res = addToRack(state.work, !!state.prev);
+  if (newly.length) setTimeout(() => showUnlock(newly[newly.length - 1]), REDUCED ? 0 : 900);
   if (res === "replaced") toast("晾布架上的布已經更新");
   else if (res === "added") toast("已經掛上晾布架");
 }
@@ -2721,14 +2809,14 @@ function fillInfo(w, ids) {
   document.getElementById(ids.serial).textContent = `No. ${pad(w.seed % 10000)}　${w.date}`;
   document.getElementById(ids.facts).innerHTML = `<li>布料 <b>${w.labels.fabric}</b></li><li>綁法 <b>${w.labels.tech}</b></li><li>浸染 <b>${w.labels.dye}</b></li>` + (w.labels.round > 1 ? `<li>染了 <b>${w.labels.round} 回</b></li>` : "");
 }
-function showResult() {
+function showResult(skipGuide) {
   document.getElementById("beforeReveal").hidden = true;
   document.getElementById("afterReveal").hidden = false;
   fillInfo(state.work, { name: "resultName", rare: "rareBadge", serial: "serial", facts: "facts" });
   document.getElementById("redyeBtn").hidden = !canRedye(state.work);
   say(state.rare && !state.prev ? "出現了罕見的紋樣！" : "");
   document.querySelectorAll("#steps button").forEach(b => { b.disabled = true; b.classList.remove("done", "current"); b.classList.add("past"); });   // 拆完布：整條都染好了
-  guideMaybe(4);   // 第一次拆完布，介紹分享和晾布架
+  if (!skipGuide) guideMaybe(4);   // 第一次拆完布，介紹分享和晾布架（剛解鎖時先不打擾）
 }
 
 let cardSrcId = null;
@@ -2885,9 +2973,10 @@ async function ensureFonts(text) {
 function cardDate() { const d = new Date(); return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`; }
 function cardRecipe() { const l = src().labels; return `${l.fabric} · ${l.tech} · ${l.dye}`; }
 function drawCard(layout, title, msg, sign) {
-  const L = LAYOUTS[layout], cv = document.createElement("canvas"); cv.width = L.w; cv.height = L.h;
+  const L = layout === "print" ? { w: 1200, h: 1800 } : LAYOUTS[layout], cv = document.createElement("canvas"); cv.width = L.w; cv.height = L.h;   // print：4×6 吋、300dpi
   const c = cv.getContext("2d");
   c.fillStyle = CARD.bg; c.fillRect(0, 0, L.w, L.h);
+  if (layout === "print") c.scale(1200 / 1080, 1200 / 1080);   // 以 1080 寬的座標來排版，再放大成 1200
   const w = src(), cloth = w.cloth;
   const serial = `No. ${pad(w.seed % 10000)}　${w.date}`;
   const textBlock = (x, y, w, opts = {}) => {
@@ -2905,7 +2994,11 @@ function drawCard(layout, title, msg, sign) {
     lines.forEach((ln, i) => c.fillText(ln, x, y + i * size * 1.6));
   };
   const frame = (x, y, w, h) => { c.save(); c.shadowColor = "rgba(10,16,36,0.18)"; c.shadowBlur = 24; c.shadowOffsetY = 8; c.fillStyle = "#fff"; c.fillRect(x, y, w, h); c.restore(); drawCover(c, cloth, x, y, w, h); };
-  if (layout === "portrait") {
+  if (layout === "print") {   // 4×6 直式：四周留白給印刷裁切
+    frame(72, 72, 936, 1010);
+    textBlock(72, 1186, 936);
+    meta(72, 1444, 780, 22);
+  } else if (layout === "portrait") {
     frame(72, 72, 936, 800);
     textBlock(72, 976, 936);
     meta(72, 1222, 780, 21);
@@ -2972,6 +3065,19 @@ async function download() {
   const a = document.createElement("a"); a.href = URL.createObjectURL(cardBlob); a.download = fileName();
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
   toast("圖片已下載");
+}
+async function downloadPrint() {
+  if (!src()) return;
+  const title = (fTitle.value.trim() || src().name), msg = fMsg.value.trim(), sign = fSign.value.trim();
+  await ensureFonts(`《》—${title}${msg}${sign}${cardRecipe()}`);
+  const cv = drawCard("print", title, msg, sign), blob = await new Promise(r => cv.toBlob(r, "image/jpeg", 0.95));
+  if (!blob) return;
+  const name = `藍染小卡-4x6列印-${title}.jpg`;
+  if (dlCap) { try { await dlCap.save({ filename: name, data: blob }); toast("列印檔已存檔"); } catch (e) { toast(e && e.code === "declined" ? "已取消下載" : "這裡沒辦法直接下載列印檔"); } return; }
+  if (inClaude) { toast("這裡沒辦法直接下載列印檔"); return; }
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  toast("列印檔已下載，接著到 ibon 雲端列印網上傳");
 }
 function updateShare() {
   const btn = document.getElementById("shareBtn");
@@ -3090,6 +3196,8 @@ document.getElementById("steps").addEventListener("click", e => { const b = e.ta
 [fTitle, fMsg, fSign].forEach(el => el.addEventListener("input", queueCard));
 document.getElementById("msgSuggest").addEventListener("click", e => { const b = e.target.closest("button"); if (b) { fMsg.value = b.textContent; queueCard(); } });
 document.getElementById("dlBtn").onclick = download;
+document.getElementById("printDl").onclick = downloadPrint;
+document.getElementById("printBtn").onclick = () => { const el = document.getElementById("printSteps"), b = document.getElementById("printBtn"); el.hidden = !el.hidden; b.setAttribute("aria-expanded", String(!el.hidden)); };
 document.getElementById("shareBtn").onclick = share;
 document.getElementById("cardForm").addEventListener("submit", e => e.preventDefault());
 
@@ -3114,6 +3222,28 @@ async function init() {
   const place = () => { if (mq.matches) { if (steps.parentNode !== top) top.appendChild(steps); } else if (steps.parentNode !== rail) rail.insertBefore(steps, rail.firstChild); };
   place(); mq.addEventListener("change", place);
 })();
+/* 解鎖小卡 */
+let unlockItem = null;
+function showUnlock(u) {
+  unlockItem = u;
+  document.getElementById("unlockImg").src = u.kind === "core" ? ICON.core[u.key] : ICON.board[u.key];
+  document.getElementById("unlockName").textContent = u.name;
+  document.getElementById("unlockDesc").textContent = u.desc;
+  document.getElementById("unlock").hidden = false;
+  document.getElementById("unlockGo").focus({ preventScroll: true });
+}
+function closeUnlock() { document.getElementById("unlock").hidden = true; }
+document.getElementById("unlockLater").onclick = closeUnlock;
+document.getElementById("unlock").addEventListener("keydown", e => { if (e.key === "Escape") closeUnlock(); });
+document.getElementById("unlockGo").onclick = () => {   // 開始新的一塊，並先選好剛解鎖的材料
+  const u = unlockItem; closeUnlock(); if (!u) return;
+  resetAll();
+  if (u.kind === "core") { state.tool = "kumo"; state.opts.kumo.core = u.key; }
+  else { state.tool = "itajime"; state.opts.itajime.board = u.key; }
+  const te = document.getElementById("tool-" + state.tool); if (te) te.checked = true;
+  toast(`已經幫你選好${u.name}，選一塊布開始吧`);
+  window.scrollTo({ top: 0, behavior: REDUCED ? "auto" : "smooth" });
+};
 /* 晾布架說明：點問號展開，點外面或再點一次收起 */
 (() => {
   const btn = document.getElementById("rackHelp"), note = document.getElementById("rackNote");
