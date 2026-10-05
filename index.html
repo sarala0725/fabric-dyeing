@@ -415,6 +415,9 @@ a { color: var(--indigo); }
 .unlock-acts { display: grid; gap: 8px; margin-top: 16px; }
 .unlock-acts .btn.wide { background: var(--on-indigo); color: var(--indigo); }
 .unlock-acts .btn.ghost { color: var(--on-indigo); border-color: rgba(19,33,63,.4); }
+.pick label .new-tag { position: absolute; top: -6px; right: -4px; z-index: 2; padding: 1px 6px; border-radius: 999px; background: #d23c2f; color: #fff; font: 700 10px/1.5 var(--font-data); letter-spacing: .06em; box-shadow: 0 1px 3px rgba(0,0,0,.35); }
+.tray-detail .pick label, .picks.tools .pick label { position: relative; }
+.picks.tools .pick label.has-new::after { content: ""; position: absolute; top: 6px; right: 8px; width: 8px; height: 8px; border-radius: 50%; background: #d23c2f; box-shadow: 0 0 0 2px rgba(255,255,255,.75); }
 @keyframes unlock-in { from { transform: scale(.9); opacity: 0; } to { transform: none; opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .unlock-card { animation: none; } }
 /* ---------- 到 7-11 列印 ---------- */
@@ -885,7 +888,7 @@ a { color: var(--indigo); }
     <img id="unlockImg" alt="">
     <h3 id="unlockName"></h3>
     <p id="unlockDesc"></p>
-    <div class="unlock-acts"><button type="button" class="btn wide" id="unlockGo">再染一塊試試看</button><button type="button" class="btn ghost" id="unlockLater">晚點再說</button></div>
+    <div class="unlock-acts"><button type="button" class="btn wide" id="unlockOk">確定</button></div>
   </div>
 </div>
 <div class="guide" id="guide" hidden>
@@ -973,7 +976,16 @@ function bumpMade() {   // 回傳這次剛解鎖的材料
   return UNLOCKS.filter(u => before < u.need && after >= u.need);
 }
 function isLocked(v) { const u = UNLOCKS.find(x => x.key === v); return !!u && madeCount() < u.need; }
-function lockBadge(v) { if (!isLocked(v)) return ""; const u = UNLOCKS.find(x => x.key === v), left = u.need - madeCount(); return `<img class="lock" src="${ICON.lock}" alt="未解鎖：再染 ${left} 塊布"><small class="lock-tip">再染 ${left} 塊</small>`; }
+// 新解鎖的材料：第一次點選前顯示「NEW」
+const NEWSEEN_KEY = "jinglan-newseen-v1";
+function newSeen() { try { return JSON.parse(localStorage.getItem(NEWSEEN_KEY) || "[]"); } catch (e) { return []; } }
+function isNew(v) { const u = UNLOCKS.find(x => x.key === v); return !!u && !isLocked(v) && !newSeen().includes(v); }
+function markSeen(v) { if (!isNew(v)) return; try { localStorage.setItem(NEWSEEN_KEY, JSON.stringify(newSeen().concat([v]))); } catch (e) { /* 略過 */ } }
+function updateToolDots() {   // 有新材料的工具頁籤加小圓點
+  const has = { kumo: UNLOCKS.some(u => u.kind === "core" && isNew(u.key)), itajime: UNLOCKS.some(u => u.kind === "board" && isNew(u.key)) };
+  for (const t of ["kumo", "nui", "itajime", "arashi"]) { const l = document.querySelector(`label[for="tool-${t}"]`); if (l) l.classList.toggle("has-new", !!has[t]); }
+}
+function lockBadge(v) { if (isNew(v)) return `<span class="new-tag" aria-label="新的">NEW</span>`; if (!isLocked(v)) return ""; const u = UNLOCKS.find(x => x.key === v), left = u.need - madeCount(); return `<img class="lock" src="${ICON.lock}" alt="未解鎖：再染 ${left} 塊布"><small class="lock-tip">再染 ${left} 塊</small>`; }
 // 色階：0 = 布的原色，1 = 最深
 const DYES = {
   indigo:   { name: "大菁藍", desc: "藍染缸的染液是黃綠色的，布出缸後碰到空氣才會變藍。", liquid: [96, 106, 40],  chip: "#2b4c86", stops: [[0.22, [176, 203, 224]], [0.5, [86, 128, 175]], [0.78, [37, 64, 115]], [1, [18, 29, 62]]], oxidize: true,
@@ -1751,6 +1763,7 @@ function renderSettings() {
     html += group("紋樣", "", ARASHI_STYLES[o.group].map(([v, n]) => pick("style", v, `<img src="${ICON.style[v]}" alt=""><span>${n}</span>`, "board")).join(""));
   }
   el.innerHTML = html;
+  updateToolDots();
   const sizeRow = document.getElementById("sizeRow");
   sizeRow.hidden = !(tool === "kumo" || (tool === "arashi" && o.group !== "pole"));
   document.getElementById("sizeLabel").textContent = tool === "kumo" ? "揪起的深度" : "範圍大小";
@@ -1763,6 +1776,7 @@ function updateCursor() {
 }
 function setOpt(key, raw) {
   if (state.busy) return;
+  if (isNew(raw)) { markSeen(raw); }   // 第一次點新材料：拿掉 NEW
   if (isLocked(raw)) { const u = UNLOCKS.find(x => x.key === raw), left = u.need - madeCount(); toast(`再染 ${left} 塊布就能解鎖${u.name}`); renderSettings(); return; }   // 還沒解鎖
   if (state.tool === "itajime" && (key === "fold" || key === "bands")) {
     state.ita[key] = key === "bands" ? +raw : raw;
@@ -3230,20 +3244,12 @@ function showUnlock(u) {
   document.getElementById("unlockName").textContent = u.name;
   document.getElementById("unlockDesc").textContent = u.desc;
   document.getElementById("unlock").hidden = false;
-  document.getElementById("unlockGo").focus({ preventScroll: true });
+  document.getElementById("unlockOk").focus({ preventScroll: true });
+  updateToolDots();
 }
 function closeUnlock() { document.getElementById("unlock").hidden = true; }
-document.getElementById("unlockLater").onclick = closeUnlock;
+document.getElementById("unlockOk").onclick = closeUnlock;
 document.getElementById("unlock").addEventListener("keydown", e => { if (e.key === "Escape") closeUnlock(); });
-document.getElementById("unlockGo").onclick = () => {   // 開始新的一塊，並先選好剛解鎖的材料
-  const u = unlockItem; closeUnlock(); if (!u) return;
-  resetAll();
-  if (u.kind === "core") { state.tool = "kumo"; state.opts.kumo.core = u.key; }
-  else { state.tool = "itajime"; state.opts.itajime.board = u.key; }
-  const te = document.getElementById("tool-" + state.tool); if (te) te.checked = true;
-  toast(`已經幫你選好${u.name}，選一塊布開始吧`);
-  window.scrollTo({ top: 0, behavior: REDUCED ? "auto" : "smooth" });
-};
 /* 晾布架說明：點問號展開，點外面或再點一次收起 */
 (() => {
   const btn = document.getElementById("rackHelp"), note = document.getElementById("rackNote");
