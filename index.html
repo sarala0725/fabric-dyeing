@@ -330,7 +330,7 @@ a { color: var(--indigo); }
   .rail { display: contents; }
   .app > .stage { order: 1; }
   .rail > .steps { order: 0; }
-  .rail > .step { order: 2; }
+  .rail > .step, .rail > .form { order: 2; }
 }
 
 /* ---------- 工具盤：上排選工具，下面直接接這個工具的選項 ---------- */
@@ -396,11 +396,74 @@ a { color: var(--indigo); }
 /* ---------- 晾布架說明：點問號才出現 ---------- */
 .rack-head { position: relative; }
 .rack-head h2 { display: flex; align-items: center; gap: 8px; }
-.qmark { width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid var(--muted); background: transparent; color: var(--muted); font: 700 14px var(--font-body); line-height: 1; cursor: pointer; padding: 0; display: inline-grid; place-items: center; }
+.qmark { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--muted); background: transparent; color: var(--muted); font: 700 11px var(--font-body); line-height: 1; cursor: pointer; padding: 0; display: inline-grid; place-items: center; }
 .qmark:hover, .qmark[aria-expanded="true"] { color: var(--on-indigo); background: var(--indigo); border-color: var(--indigo); }
 .qmark:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 .rack-note { position: absolute; left: 0; top: calc(100% + 8px); z-index: 5; width: min(360px, 100%); margin: 0; padding: 12px 14px; border-radius: 10px; background: var(--indigo); color: var(--on-indigo); font-size: 14px; line-height: 1.7; box-shadow: 0 10px 24px rgba(0,0,0,.4); }
 
+
+/* ---------- 分享頁：精簡成一個畫面 ---------- */
+.form.share { gap: 10px; }
+.share-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.share-head h2 { margin: 0; font: 700 18px var(--font-display); letter-spacing: .08em; order: -1; }
+.back-link { background: none; border: 0; padding: 4px 0; font: inherit; font-size: 13px; color: var(--muted); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.back-link:hover { color: var(--ink); }
+.prods { display: grid !important; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.pick.prod label { flex-direction: column; justify-content: center; gap: 2px; padding: 6px 4px; font-size: 13px; }
+.pick.prod img { width: 100%; max-width: 52px !important; height: auto; }
+.share .seg label { padding: 3px 6px; font-size: 13px; }
+@media (max-width: 900px) { .share-head { margin-top: -4px; } .share .btn { min-height: 42px; padding-block: 8px; } .form.share { gap: 8px; } }
+.edit-text { border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+.edit-text summary { cursor: pointer; padding: 8px 12px; font-size: 14px; list-style: none; }
+.edit-text summary::-webkit-details-marker { display: none; }
+.edit-text[open] summary { border-bottom: 1px solid var(--line); }
+.edit-body { display: grid; gap: 8px; padding: 10px 12px 12px; }
+.edit-body input[type="text"], .edit-body textarea { background: var(--bg); }
+.edit-body textarea { min-height: 0; }
+.msg-row { display: flex; align-items: baseline; justify-content: space-between; }
+.next-msg { background: none; border: 0; padding: 0; font: inherit; font-size: 12px; color: var(--ink); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.share-acts { display: grid; gap: 8px; }
+.share-sub { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 8px; }
+.share-sub [hidden] { display: none; }
+.print-card { text-align: left; }
+.print-card ol li { text-align: left; }
+#printDlg { z-index: 46; }
+.print-card h3 { text-align: center; margin-bottom: 10px; }
+.print-card ol { margin: 0; padding-left: 1.3em; display: grid; gap: 4px; font-size: 14px; line-height: 1.6; }
+.print-card .unlock-acts a.btn { text-align: center; text-decoration: none; color: var(--on-indigo); border: 1px solid rgba(19,33,63,.4); }
+.print-note { margin: 10px 0 0 !important; font-size: 12px !important; color: #5a6a8f; }
+
+/* ---------- 小卡上的文字輸入框 ---------- */
+.card-edit { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
+.card-edit[hidden] { display: none; }
+.ce { position: absolute; pointer-events: auto; margin: 0; padding: 0 6px 0 4px; display: block; border: 1.5px dashed rgba(26,35,64,.38); border-radius: 3px; box-sizing: border-box;
+  background: transparent; color: transparent; caret-color: #1a2340; line-height: 1.5; resize: none; overflow: hidden; cursor: text; }
+.ce::placeholder { color: rgba(26,35,64,.4); }
+.ce:hover { background: rgba(36,57,111,.06); }
+.ce:focus { color: #1a2340; background: #fbfbf8; outline: 2px solid #24396f; outline-offset: 2px; z-index: 3; box-shadow: 0 6px 16px rgba(0,0,0,.25); }
+.ce-msg:focus { height: auto !important; min-height: 4.8em; }
+@media (max-width: 900px) { .ce:focus { font-size: max(16px, var(--fs)) !important; min-width: 70%; } }   /* 手機上放大，iPhone 才不會自動縮放畫面 */
+.ce-next { position: absolute; z-index: 4; pointer-events: auto; width: 26px; height: 26px; border-radius: 50%; border: 0; padding: 0; display: grid; place-items: center; background: rgba(36,57,111,.85); color: #fff; cursor: pointer; }
+.ce-next::before { content: ""; position: absolute; inset: -8px; }
+.ce-next[hidden] { display: none; }
+.ce-next svg { width: 62%; height: 62%; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.back-top { background: none; border: 0; padding: 4px 0; color: var(--ink); font: 700 18px var(--font-body); cursor: pointer; }
+.back-top[hidden] { display: none; }
+.edit-hint { margin: 0; min-height: 0; }
+.share-acts { display: grid; gap: 8px; }
+.share-row { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 8px; }
+.share-row [hidden] { display: none; }
+.share-acts .btn { padding-inline: 6px; white-space: nowrap; }
+.share-wrap { position: relative; display: grid; }
+.share-menu { position: absolute; right: 0; bottom: calc(100% + 6px); z-index: 20; min-width: 150px; display: grid; padding: 6px; border-radius: 12px; background: var(--indigo); box-shadow: 0 10px 26px rgba(0,0,0,.45); }
+.share-menu[hidden] { display: none; }
+.share-menu button { background: none; border: 0; text-align: left; padding: 10px 12px; border-radius: 8px; font: 500 15px var(--font-body); color: var(--on-indigo); cursor: pointer; }
+.share-menu button[hidden] { display: none; }
+.share-menu button:hover, .share-menu button:focus-visible { background: rgba(19,33,63,.1); }
+.icon-btn { width: 46px; height: 46px; border-radius: 50%; border: 1px solid var(--ink); background: transparent; color: var(--ink); display: grid; place-items: center; cursor: pointer; padding: 0; }
+.icon-btn[hidden] { display: none; }
+.icon-btn:hover { background: rgba(255,255,255,.08); }
+.icon-btn svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 /* ---------- 解鎖：未解鎖的材料、解鎖小卡 ---------- */
 .pick.locked label { opacity: .55; filter: grayscale(.8); position: relative; }
 .pick.locked label .lock { position: absolute; top: 2px; right: 2px; width: 18px !important; max-width: 18px !important; height: 18px; filter: none; }
@@ -731,12 +794,19 @@ a { color: var(--indigo); }
 <div class="wrap">
   <header class="top">
     <h1>島宇染坊</h1>
+    <button class="back-top" type="button" id="backWork" hidden>← 回到作品</button>
   </header>
 
   <main class="app">
     <div class="stage" id="stageBox">
       <canvas id="stage" width="900" height="900" aria-label="染布工作台"></canvas>
       <img class="card-img" id="cardImg" alt="" hidden>
+      <div class="card-edit" id="cardEdit" hidden>
+        <input class="ce ce-title" type="text" id="cTitle" maxlength="12" aria-label="作品名稱" placeholder="作品名稱">
+        <textarea class="ce ce-msg" id="cMsg" maxlength="48" aria-label="想說的話" placeholder="想說的話">把一缸藍染成的布送給你，願你日子平順。</textarea>
+        <input class="ce ce-sign" type="text" id="cSign" maxlength="12" aria-label="署名" placeholder="— 你的名字">
+        <button type="button" class="ce-next" id="nextMsg" title="換一句" aria-label="換一句想說的話"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v4.5h-4.5"/></svg></button>
+      </div>
       <p class="cap" id="caption" aria-live="polite"></p>
       <div class="sel-layer" id="selLayer">
         <div class="sel-box" id="selBox" hidden>
@@ -831,35 +901,17 @@ a { color: var(--indigo); }
         <p class="tip" id="vNote"></p>
       </section>
 
-      <form class="form" id="cardForm" autocomplete="off" hidden>
-          <div><p class="label">做成什麼</p><div class="picks prods" id="productOpts" role="radiogroup" aria-label="分享樣式"></div></div>
-          <div class="card-only"><p class="label">版型</p><div class="seg" id="layoutOpts" role="radiogroup" aria-label="小卡版型"></div></div>
-          <div><label class="t" for="cTitle">作品名稱</label><input type="text" id="cTitle" maxlength="12"></div>
-          <div class="card-only">
-            <label class="t" for="cMsg">想說的話</label>
-            <textarea id="cMsg" maxlength="48">把一缸藍染成的布送給你，願你日子平順。</textarea>
-            <div class="suggest" id="msgSuggest"></div>
-          </div>
-          <div class="card-only"><label class="t" for="cSign">署名</label><input type="text" id="cSign" maxlength="12" placeholder="你的名字"></div>
-          <div class="actions">
-            <button class="btn wide" type="button" id="dlBtn">下載圖片</button>
-            <button class="btn ghost" type="button" id="shareBtn" hidden>分享</button>
-          </div>
-          <p class="tip" id="prodTip">手機可長按圖片儲存，電腦可按右鍵另存。</p>
-          <div class="card-only print-box">
-            <button class="btn ghost" type="button" id="printBtn" aria-expanded="false" aria-controls="printSteps">到 7-11 列印</button>
-            <div class="print-steps" id="printSteps" hidden>
-              <ol>
-                <li>下載 4×6 吋的列印檔。</li>
-                <li>到 ibon 雲端列印網上傳檔案，取得列印碼（檔案保留 3 天）。</li>
-                <li>到 7-ELEVEN 門市的 ibon 機台輸入列印碼，選 4×6 尺寸彩色列印。</li>
-              </ol>
-              <button class="btn wide" type="button" id="printDl">下載 4×6 列印檔</button>
-              <a href="https://print.ibon.com.tw/" target="_blank" rel="noopener">開啟 ibon 雲端列印網 ↗</a>
-              <p class="tip" style="margin:0">列印檔是 1200×1800 像素的 JPG，印成 4×6 吋剛好是 300dpi。紙張種類與價格以門市機台為準。</p>
+      <form class="form share" id="cardForm" autocomplete="off" hidden>
+          <div class="picks prods" id="productOpts" role="radiogroup" aria-label="做成什麼"></div>
+          <div class="card-only"><div class="seg" id="layoutOpts" role="radiogroup" aria-label="小卡版型"></div></div>
+          <div class="share-acts">
+            <button class="btn wide" type="button" id="dlBtn">儲存圖片</button>
+            <div class="share-row">
+              <button class="btn ghost" type="button" id="shareBtn" hidden>分享圖片</button>
+              <button class="btn ghost" type="button" id="copyBtn">複製連結</button>
+              <button class="btn ghost card-only" type="button" id="printBtn" aria-haspopup="dialog">7-11 列印</button>
             </div>
           </div>
-          <button class="btn ghost small" type="button" id="backWork">← 回到作品</button>
       </form>
     </aside>
   </main>
@@ -881,6 +933,22 @@ a { color: var(--indigo); }
     <span>圖案依照你的布、綁法與浸染，由程式即時生成，每一塊都不一樣。</span>
     <span><button type="button" class="guide-again" id="guideAgain">再看一次教學</button>　<a href="culture.html">關於藍染 →</a></span>
   </footer>
+</div>
+<div class="unlock" id="printDlg" hidden>
+  <div class="unlock-card print-card" role="dialog" aria-modal="true" aria-labelledby="printTitle">
+    <h3 id="printTitle">到 7-11 列印</h3>
+    <ol>
+      <li>下載 4×6 吋的列印檔。</li>
+      <li>到 ibon 雲端列印網上傳，取得列印碼（檔案保留 3 天）。</li>
+      <li>到 7-ELEVEN 的 ibon 機台輸入列印碼，選 4×6 尺寸彩色列印。</li>
+    </ol>
+    <div class="unlock-acts">
+      <button class="btn wide" type="button" id="printDl">下載 4×6 列印檔</button>
+      <a class="btn ghost" href="https://print.ibon.com.tw/" target="_blank" rel="noopener">開啟 ibon 雲端列印網 ↗</a>
+      <button class="btn ghost" type="button" id="printClose">關閉</button>
+    </div>
+    <p class="print-note">1200×1800 像素 JPG，印成 4×6 吋剛好是 300dpi。紙張與價格以門市機台為準。</p>
+  </div>
 </div>
 <div class="unlock" id="unlock" hidden>
   <div class="unlock-card" role="dialog" aria-modal="true" aria-labelledby="unlockName">
@@ -1640,7 +1708,7 @@ function buildIcons() {
     arashi: makeIcon(sq, sq, c => { drawNet(c, 58, 82, 36); drawPole(c, 112, 80, 110, -1.0); })
   };
   ICON.core = {};
-  for (const k of ["none", "bean", "marble", "button", "chop", "stone"]) ICON.core[k] = makeIcon(sq, 110, c => {
+  for (const k of ["none", "bean", "marble", "chop", "stone", "button"]) ICON.core[k] = makeIcon(sq, 110, c => {
     drawDish(c, 80, 62, 62);
     if (k === "none") { c.fillStyle = "#3b2a17"; c.font = '600 20px "Noto Sans TC", sans-serif'; c.textAlign = "center"; c.fillText("空", 80, 68); }
     else drawCore(c, k, 80, 58, 20);
@@ -1737,7 +1805,6 @@ function buildOptions() {
     radioHTML("product", k, "prod-" + k, `<img src="${productIcon(k)}" alt=""><span>${pr.name}</span>`, k === state.product, "prod")).join("");
   document.getElementById("layoutOpts").innerHTML = Object.entries(LAYOUTS).map(([k, l]) =>
     `<span><input type="radio" name="layout" id="lay-${k}" value="${k}" ${k === state.layout ? "checked" : ""}><label for="lay-${k}">${l.name}</label></span>`).join("");
-  document.getElementById("msgSuggest").innerHTML = MESSAGES.map(m => `<button type="button">${m}</button>`).join("");
   document.getElementById("fabricTip").textContent = FABRICS[state.fabric].desc;
 }
 
@@ -1749,7 +1816,7 @@ function renderSettings() {
   const pick = (key, v, inner, cls) => radioHTML("opt-" + key, v, `opt-${key}-${v}`, inner, String(o[key]) === String(v), cls + (isLocked(v) ? " locked" : "")).replace("<input ", `<input data-key="${key}" `);
   let html = "";
   if (tool === "kumo") {
-    html += group("內包物", "點碟子，再點布上的角", ["none", "bean", "marble", "button", "chop", "stone"].map(v => pick("core", v, `<img src="${ICON.core[v]}" alt=""><span>${CORE_NAME[v]}</span>${lockBadge(v)}`, "dish")).join(""), "cores");
+    html += group("內包物", "點碟子，再點布上的角", ["none", "bean", "marble", "chop", "stone", "button"].map(v => pick("core", v, `<img src="${ICON.core[v]}" alt=""><span>${CORE_NAME[v]}</span>${lockBadge(v)}`, "dish")).join(""), "cores");
     html += group("綁幾圈", `${o.bands} 圈`, [1, 2, 3, 4, 5].map(v => pick("bands", v, `<img src="${v <= o.bands ? ICON.ringOn : ICON.ringOff}" alt="${v} 圈">`, "ring")).join(""), "rings");
   } else if (tool === "nui") {
     html += group("針法", "點一塊樣布", ["hira", "ori", "maki", "gather"].map(v => pick("stitch", v, `<img src="${ICON.stitch[v]}" alt=""><span>${STITCH_NAME[v]}</span>`, "swatch")).join(""));
@@ -1919,7 +1986,8 @@ function drawLadleRack(ctx) {
       ctx.beginPath(); ctx.ellipse(-8, -2, 12, 7, 0, 0, Math.PI * 2); ctx.fillStyle = "#5f4426"; ctx.fill();
       ctx.restore();
     }
-    ctx.font = `${on ? 700 : 500} 30px "Noto Sans TC", sans-serif`; ctx.textAlign = "center";
+    const k = (stage.getBoundingClientRect().width || 900) / 900, fs = Math.round(Math.min(30, Math.max(20, 16 / k)));   // 桌機上約 16px，手機維持
+    ctx.font = `${on ? 700 : 500} ${fs}px "Noto Sans TC", sans-serif`; ctx.textAlign = "center";
     ctx.fillStyle = on ? "#3a2510" : "rgba(255,244,222,0.92)"; ctx.fillText(STRENGTH[s.k].name, s.x + s.w / 2, s.y + s.h - 14);   // 只留淡、中、濃，杓子支數已經看得出幾杓
   });
   ctx.textAlign = "left"; ctx.restore();
@@ -2837,6 +2905,8 @@ let cardSrcId = null;
 function setCardMode(on) {
   state.cardMode = on;
   document.getElementById("cardImg").hidden = !on;
+  document.getElementById("cardEdit").hidden = true;
+  document.querySelector(".top h1").hidden = on; document.getElementById("backWork").hidden = !on;   // 分享時，左上角換成「回到作品」
   stage.style.visibility = on ? "hidden" : "visible";
   updateRail();
   say("");
@@ -2956,6 +3026,7 @@ function newSeed() { return (Math.floor(Math.random() * 2 ** 31) ^ Date.now()) >
 
 /* ---------- 小卡 ---------- */
 const CARD = { bg: "#eef0eb", ink: "#1a2340", muted: "#5d6579", line: "#c9cec4", accent: "#24396f" };
+let CARD_BOX = null;
 const F_DISPLAY = '"LXGW WenKai TC", "Kaiti TC", "BiauKai", serif';
 const F_BODY = '"Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif';
 const F_DATA = '"IBM Plex Mono", ui-monospace, monospace';
@@ -2993,14 +3064,23 @@ function drawCard(layout, title, msg, sign) {
   if (layout === "print") c.scale(1200 / 1080, 1200 / 1080);   // 以 1080 寬的座標來排版，再放大成 1200
   const w = src(), cloth = w.cloth;
   const serial = `No. ${pad(w.seed % 10000)}　${w.date}`;
+  const box = { W: 1080, H: L.h * 1080 / L.w };
   const textBlock = (x, y, w, opts = {}) => {
     const ts = opts.title || 68, bs = opts.body || 34;
     c.fillStyle = CARD.ink; c.textBaseline = "alphabetic";
     c.font = `700 ${ts}px ${F_DISPLAY}`; c.fillText(`《${title}》`, x - ts * 0.45, y);
-    let yy = y + (opts.gap || 64);
+    // 三個可編輯的框：左右對齊、同寬
+    const bx = x - ts * 0.45 - 10, bw = w + ts * 0.45 + 20, padT = x - bx;
+    box.title = { x: bx, y: y - ts * 1.05, w: bw, h: ts * 1.38, fs: ts, font: "display", bold: true, pad: 10 };
+    let yy = y + (opts.gap || 64) + 22;   // 框與框之間留空隙
     c.font = `400 ${bs}px ${F_BODY}`;
-    for (const ln of wrapText(c, msg, w).slice(0, 3)) { c.fillText(ln, x, yy); yy += bs * 1.55; }
-    if (sign) { c.font = `400 ${bs}px ${F_DISPLAY}`; c.fillStyle = CARD.muted; c.fillText(`— ${sign}`, x, yy + 6); }
+    const lns = wrapText(c, msg, w - bs * 2.2).slice(0, 3);   // 右側留空間給「換一句」
+    box.msg = { x: bx, y: yy - bs * 1.25, w: bw, h: bs * 1.55 * 3 + bs * 0.55, fs: bs, font: "body", pad: padT };   // 固定三行高
+    const y0 = yy;
+    for (const ln of lns) { c.fillText(ln, x, yy); yy += bs * 1.55; }
+    yy = y0 + bs * 1.55 * 3 + 22;
+    box.sign = { x: bx, y: yy - bs * 1.2, w: padT + bs * 8, h: bs * 1.7, fs: bs, font: "display", pad: padT };   // 署名框短一點
+    if (sign) { c.font = `400 ${bs}px ${F_DISPLAY}`; c.fillStyle = CARD.muted; c.fillText(`— ${sign}`, x, yy); }
   };
   const meta = (x, y, w, size) => {
     c.font = `400 ${size}px ${F_DATA}`; c.fillStyle = CARD.muted;
@@ -3010,29 +3090,30 @@ function drawCard(layout, title, msg, sign) {
   const frame = (x, y, w, h) => { c.save(); c.shadowColor = "rgba(10,16,36,0.18)"; c.shadowBlur = 24; c.shadowOffsetY = 8; c.fillStyle = "#fff"; c.fillRect(x, y, w, h); c.restore(); drawCover(c, cloth, x, y, w, h); };
   if (layout === "print") {   // 4×6 直式：四周留白給印刷裁切
     frame(72, 72, 936, 1010);
-    textBlock(72, 1186, 936);
-    meta(72, 1444, 780, 22);
+    textBlock(72, 1176, 936);
+    meta(72, 1520, 780, 22);
   } else if (layout === "portrait") {
     frame(72, 72, 936, 800);
-    textBlock(72, 976, 936);
-    meta(72, 1222, 780, 21);
+    textBlock(72, 970, 936);
+    meta(72, 1302, 780, 21);
   } else if (layout === "square") {
     drawCover(c, cloth, 0, 0, 1080, 1080);
     c.font = `400 34px ${F_BODY}`;
     const lines = Math.min(3, wrapText(c, msg, 560).length);
     c.font = `400 19px ${F_DATA}`;
     const mlines = 1 + Math.min(2, wrapText(c, cardRecipe(), 560).length);
-    const ph = 64 + 68 + 30 + lines * 53 + (sign ? 58 : 0) + mlines * 30 + 40;
+    const ph = 64 + 68 + 30 + 3 * 53 + 56 + 58 + mlines * 30 + 40;
     const py = 1080 - 56 - ph;
     c.save(); c.shadowColor = "rgba(10,16,36,0.22)"; c.shadowBlur = 30; c.shadowOffsetY = 8; c.fillStyle = CARD.bg; c.fillRect(56, py, 640, ph); c.restore();
     textBlock(96, py + 120, 560);
     meta(96, py + ph - 40 - (mlines - 1) * 30, 560, 19);
   } else {
     frame(72, 140, 936, 1180);
-    textBlock(72, 1470, 936, { title: 80, body: 38, gap: 80 });
-    meta(72, 1770, 780, 24);
+    textBlock(72, 1462, 936, { title: 80, body: 38, gap: 80 });
+    meta(72, 1820, 780, 24);
   }
   // LOGO_SLOT：刻意留白
+  if (layout !== "print") CARD_BOX = box;   // 讓小卡上的輸入框對準文字
   return cv;
 }
 
@@ -3052,8 +3133,9 @@ async function refreshCard() {
   cardURL = URL.createObjectURL(blob);
   const img = document.getElementById("cardImg");
   img.src = cardURL; img.alt = `小卡預覽：《${title}》`;
+  placeCardEdit();
 }
-const queueCard = () => { clearTimeout(cardTimer); cardTimer = setTimeout(refreshCard, 250); };
+const queueCard = () => { clearTimeout(cardTimer); cardTimer = setTimeout(refreshCard, 120); };
 
 let toastTimer = 0;
 function toast(t) {
@@ -3093,12 +3175,18 @@ async function downloadPrint() {
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
   toast("列印檔已下載，接著到 ibon 雲端列印網上傳");
 }
-function updateShare() {
-  const btn = document.getElementById("shareBtn");
-  btn.hidden = true;
+function updateShare() {   // 手機支援時才出現「分享圖片」（可以直接傳到 LINE、IG 等 App）
+  const it = document.getElementById("shareBtn");
+  it.hidden = true;
   if (inClaude || !navigator.canShare || !window.File) return;
-  try { btn.hidden = !navigator.canShare({ files: [new File([new Blob(["x"])], "a.png", { type: "image/png" })] }); } catch (e) { btn.hidden = true; }
+  try { it.hidden = !navigator.canShare({ files: [new File([new Blob(["x"])], "a.png", { type: "image/png" })] }); } catch (e) { it.hidden = true; }
 }
+const siteURL = () => location.origin + location.pathname.replace(/index\.html$/, "");
+document.getElementById("shareBtn").onclick = share;
+document.getElementById("copyBtn").onclick = async () => {
+  try { await navigator.clipboard.writeText(siteURL()); toast("已複製網站連結"); }
+  catch (e) { const t = document.createElement("textarea"); t.value = siteURL(); document.body.appendChild(t); t.select(); try { document.execCommand("copy"); toast("已複製網站連結"); } catch (e2) { toast(siteURL()); } t.remove(); }
+};
 async function share() {
   if (!cardBlob) return;
   try { await navigator.share({ files: [new File([cardBlob], fileName(), { type: "image/png" })], title: "我的藍染作品" }); }
@@ -3113,6 +3201,7 @@ function productPath(c, kind) {
   if (kind === "bag") {
     c.moveTo(300, 300); c.lineTo(780, 300); c.lineTo(810, 860); c.quadraticCurveTo(812, 905, 765, 905); c.lineTo(315, 905); c.quadraticCurveTo(268, 905, 270, 860); c.closePath();
   } else if (kind === "tee") {
+    // 客家藍衫：立領、窄肩、寬袖，衣身較長，下襬兩側開衩
     c.moveTo(430, 210); c.quadraticCurveTo(540, 290, 650, 210); c.lineTo(800, 260); c.lineTo(900, 420); c.lineTo(790, 480); c.lineTo(740, 420);
     c.lineTo(745, 900); c.lineTo(335, 900); c.lineTo(340, 420); c.lineTo(290, 480); c.lineTo(180, 420); c.lineTo(280, 260); c.closePath();
   } else c.arc(540, 520, 340, 0, Math.PI * 2);
@@ -3148,6 +3237,7 @@ function drawProduct(kind, title) {
   }
   c.setLineDash([]);
   c.textAlign = "center"; c.fillStyle = CARD.ink; c.font = `700 52px ${F_DISPLAY}`; c.fillText(`《${title}》`, 540, kind === "tee" ? 990 : 1000);
+  CARD_BOX = { W: 1080, H: 1080, center: true, title: { x: 240, y: (kind === "tee" ? 990 : 1000) - 52, w: 600, h: 68, fs: 52, font: "display", bold: true } };
   c.font = `400 20px ${F_DATA}`; c.fillStyle = CARD.muted; c.fillText(`${PRODUCTS[kind].name}示意圖，非實際商品　·　${cardRecipe()}`.slice(0, 60), 540, 1046);
   c.textAlign = "left";
   return cv;
@@ -3208,11 +3298,18 @@ document.getElementById("skipHang").onclick = skipHang;
 document.getElementById("backWork").onclick = () => setCardMode(false);
 document.getElementById("steps").addEventListener("click", e => { const b = e.target.closest("button"); if (b && !b.disabled) show(+b.dataset.go); });
 [fTitle, fMsg, fSign].forEach(el => el.addEventListener("input", queueCard));
-document.getElementById("msgSuggest").addEventListener("click", e => { const b = e.target.closest("button"); if (b) { fMsg.value = b.textContent; queueCard(); } });
+
 document.getElementById("dlBtn").onclick = download;
 document.getElementById("printDl").onclick = downloadPrint;
-document.getElementById("printBtn").onclick = () => { const el = document.getElementById("printSteps"), b = document.getElementById("printBtn"); el.hidden = !el.hidden; b.setAttribute("aria-expanded", String(!el.hidden)); };
-document.getElementById("shareBtn").onclick = share;
+{   // 7-11 列印：跳出小卡
+  const dlg = document.getElementById("printDlg"), close = () => { dlg.hidden = true; document.getElementById("printBtn").focus(); };
+  document.getElementById("printBtn").onclick = () => { dlg.hidden = false; document.getElementById("printDl").focus(); };
+  document.getElementById("printClose").onclick = close;
+  dlg.addEventListener("click", e => { if (e.target === dlg) close(); });
+  dlg.addEventListener("keydown", e => { if (e.key === "Escape") close(); });
+}
+let msgIdx = 0;
+document.getElementById("nextMsg").onclick = () => { msgIdx = (MESSAGES.indexOf(fMsg.value) + 1) % MESSAGES.length; fMsg.value = MESSAGES[msgIdx]; queueCard(); };
 document.getElementById("cardForm").addEventListener("submit", e => e.preventDefault());
 
 /* ---------- 開始 ---------- */
@@ -3250,6 +3347,31 @@ function showUnlock(u) {
 function closeUnlock() { document.getElementById("unlock").hidden = true; }
 document.getElementById("unlockOk").onclick = closeUnlock;
 document.getElementById("unlock").addEventListener("keydown", e => { if (e.key === "Escape") closeUnlock(); });
+/* 小卡上直接編輯文字：輸入框疊在預覽圖的文字位置 */
+function placeCardEdit() {
+  const ed = document.getElementById("cardEdit"), img = document.getElementById("cardImg"), b = CARD_BOX;
+  if (!state.cardMode || !b) { ed.hidden = true; return; }
+  ed.hidden = false;
+  const cs = getComputedStyle(img), pl = parseFloat(cs.paddingLeft), pt = parseFloat(cs.paddingTop);
+  const cw = img.clientWidth - pl * 2, ch = img.clientHeight - pt * 2, sc = Math.min(cw / b.W, ch / b.H);
+  const ox = img.offsetLeft + pl + (cw - b.W * sc) / 2, oy = img.offsetTop + pt + (ch - b.H * sc) / 2;
+  const put = (el, r) => {
+    if (!r) { el.hidden = true; return; }
+    el.hidden = false;
+    Object.assign(el.style, { left: ox + r.x * sc + "px", top: oy + r.y * sc + "px", width: r.w * sc + "px", height: r.h * sc + "px",
+      fontSize: r.fs * sc + "px", fontFamily: r.font === "display" ? F_DISPLAY : F_BODY, fontWeight: r.bold ? 700 : 400, textAlign: b.center ? "center" : "left",
+      paddingLeft: (r.pad || 4) * sc + "px", paddingRight: (el === fMsg ? 34 : 6) + "px" });
+    el.style.setProperty("--fs", r.fs * sc + "px");
+  };
+  const isCard = state.product === "card";
+  put(fTitle, b.title); put(fMsg, isCard ? b.msg : null); put(fSign, isCard ? b.sign : null);
+  const nx = document.getElementById("nextMsg");
+  if (isCard && b.msg) {   // 放在「想說的話」框內右側，大小跟著框
+    const sz = Math.round(Math.max(18, Math.min(24, b.msg.h * sc * 0.45)));
+    nx.hidden = false; Object.assign(nx.style, { width: sz + "px", height: sz + "px", left: ox + (b.msg.x + b.msg.w) * sc - sz - 4 + "px", top: oy + (b.msg.y + b.msg.h / 2) * sc - sz / 2 + "px" });
+  } else nx.hidden = true;   // 放在「想說的話」框內右側
+}
+addEventListener("resize", () => { if (state.cardMode) placeCardEdit(); });
 /* 晾布架說明：點問號展開，點外面或再點一次收起 */
 (() => {
   const btn = document.getElementById("rackHelp"), note = document.getElementById("rackNote");
