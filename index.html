@@ -464,6 +464,25 @@ a { color: var(--indigo); }
 .icon-btn[hidden] { display: none; }
 .icon-btn:hover { background: rgba(255,255,255,.08); }
 .icon-btn svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ---------- 分享頁：卡片放大、不放木板 ---------- */
+.stage.cardmode { background: none !important; box-shadow: none; padding: 0; border-radius: 0; overflow: visible; }
+.stage.cardmode canvas { display: none; }
+.stage.cardmode .card-img { position: static; display: block; width: auto; max-width: 100%; height: auto; max-height: calc(100dvh - 150px); margin: 0 auto; padding: 0; object-fit: initial; box-shadow: 0 8px 22px rgba(0,0,0,.35); }
+@media (max-width: 900px) { .stage.cardmode .card-img { width: 100%; max-height: none; } }
+.stage.cardmode .cap, .stage.cardmode .stage-tools, .stage.cardmode .sel-layer { display: none; }
+.work-pick { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 10px; }
+.work-pick[hidden] { display: none; }
+.work-pick .wp { width: 44px; height: 44px; padding: 0; border: 2px solid transparent; border-radius: 8px; background: none; cursor: pointer; overflow: hidden; opacity: .75; }
+.work-pick .wp img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.work-pick .wp.on { border-color: var(--indigo); opacity: 1; }
+.work-pick .wp:hover { opacity: 1; }
+.work-pick .wp:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+@media (min-width: 901px) { .app > .work-pick { grid-column: 1; grid-row: 1; } .app > .stage { grid-column: 1; grid-row: 2; } .app > .rail { grid-column: 2; grid-row: 1 / span 2; } .app { row-gap: 0; } }
+@media (max-width: 900px) { .app > .work-pick { order: 1; margin-bottom: 0; } }
+/* 未解鎖材料：點了在旁邊跳出提示 */
+.lock-bubble { position: absolute; z-index: 30; max-width: 200px; padding: 8px 10px; border-radius: 8px; background: var(--indigo); color: var(--on-indigo); font-size: 13px; line-height: 1.5; box-shadow: 0 6px 16px rgba(0,0,0,.35); pointer-events: none; }
+.lock-bubble::before { content: ""; position: absolute; left: calc(var(--ax, 20px) - 6px); top: -6px; border: 6px solid transparent; border-top: 0; border-bottom-color: var(--indigo); }
 /* ---------- 解鎖：未解鎖的材料、解鎖小卡 ---------- */
 .pick.locked label { opacity: .55; filter: grayscale(.8); position: relative; }
 .pick.locked label .lock { position: absolute; top: 2px; right: 2px; width: 18px !important; max-width: 18px !important; height: 18px; filter: none; }
@@ -798,6 +817,7 @@ a { color: var(--indigo); }
   </header>
 
   <main class="app">
+    <div class="work-pick" id="workPick" role="radiogroup" aria-label="選擇要分享的作品" hidden></div>
     <div class="stage" id="stageBox">
       <canvas id="stage" width="900" height="900" aria-label="染布工作台"></canvas>
       <img class="card-img" id="cardImg" alt="" hidden>
@@ -1043,6 +1063,19 @@ function bumpMade() {   // 回傳這次剛解鎖的材料
   try { localStorage.setItem(PROG_KEY, JSON.stringify({ made: after })); } catch (e) { /* 瀏覽器不允許暫存就算了 */ }
   return UNLOCKS.filter(u => before < u.need && after >= u.need);
 }
+function showLockBubble(v) {   // 在那個材料旁邊跳出提示
+  const u = UNLOCKS.find(x => x.key === v), lab = document.querySelector(`label[for="opt-${u.kind === "core" ? "core" : "board"}-${v}"]`);
+  document.querySelectorAll(".lock-bubble").forEach(b => b.remove());
+  const t = `染滿 ${u.need} 塊布就能解鎖（已染 ${madeCount()} 塊）`;
+  if (!lab) { toast(t); return; }
+  const r = lab.getBoundingClientRect(), b = document.createElement("div");
+  b.className = "lock-bubble"; b.setAttribute("role", "status"); b.textContent = t; document.body.appendChild(b);
+  const left = Math.min(Math.max(8, r.left + scrollX), scrollX + innerWidth - b.offsetWidth - 8);
+  b.style.left = left + "px"; b.style.top = r.bottom + scrollY + 8 + "px";
+  b.style.setProperty("--ax", r.left + scrollX + r.width / 2 - left + "px");
+  const kill = () => { b.remove(); document.removeEventListener("pointerdown", kill, true); };
+  setTimeout(kill, 2400); setTimeout(() => document.addEventListener("pointerdown", kill, true), 0);
+}
 function isLocked(v) { const u = UNLOCKS.find(x => x.key === v); return !!u && madeCount() < u.need; }
 // 新解鎖的材料：第一次點選前顯示「NEW」
 const NEWSEEN_KEY = "jinglan-newseen-v1";
@@ -1053,7 +1086,7 @@ function updateToolDots() {   // 有新材料的工具頁籤加小圓點
   const has = { kumo: UNLOCKS.some(u => u.kind === "core" && isNew(u.key)), itajime: UNLOCKS.some(u => u.kind === "board" && isNew(u.key)) };
   for (const t of ["kumo", "nui", "itajime", "arashi"]) { const l = document.querySelector(`label[for="tool-${t}"]`); if (l) l.classList.toggle("has-new", !!has[t]); }
 }
-function lockBadge(v) { if (isNew(v)) return `<span class="new-tag" aria-label="新的">NEW</span>`; if (!isLocked(v)) return ""; const u = UNLOCKS.find(x => x.key === v), left = u.need - madeCount(); return `<img class="lock" src="${ICON.lock}" alt="未解鎖：再染 ${left} 塊布"><small class="lock-tip">再染 ${left} 塊</small>`; }
+function lockBadge(v) { if (isNew(v)) return `<span class="new-tag" aria-label="新的">NEW</span>`; if (!isLocked(v)) return ""; const u = UNLOCKS.find(x => x.key === v), left = u.need - madeCount(); return `<img class="lock" src="${ICON.lock}" alt="未解鎖：染滿 ${u.need} 塊布就能解鎖">`; }
 // 色階：0 = 布的原色，1 = 最深
 const DYES = {
   indigo:   { name: "大菁藍", desc: "藍染缸的染液是黃綠色的，布出缸後碰到空氣才會變藍。", liquid: [96, 106, 40],  chip: "#2b4c86", stops: [[0.22, [176, 203, 224]], [0.5, [86, 128, 175]], [0.78, [37, 64, 115]], [1, [18, 29, 62]]], oxidize: true,
@@ -1844,7 +1877,7 @@ function updateCursor() {
 function setOpt(key, raw) {
   if (state.busy) return;
   if (isNew(raw)) { markSeen(raw); }   // 第一次點新材料：拿掉 NEW
-  if (isLocked(raw)) { const u = UNLOCKS.find(x => x.key === raw), left = u.need - madeCount(); toast(`再染 ${left} 塊布就能解鎖${u.name}`); renderSettings(); return; }   // 還沒解鎖
+  if (isLocked(raw)) { renderSettings(); showLockBubble(raw); return; }   // 還沒解鎖：在旁邊顯示提示
   if (state.tool === "itajime" && (key === "fold" || key === "bands")) {
     state.ita[key] = key === "bands" ? +raw : raw;
     renderSettings(); updateBind(); return;
@@ -2908,6 +2941,9 @@ function setCardMode(on) {
   document.getElementById("cardEdit").hidden = true;
   document.querySelector(".top h1").hidden = on; document.getElementById("backWork").hidden = !on;   // 分享時，左上角換成「回到作品」
   stage.style.visibility = on ? "hidden" : "visible";
+  stageBox.classList.toggle("cardmode", on);
+  document.querySelector(".rack-sec").hidden = on;   // 分享頁不顯示晾布架
+  renderWorkPick();
   updateRail();
   say("");
   if (on) {
@@ -3057,7 +3093,7 @@ async function ensureFonts(text) {
 
 function cardDate() { const d = new Date(); return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`; }
 function cardRecipe() { const l = src().labels; return `${l.fabric} · ${l.tech} · ${l.dye}`; }
-function drawCard(layout, title, msg, sign) {
+function drawCard(layout, title, msg, sign, big = false) {   // big：手機預覽用大字版（存檔、列印還是原本大小）
   const L = layout === "print" ? { w: 1200, h: 1800 } : LAYOUTS[layout], cv = document.createElement("canvas"); cv.width = L.w; cv.height = L.h;   // print：4×6 吋、300dpi
   const c = cv.getContext("2d");
   c.fillStyle = CARD.bg; c.fillRect(0, 0, L.w, L.h);
@@ -3066,7 +3102,7 @@ function drawCard(layout, title, msg, sign) {
   const serial = `No. ${pad(w.seed % 10000)}　${w.date}`;
   const box = { W: 1080, H: L.h * 1080 / L.w };
   const textBlock = (x, y, w, opts = {}) => {
-    const ts = opts.title || 68, bs = opts.body || 34;
+    const ts = opts.title || 68, bs = (opts.body || 34) + (big ? 6 : 0);
     c.fillStyle = CARD.ink; c.textBaseline = "alphabetic";
     c.font = `700 ${ts}px ${F_DISPLAY}`; c.fillText(`《${title}》`, x - ts * 0.45, y);
     // 三個可編輯的框：左右對齊、同寬
@@ -3074,15 +3110,17 @@ function drawCard(layout, title, msg, sign) {
     box.title = { x: bx, y: y - ts * 1.05, w: bw, h: ts * 1.38, fs: ts, font: "display", bold: true, pad: 10 };
     let yy = y + (opts.gap || 64) + 22;   // 框與框之間留空隙
     c.font = `400 ${bs}px ${F_BODY}`;
-    const lns = wrapText(c, msg, w - bs * 2.2).slice(0, 3);   // 右側留空間給「換一句」
-    box.msg = { x: bx, y: yy - bs * 1.25, w: bw, h: bs * 1.55 * 3 + bs * 0.55, fs: bs, font: "body", pad: padT };   // 固定三行高
+    const lns = wrapText(c, msg, w - bs * 2.2).slice(0, big ? 5 : 3);   // 右側留空間給「換一句」
+    const nl = Math.max(3, lns.length);   // 至少三行高
+    box.msg = { x: bx, y: yy - bs * 1.25, w: bw, h: bs * 1.55 * nl + bs * 0.55, fs: bs, font: "body", pad: padT };
     const y0 = yy;
     for (const ln of lns) { c.fillText(ln, x, yy); yy += bs * 1.55; }
-    yy = y0 + bs * 1.55 * 3 + 22;
+    yy = y0 + bs * 1.55 * nl + 22;
     box.sign = { x: bx, y: yy - bs * 1.2, w: padT + bs * 8, h: bs * 1.7, fs: bs, font: "display", pad: padT };   // 署名框短一點
     if (sign) { c.font = `400 ${bs}px ${F_DISPLAY}`; c.fillStyle = CARD.muted; c.fillText(`— ${sign}`, x, yy); }
   };
   const meta = (x, y, w, size) => {
+    if (big) size = 37;   // 手機上看起來約 12px
     c.font = `400 ${size}px ${F_DATA}`; c.fillStyle = CARD.muted;
     const lines = [serial].concat(wrapText(c, cardRecipe(), w).slice(0, 2));
     lines.forEach((ln, i) => c.fillText(ln, x, y + i * size * 1.6));
@@ -3093,31 +3131,32 @@ function drawCard(layout, title, msg, sign) {
     textBlock(72, 1176, 936);
     meta(72, 1520, 780, 22);
   } else if (layout === "portrait") {
-    frame(72, 72, 936, 800);
-    textBlock(72, 970, 936);
-    meta(72, 1302, 780, 21);
+    if (big) { frame(72, 72, 936, 700); textBlock(72, 870, 936); meta(72, 1250, 900, 21); }
+    else { frame(72, 72, 936, 800); textBlock(72, 970, 936); meta(72, 1302, 780, 21); }
   } else if (layout === "square") {
     drawCover(c, cloth, 0, 0, 1080, 1080);
-    c.font = `400 34px ${F_BODY}`;
-    const lines = Math.min(3, wrapText(c, msg, 560).length);
-    c.font = `400 19px ${F_DATA}`;
+    const bsq = big ? 40 : 34, msq = big ? 37 : 19;
+    c.font = `400 ${bsq}px ${F_BODY}`;
+    const lines = Math.max(3, Math.min(big ? 5 : 3, wrapText(c, msg, 560 - bsq * 2.2).length));
+    c.font = `400 ${msq}px ${F_DATA}`;
     const mlines = 1 + Math.min(2, wrapText(c, cardRecipe(), 560).length);
-    const ph = 64 + 68 + 30 + 3 * 53 + 56 + 58 + mlines * 30 + 40;
+    const ph = 64 + 68 + 30 + lines * bsq * 1.55 + 56 + bsq * 1.7 + mlines * msq * 1.6 + 40;
     const py = 1080 - 56 - ph;
     c.save(); c.shadowColor = "rgba(10,16,36,0.22)"; c.shadowBlur = 30; c.shadowOffsetY = 8; c.fillStyle = CARD.bg; c.fillRect(56, py, 640, ph); c.restore();
     textBlock(96, py + 120, 560);
-    meta(96, py + ph - 40 - (mlines - 1) * 30, 560, 19);
+    meta(96, py + ph - 40 - (mlines - 1) * msq * 1.6, 560, 19);
   } else {
     frame(72, 140, 936, 1180);
     textBlock(72, 1462, 936, { title: 80, body: 38, gap: 80 });
     meta(72, 1820, 780, 24);
   }
   // LOGO_SLOT：刻意留白
-  if (layout !== "print") CARD_BOX = box;   // 讓小卡上的輸入框對準文字
+  if (layout !== "print" && big === previewBig()) CARD_BOX = box;   // 讓小卡上的輸入框對準預覽圖的文字
   return cv;
 }
 
 let cardBlob = null, cardURL = null, cardTimer = 0, cardSeq = 0;
+const previewBig = () => matchMedia("(max-width: 900px)").matches;   // 手機：預覽圖用大字版
 const fTitle = document.getElementById("cTitle"), fMsg = document.getElementById("cMsg"), fSign = document.getElementById("cSign");
 async function refreshCard() {
   if (!src()) return;
@@ -3125,13 +3164,17 @@ async function refreshCard() {
   const title = (fTitle.value.trim() || src().name), msg = fMsg.value.trim(), sign = fSign.value.trim();
   await ensureFonts(`《》—${title}${msg}${sign}${cardRecipe()}`);
   if (seq !== cardSeq) return;
-  const cv = state.product === "card" ? drawCard(state.layout, title, msg, sign) : drawProduct(state.product, title);
+  const isCard = state.product === "card", big = isCard && previewBig();
+  const cv = isCard ? drawCard(state.layout, title, msg, sign) : drawProduct(state.product, title);   // 存檔、分享用：原本大小
+  const pv = big ? drawCard(state.layout, title, msg, sign, true) : cv;                                  // 畫面預覽用
   const blob = await new Promise(r => cv.toBlob(r, "image/png"));
-  if (seq !== cardSeq || !blob) return;
+  const pblob = pv === cv ? blob : await new Promise(r => pv.toBlob(r, "image/png"));
+  if (seq !== cardSeq || !blob || !pblob) return;
   cardBlob = blob;
   if (cardURL) URL.revokeObjectURL(cardURL);
-  cardURL = URL.createObjectURL(blob);
+  cardURL = URL.createObjectURL(pblob);
   const img = document.getElementById("cardImg");
+  img.onload = placeCardEdit;   // 圖片載入、排好版之後才對準輸入框
   img.src = cardURL; img.alt = `小卡預覽：《${title}》`;
   placeCardEdit();
 }
@@ -3295,7 +3338,10 @@ document.getElementById("vBack").onclick = closeView;
 document.getElementById("vRedye").onclick = () => { const it = rack.find(x => x.id === state.viewing.id); if (it) startRedye(it); };
 document.getElementById("slots").addEventListener("click", e => { const b = e.target.closest("button.cloth"); if (!b) return; if (pendingHang) hangInstead(b.dataset.id); else openView(b.dataset.id); });
 document.getElementById("skipHang").onclick = skipHang;
-document.getElementById("backWork").onclick = () => setCardMode(false);
+document.getElementById("backWork").onclick = () => {
+  const v = state.viewing; setCardMode(false);
+  if (v) { clearStage(); sctx.drawImage(v.cloth, 0, 0); fillInfo(v, { name: "vName", rare: "vRare", serial: "vSerial", facts: "vFacts" }); document.getElementById("vRedye").hidden = !canRedye(v); renderRack(); }   // 分享時換過作品：回到那塊布
+};
 document.getElementById("steps").addEventListener("click", e => { const b = e.target.closest("button"); if (b && !b.disabled) show(+b.dataset.go); });
 [fTitle, fMsg, fSign].forEach(el => el.addEventListener("input", queueCard));
 
@@ -3347,6 +3393,31 @@ function showUnlock(u) {
 function closeUnlock() { document.getElementById("unlock").hidden = true; }
 document.getElementById("unlockOk").onclick = closeUnlock;
 document.getElementById("unlock").addEventListener("keydown", e => { if (e.key === "Escape") closeUnlock(); });
+/* 分享頁：卡片上方的作品小方格，點了換成那塊布 */
+function renderWorkPick() {
+  const el = document.getElementById("workPick");
+  const items = rack.slice().reverse();
+  if (state.work && !items.some(x => x.id === state.work.id) && state.work.cloth) items.unshift({ id: state.work.id, name: state.work.name, img: state.work.cloth.toDataURL("image/jpeg", 0.7), _cur: true });
+  if (!state.cardMode || items.length < 2) { el.hidden = true; el.innerHTML = ""; return; }
+  const cur = src() && src().id;
+  el.innerHTML = items.map(it => `<button type="button" role="radio" aria-checked="${it.id === cur}" class="wp${it.id === cur ? " on" : ""}" data-id="${it.id}" title="《${it.name}》" aria-label="《${it.name}》"><img src="${it.img}" alt=""></button>`).join("");
+  el.hidden = false;
+}
+document.getElementById("workPick").addEventListener("click", e => {
+  const b = e.target.closest(".wp"); if (!b || b.classList.contains("on") || state.busy) return;
+  const id = b.dataset.id;
+  if (state.work && state.work.id === id) { state.viewing = null; switchCardSource(); return; }
+  const it = rack.find(x => x.id === id); if (!it) return;
+  const img = new Image();
+  img.onload = () => {
+    const c = document.createElement("canvas"); c.width = c.height = S; c.getContext("2d").drawImage(img, 0, 0, S, S);
+    state.viewing = Object.assign({}, it, { cloth: c, labels: Object.assign({ round: 1 }, it.labels) });
+    switchCardSource();
+  };
+  img.src = it.img;
+});
+function switchCardSource() { const w = src(); fTitle.value = w.name; cardSrcId = w.id + w.labels.round; renderWorkPick(); refreshCard(); }
+addEventListener("resize", () => { if (state.cardMode) queueCard(); });
 /* 小卡上直接編輯文字：輸入框疊在預覽圖的文字位置 */
 function placeCardEdit() {
   const ed = document.getElementById("cardEdit"), img = document.getElementById("cardImg"), b = CARD_BOX;
