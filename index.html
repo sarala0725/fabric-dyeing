@@ -478,7 +478,7 @@ a { color: var(--indigo); }
 .work-pick .wp.on { border-color: var(--indigo); opacity: 1; }
 .work-pick .wp:hover { opacity: 1; }
 .work-pick .wp:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
-@media (min-width: 901px) { .app > .work-pick { grid-column: 1; grid-row: 1; } .app > .stage { grid-column: 1; grid-row: 2; } .app > .rail { grid-column: 2; grid-row: 1 / span 2; } .app { row-gap: 0; } }
+@media (min-width: 901px) { .app > .work-pick { grid-column: 1; grid-row: 1; } .app > .stage { grid-column: 1; grid-row: 2; } .app > .rail { grid-column: 2; grid-row: 1 / span 2; } .app { row-gap: 0; grid-template-rows: auto 1fr; } }
 @media (max-width: 900px) { .app > .work-pick { order: 1; margin-bottom: 0; } }
 /* 未解鎖材料：點了在旁邊跳出提示 */
 .lock-bubble { position: absolute; z-index: 30; max-width: 200px; padding: 8px 10px; border-radius: 8px; background: var(--indigo); color: var(--on-indigo); font-size: 13px; line-height: 1.5; box-shadow: 0 6px 16px rgba(0,0,0,.35); pointer-events: none; }
