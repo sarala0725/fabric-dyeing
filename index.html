@@ -6,8 +6,8 @@
 <title>島宇染坊</title>
 <meta name="description" content="在線上體驗客家藍染：選布、綁布、浸染，拆開看看你染出的花樣，做成小卡分享給朋友。">
 <meta name="theme-color" content="#16244a">
-<link rel="icon" type="image/png" href="favicon.png">
-<link rel="apple-touch-icon" href="favicon.png">
+<link rel="icon" type="image/png" sizes="48x48" href="favicon.png">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 <!-- 分享到 LINE、Facebook 時的預覽卡片；之後換網域要一併修改網址 -->
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="島宇染坊">
@@ -481,6 +481,13 @@ a { color: var(--indigo); }
 @media (min-width: 901px) { .app > .work-pick { grid-column: 1; grid-row: 1; } .app > .stage { grid-column: 1; grid-row: 2; } .app > .rail { grid-column: 2; grid-row: 1 / span 2; } .app { row-gap: 0; grid-template-rows: auto 1fr; } }
 @media (max-width: 900px) { .app > .work-pick { order: 1; margin-bottom: 0; } }
 /* 未解鎖材料：點了在旁邊跳出提示 */
+.friend { position: fixed; inset: 0; z-index: 45; overflow-y: auto; background: var(--bg); padding: 28px 16px calc(32px + env(safe-area-inset-bottom, 0px)); }
+.friend[hidden] { display: none; }
+.friend-in { max-width: 520px; margin: 0 auto; display: grid; gap: 18px; }
+.friend h1 { margin: 0; font: 700 26px var(--font-display); letter-spacing: .06em; text-align: center; }
+.friend img { display: block; width: 100%; height: auto; box-shadow: 0 8px 22px rgba(0,0,0,.35); }
+.friend .acts { display: grid; gap: 10px; }
+.friend .btn { text-align: center; text-decoration: none; }
 .lock-bubble { position: absolute; z-index: 30; max-width: 200px; padding: 8px 10px; border-radius: 8px; background: var(--indigo); color: var(--on-indigo); font-size: 13px; line-height: 1.5; box-shadow: 0 6px 16px rgba(0,0,0,.35); pointer-events: none; }
 .lock-bubble::before { content: ""; position: absolute; left: calc(var(--ax, 20px) - 6px); top: -6px; border: 6px solid transparent; border-top: 0; border-bottom-color: var(--indigo); }
 /* ---------- 解鎖：未解鎖的材料、解鎖小卡 ---------- */
@@ -511,6 +518,7 @@ a { color: var(--indigo); }
 /* ---------- 第一次使用的引導 ---------- */
 .guide { position: fixed; inset: 0; z-index: 40; }
 .guide[hidden] { display: none; }
+html.guide-lock, html.guide-lock body { overflow: hidden; overscroll-behavior: none; }   /* 引導時鎖住頁面捲動 */
 .guide-hole { position: fixed; border-radius: 12px; box-shadow: 0 0 0 9999px rgba(8, 14, 32, .62); outline: 2px solid var(--focus); outline-offset: 3px; transition: left .3s ease, top .3s ease, width .3s ease, height .3s ease; pointer-events: none; }
 .guide-card { position: fixed; width: min(320px, calc(100vw - 32px)); background: var(--indigo); color: var(--on-indigo); border-radius: 14px; padding: 16px 18px 14px; box-shadow: 0 12px 32px rgba(0,0,0,.45); transition: left .3s ease, top .3s ease; }
 .guide-card h3 { margin: 0 0 6px; font: 700 17px var(--font-display); letter-spacing: .04em; }
@@ -1055,7 +1063,8 @@ const OPT_TIPS = {
 const PROG_KEY = "jinglan-progress-v1";
 const UNLOCKS = [
   { key: "button", kind: "core", need: 1, name: "鈕扣", desc: "包進捆紮裡，染出扁圓和一圈細環，四個小洞會滲進一點藍。" },
-  { key: "star", kind: "board", need: 3, name: "星星壓克力", desc: "夾在摺好的布上，攤開會出現好幾顆對稱的星星。" }
+  { key: "star", kind: "board", need: 3, name: "星星壓克力", desc: "夾在摺好的布上，攤開會出現好幾顆對稱的星星。" },
+  { key: "ripple", kind: "style", need: 6, name: "木棍水波紋", desc: "把布捲在木棍上輕輕推擠，紋路像水波。" }
 ];
 function madeCount() { try { return (JSON.parse(localStorage.getItem(PROG_KEY) || "{}").made) || 0; } catch (e) { return 0; } }
 function bumpMade() {   // 回傳這次剛解鎖的材料
@@ -1064,9 +1073,9 @@ function bumpMade() {   // 回傳這次剛解鎖的材料
   return UNLOCKS.filter(u => before < u.need && after >= u.need);
 }
 function showLockBubble(v) {   // 在那個材料旁邊跳出提示
-  const u = UNLOCKS.find(x => x.key === v), lab = document.querySelector(`label[for="opt-${u.kind === "core" ? "core" : "board"}-${v}"]`);
+  const u = UNLOCKS.find(x => x.key === v), lab = document.querySelector(`label[for="opt-${u.kind}-${v}"]`);
   document.querySelectorAll(".lock-bubble").forEach(b => b.remove());
-  const t = `染滿 ${u.need} 塊布就能解鎖（已染 ${madeCount()} 塊）`;
+  const t = `染滿 ${u.need} 塊布就能解鎖`;
   if (!lab) { toast(t); return; }
   const r = lab.getBoundingClientRect(), b = document.createElement("div");
   b.className = "lock-bubble"; b.setAttribute("role", "status"); b.textContent = t; document.body.appendChild(b);
@@ -1083,7 +1092,7 @@ function newSeen() { try { return JSON.parse(localStorage.getItem(NEWSEEN_KEY) |
 function isNew(v) { const u = UNLOCKS.find(x => x.key === v); return !!u && !isLocked(v) && !newSeen().includes(v); }
 function markSeen(v) { if (!isNew(v)) return; try { localStorage.setItem(NEWSEEN_KEY, JSON.stringify(newSeen().concat([v]))); } catch (e) { /* 略過 */ } }
 function updateToolDots() {   // 有新材料的工具頁籤加小圓點
-  const has = { kumo: UNLOCKS.some(u => u.kind === "core" && isNew(u.key)), itajime: UNLOCKS.some(u => u.kind === "board" && isNew(u.key)) };
+  const has = { kumo: UNLOCKS.some(u => u.kind === "core" && isNew(u.key)), itajime: UNLOCKS.some(u => u.kind === "board" && isNew(u.key)), arashi: UNLOCKS.some(u => u.kind === "style" && isNew(u.key)) };
   for (const t of ["kumo", "nui", "itajime", "arashi"]) { const l = document.querySelector(`label[for="tool-${t}"]`); if (l) l.classList.toggle("has-new", !!has[t]); }
 }
 function lockBadge(v) { if (isNew(v)) return `<span class="new-tag" aria-label="新的">NEW</span>`; if (!isLocked(v)) return ""; const u = UNLOCKS.find(x => x.key === v), left = u.need - madeCount(); return `<img class="lock" src="${ICON.lock}" alt="未解鎖：染滿 ${u.need} 塊布就能解鎖">`; }
@@ -1860,7 +1869,7 @@ function renderSettings() {
     html += group("橡皮筋", `${ita.bands ? ita.bands + " 條" : "不綁"}`, [0, 1, 2, 3, 4].map(v => pickI("bands", v, `<img src="${ICON.pegs[v]}" alt="${v ? v + " 條" : "不綁"}">`, "peg")).join(""));
   } else {
     html += group("用什麼綁", "", ["rope", "net", "pole"].map(v => pick("group", v, `<img src="${ICON.group[v]}" alt=""><span>${{ rope: "繩子", net: "網袋／絲襪", pole: "木棍" }[v]}</span>`, "board")).join(""));
-    html += group("紋樣", "", ARASHI_STYLES[o.group].map(([v, n]) => pick("style", v, `<img src="${ICON.style[v]}" alt=""><span>${n}</span>`, "board")).join(""));
+    html += group("紋樣", "", ARASHI_STYLES[o.group].map(([v, n]) => pick("style", v, `<img src="${ICON.style[v]}" alt=""><span>${n}</span>${lockBadge(v)}`, "board")).join(""));
   }
   el.innerHTML = html;
   updateToolDots();
@@ -3224,11 +3233,60 @@ function updateShare() {   // 手機支援時才出現「分享圖片」（可�
   if (inClaude || !navigator.canShare || !window.File) return;
   try { it.hidden = !navigator.canShare({ files: [new File([new Blob(["x"])], "a.png", { type: "image/png" })] }); } catch (e) { it.hidden = true; }
 }
-const siteURL = () => location.origin + location.pathname.replace(/index\.html$/, "");
+const SITE = "https://sarala0725.github.io/fabric-dyeing/";
+const siteURL = () => /^https?:$/.test(location.protocol) && !inClaude ? location.origin + location.pathname.replace(/index\.html$/, "") : SITE;
+/* 作品連結：把配方和小卡文字壓縮後放在網址 # 後面，朋友打開就能看到同一塊布 */
+const b64u = u8 => { let s = ""; for (let i = 0; i < u8.length; i += 8192) s += String.fromCharCode.apply(null, u8.subarray(i, i + 8192)); return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); };
+const unb64u = s => Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/")), c => c.charCodeAt(0));
+const roundNums = v => typeof v === "number" ? (Number.isInteger(v) ? v : Math.round(v * 100) / 100) : Array.isArray(v) ? v.map(roundNums) : v && typeof v === "object" ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, roundNums(x)])) : v;
+async function pipeBytes(u8, stream) { return new Uint8Array(await new Response(new Blob([u8]).stream().pipeThrough(stream)).arrayBuffer()); }
+async function workLink() {
+  const w = src(); if (!w || !w.recipe) return siteURL();
+  const data = { v: 1, r: roundNums(w.recipe), n: w.name, d: w.date, t: fTitle.value.trim(), m: fMsg.value.trim(), s: fSign.value.trim(), l: state.layout };
+  const raw = new TextEncoder().encode(JSON.stringify(data));
+  let code;
+  try { code = "z" + b64u(await pipeBytes(raw, new CompressionStream("deflate-raw"))); } catch (e) { code = "j" + b64u(raw); }   // 舊瀏覽器不能壓縮就直接編碼
+  return siteURL() + "#w=" + code;
+}
+async function readWorkLink() {
+  const m = location.hash.match(/^#w=([zj])([A-Za-z0-9_-]+)$/); if (!m) return null;
+  try {
+    let u8 = unb64u(m[2]);
+    if (m[1] === "z") u8 = await pipeBytes(u8, new DecompressionStream("deflate-raw"));
+    const d = JSON.parse(new TextDecoder().decode(u8));
+    if (!d || d.v !== 1 || !d.r || !FABRICS[d.r.fabric] || !Array.isArray(d.r.rounds)) return null;
+    return d;
+  } catch (e) { return null; }
+}
+async function showFriendWork() {
+  const d = await readWorkLink(); if (!d) return false;
+  const r = d.r, cloth = renderCloth(r);
+  const fw = { cloth, name: String(d.n || "藍染"), seed: r.seed, rare: r.rare, date: String(d.d || ""), recipe: r,
+    labels: { fabric: FABRICS[r.fabric].name, tech: techLabel(r.rounds), dye: r.rounds.map(x => dyeLabel(x.dips)).join(" → "), round: r.rounds.length } };
+  const title = String(d.t || fw.name).slice(0, 40), msg = String(d.m || "").slice(0, 200), sign = String(d.s || "").slice(0, 30), layout = LAYOUTS[d.l] ? d.l : "portrait";
+  await ensureFonts(`《》—${title}${msg}${sign}${fw.labels.fabric}${fw.labels.tech}${fw.labels.dye}`);
+  const keep = state.viewing; state.viewing = fw;
+  const cv = drawCard(layout, title, msg, sign, previewBig());
+  state.viewing = keep;
+  const box = document.createElement("section");
+  box.className = "friend"; box.id = "friend"; box.setAttribute("aria-label", "朋友送你的藍染作品");
+  box.innerHTML = `<div class="friend-in"><h1>朋友染了一塊布送你</h1><img alt=""><div class="acts"><button type="button" class="btn big" id="friendGo">我也來染一塊</button><a class="btn ghost" href="culture.html">認識藍染</a></div></div>`;
+  const img = box.querySelector("img"); img.src = cv.toDataURL("image/png"); img.alt = `小卡：《${title}》`;
+  document.body.appendChild(box);
+  document.documentElement.style.overflow = "hidden";
+  document.getElementById("friendGo").onclick = () => {
+    box.remove(); document.documentElement.style.overflow = "";
+    try { history.replaceState(null, "", location.pathname + location.search); } catch (e) { /* 略過 */ }
+    window.scrollTo({ top: 0 }); guideMaybe(1);
+  };
+  document.getElementById("friendGo").focus({ preventScroll: true });
+  return true;
+}
 document.getElementById("shareBtn").onclick = share;
 document.getElementById("copyBtn").onclick = async () => {
-  try { await navigator.clipboard.writeText(siteURL()); toast("已複製網站連結"); }
-  catch (e) { const t = document.createElement("textarea"); t.value = siteURL(); document.body.appendChild(t); t.select(); try { document.execCommand("copy"); toast("已複製網站連結"); } catch (e2) { toast(siteURL()); } t.remove(); }
+  const url = await workLink(), msg = url.includes("#w=") ? "已複製作品連結" : "已複製網站連結";
+  try { await navigator.clipboard.writeText(url); toast(msg); }
+  catch (e) { const t = document.createElement("textarea"); t.value = url; document.body.appendChild(t); t.select(); try { document.execCommand("copy"); toast(msg); } catch (e2) { toast(url); } t.remove(); }
 };
 async function share() {
   if (!cardBlob) return;
@@ -3383,7 +3441,7 @@ async function init() {
 let unlockItem = null;
 function showUnlock(u) {
   unlockItem = u;
-  document.getElementById("unlockImg").src = u.kind === "core" ? ICON.core[u.key] : ICON.board[u.key];
+  document.getElementById("unlockImg").src = (u.kind === "core" ? ICON.core : u.kind === "style" ? ICON.style : ICON.board)[u.key];
   document.getElementById("unlockName").textContent = u.name;
   document.getElementById("unlockDesc").textContent = u.desc;
   document.getElementById("unlock").hidden = false;
@@ -3479,6 +3537,7 @@ function guideStart(step) {
   guide.step = step; guide.i = 0; guide.open = true;
   guide.last = document.activeElement;
   document.getElementById("guide").hidden = false;
+  document.documentElement.classList.add("guide-lock");
   guidePlace();
   document.getElementById("guideNext").focus({ preventScroll: true });
 }
@@ -3499,6 +3558,10 @@ function guidePlace() {
   el.scrollIntoView({ block: mobile ? "start" : "nearest", behavior: "auto" });
   // 手機：卡片在底部，目標捲到畫面上半
   if (mobile) { window.scrollBy(0, -16); const r0 = el.getBoundingClientRect(), cardH = card.offsetHeight + 24; if (r0.bottom > innerHeight - cardH) window.scrollBy(0, Math.min(r0.top - 16, r0.bottom - (innerHeight - cardH))); }
+  guidePos(el);
+}
+function guidePos(el) {   // 依目標目前的位置擺框框和說明卡
+  const hole = document.getElementById("guideHole"), card = document.getElementById("guideCard"), mobile = matchMedia("(max-width: 600px)").matches;
   const r = el.getBoundingClientRect(), pad = 6;
   hole.style.cssText = `left:${r.left - pad}px;top:${r.top - pad}px;width:${r.width + pad * 2}px;height:${r.height + pad * 2}px`;
   if (mobile) return;
@@ -3511,6 +3574,7 @@ function guidePlace() {
 }
 function guideClose(all) {
   guide.open = false; document.getElementById("guide").hidden = true;
+  document.documentElement.classList.remove("guide-lock");
   guideMark(all ? { skip: true } : { [guide.step]: true });
   if (guide.last && guide.last.focus) guide.last.focus({ preventScroll: true });
 }
@@ -3521,13 +3585,16 @@ document.getElementById("guide").addEventListener("keydown", e => {
   if (e.key === "Tab") { const b = [document.getElementById("guideSkip"), document.getElementById("guideNext")], k = b.indexOf(document.activeElement); e.preventDefault(); b[(k + 1) % 2].focus(); }
 });
 addEventListener("resize", () => { if (guide.open) guidePlace(); });
+addEventListener("scroll", () => { if (guide.open) { const el = guideTarget(); if (el) guidePos(el); } }, { passive: true });   // 萬一頁面還是動了，框框跟著對位
+for (const ev of ["wheel", "touchmove"]) document.getElementById("guide").addEventListener(ev, e => e.preventDefault(), { passive: false });   // 引導時滑鼠滾輪、手指滑動都不捲頁面
 document.getElementById("guideAgain").addEventListener("click", () => {
   try { localStorage.removeItem(GUIDE_KEY); } catch (e) { /* 略過 */ }
   const step = !document.getElementById("afterReveal").hidden && state.step === 4 ? 4 : state.step;
   window.scrollTo({ top: 0 }); setTimeout(() => guideStart(GUIDES[step] ? step : 1), 50);
 });
 // 第一步：等載入動畫結束、布架準備好之後再出現
-(window.__loaderDone || Promise.resolve()).then(() => {
+(window.__loaderDone || Promise.resolve()).then(async () => {
+  if (location.hash.startsWith("#w=") && await showFriendWork()) return;   // 朋友傳來的作品連結：先看作品，按「我也來染一塊」才開始
   const wait = () => document.querySelector("#fabricOpts input") ? guideMaybe(1) : setTimeout(wait, 150);
   wait();
 });
