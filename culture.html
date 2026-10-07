@@ -120,6 +120,7 @@ sup a { text-decoration: none; font-family: var(--font-data); font-size: 12px; }
   const REDUCE = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   let fromNav = false;
   try { fromNav = sessionStorage.getItem("jl-nav") === "1"; sessionStorage.removeItem("jl-nav"); } catch (e) { /* 瀏覽器不允許暫存就照常播放 */ }
+  try { const t = +localStorage.getItem("jl-nav-at"); if (t && Date.now() - t < 10000) fromNav = true; localStorage.removeItem("jl-nav-at"); } catch (e) { /* 略過 */ }   // 另開分頁過來的也跳過
   const loader = document.getElementById("loader"), cv = document.getElementById("loaderCv"), c = cv.getContext("2d"), mainCtx = c;
   const fill = document.getElementById("ldFill"), pctEl = document.getElementById("ldPct");
   const clamp = (v, a = 0, b = 1) => v < a ? a : v > b ? b : v;
@@ -215,6 +216,7 @@ sup a { text-decoration: none; font-family: var(--font-data); font-size: 12px; }
   const fade = document.getElementById("navFade");
   document.addEventListener("click", e => {
     const a = e.target.closest && e.target.closest("a[href]");
+    if (a && a.target === "_blank" && /^[\w-]+\.html$/.test(a.getAttribute("href") || "")) { try { localStorage.setItem("jl-nav-at", String(Date.now())); } catch (err) { /* 略過 */ } return; }   // 站內另開分頁：新分頁讀得到這個記號
     if (!a || a.target === "_blank" || e.metaKey || e.ctrlKey || e.shiftKey) return;
     const href = a.getAttribute("href");
     if (!/^[\w-]+\.html(#[\w.~-]*)?$/.test(href)) return;

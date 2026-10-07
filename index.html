@@ -510,6 +510,13 @@ a { color: var(--indigo); }
 .friend .acts { display: grid; gap: 10px; }
 .friend .btn { text-align: center; text-decoration: none; }
 .result-name.unnamed { color: var(--muted); }
+.name-row { position: relative; margin: 4px 0 10px; }
+.name-row input { width: 100%; box-sizing: border-box; padding: 10px 92px 10px 14px; border: 1.5px dashed var(--muted); border-radius: 10px; background: var(--surface); color: var(--ink); font: 700 24px var(--font-display); letter-spacing: .06em; }
+.name-row input::placeholder { color: var(--muted); font-weight: 400; font-size: 20px; }
+.name-row input:focus { outline: 3px solid var(--focus); outline-offset: 1px; border-style: solid; }
+.name-row .ce-rand { right: 8px; top: 50%; transform: translateY(-50%); height: 32px; font-size: 13px; }
+.need-name-wrap.need-name .btn { opacity: .45; }
+.name-row input.flash { animation: ceFlash .9s ease 2; }
 .ce-rand { position: absolute; z-index: 4; pointer-events: auto; display: inline-flex; align-items: center; gap: 4px; padding: 0 10px 0 7px; border: 0; border-radius: 999px; background: #24396f; color: #f1efe6; font: 500 13px var(--font-body); letter-spacing: .04em; white-space: nowrap; cursor: pointer; box-shadow: 0 2px 6px rgba(19,33,63,.3); }
 .ce-rand[hidden] { display: none; }
 .ce-rand svg { width: 1.35em; height: 1.35em; fill: none; stroke: currentColor; stroke-width: 1.6; }
@@ -614,6 +621,7 @@ html.guide-lock, html.guide-lock body { overflow: hidden; overscroll-behavior: n
   const REDUCE = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   let fromNav = false;
   try { fromNav = sessionStorage.getItem("jl-nav") === "1"; sessionStorage.removeItem("jl-nav"); } catch (e) { /* 瀏覽器不允許暫存就照常播放 */ }
+  try { const t = +localStorage.getItem("jl-nav-at"); if (t && Date.now() - t < 10000) fromNav = true; localStorage.removeItem("jl-nav-at"); } catch (e) { /* 略過 */ }   // 另開分頁過來的也跳過
   const loader = document.getElementById("loader"), cv = document.getElementById("loaderCv"), c = cv.getContext("2d"), mainCtx = c;
   const fill = document.getElementById("ldFill"), pctEl = document.getElementById("ldPct");
   const clamp = (v, a = 0, b = 1) => v < a ? a : v > b ? b : v;
@@ -709,6 +717,7 @@ html.guide-lock, html.guide-lock body { overflow: hidden; overscroll-behavior: n
   const fade = document.getElementById("navFade");
   document.addEventListener("click", e => {
     const a = e.target.closest && e.target.closest("a[href]");
+    if (a && a.target === "_blank" && /^[\w-]+\.html$/.test(a.getAttribute("href") || "")) { try { localStorage.setItem("jl-nav-at", String(Date.now())); } catch (err) { /* 略過 */ } return; }   // 站內另開分頁：新分頁讀得到這個記號
     if (!a || a.target === "_blank" || e.metaKey || e.ctrlKey || e.shiftKey) return;
     const href = a.getAttribute("href");
     if (!/^[\w-]+\.html(#[\w.~-]*)?$/.test(href)) return;
@@ -941,15 +950,20 @@ html.guide-lock, html.guide-lock body { overflow: hidden; overscroll-behavior: n
         </div>
         <div id="afterReveal" class="step" hidden>
           <span class="badge" id="rareBadge" hidden>罕見紋樣</span>
-          <p class="result-name" id="resultName"></p>
+          <p class="result-name" id="resultName" hidden></p>
+          <div class="name-row" id="nameRow">
+            <label class="sr-only" for="rName">作品名稱</label>
+            <input type="text" id="rName" maxlength="12" placeholder="幫作品取個名字" autocomplete="off">
+            <button type="button" class="ce-rand" id="rRand" aria-label="隨機：幫你想作品名稱"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><circle cx="8.5" cy="8.5" r="1.4"/><circle cx="15.5" cy="8.5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="8.5" cy="15.5" r="1.4"/><circle cx="15.5" cy="15.5" r="1.4"/></svg><span>隨機</span></button>
+          </div>
           <p class="serial" id="serial"></p>
           <ul class="facts" id="facts"></ul>
           <div class="dip-rec"><p class="label">浸染紀錄</p><div class="strips mini" id="resultDips"></div></div>
-          <div class="actions">
+          <div class="actions need-name-wrap" id="resultActs">
             <button class="btn wide" type="button" id="toCard">分享</button>
             <button class="btn ghost" type="button" id="again">染新的一塊</button>
           </div>
-          <button class="btn ghost small" type="button" id="redyeBtn" hidden>重新加工</button>
+          <div class="need-name-wrap" id="redyeWrap"><button class="btn ghost small" type="button" id="redyeBtn" hidden>重新加工</button></div>
           <p class="redye-left" id="redyeLeft" hidden></p>
         </div>
       </section>
@@ -1097,6 +1111,7 @@ const OPT_TIPS = {
   hira: "一排平針縫好抽緊，染出像木紋的直皺。", ori: "把布摺起來沿摺線縫，染出一串菱形。", maki: "沿著布邊繞圈縫，染出斜斜的短紋。", gather: "縫好幾排平行的針腳再抽緊，皺褶比較寬。",
   marble: "揉成一團用繩子綁住，紋路像大理石。", lightning: "揉得更緊，留下尖銳的閃電狀白紋。", ice: "裝進網袋或絲襪壓緊，留下細碎的裂紋。", cloud: "鬆鬆地壓進網袋，顏色深淺像雲霧。",
   fold_sq2: "摺成 2×2 的方塊再夾板，攤開後同一個圖案對稱重複 4 次，花樣大而疏。", fold_sq3: "摺成 3×3 的方塊再夾板，攤開後圖案對稱重複 9 次。",
+  ita_bands: "在摺好的布上纏橡皮筋，纏住的地方吃不到顏色，攤開後會多出一條條重複的細白線。",
   fold_sq4: "摺成 4×4 的小方塊再夾板，攤開後圖案重複 16 次，花樣小而密，像格子窗。", fold_tri: "摺成三角形再夾板，攤開後圖案從中心往外對稱，像雪花或萬花筒。",
   storm: "捲在棍子上纏線、往下推擠，染出細細的斜線。", wood: "捲在棍子上推擠，紋路像木紋。", ripple: "捲在棍子上輕輕推擠，紋路像水波。"
 };
@@ -1889,6 +1904,15 @@ function buildOptions() {
   document.getElementById("layoutOpts").innerHTML = Object.entries(LAYOUTS).map(([k, l]) =>
     `<span><input type="radio" name="layout" id="lay-${k}" value="${k}" ${k === state.layout ? "checked" : ""}><label for="lay-${k}">${l.name}</label></span>`).join("");
   document.getElementById("fabricTip").textContent = FABRICS[state.fabric].desc;
+  const shelf = document.getElementById("fabricOpts"), tip = document.getElementById("fabricTip");
+  if (!shelf.dataset.hover) {   // 滑鼠移到哪卷布，就先預覽那卷的說明；移開恢復選中的
+    shelf.dataset.hover = "1";
+    const preview = e => { const inp = e.target.closest && e.target.closest(".pick") && e.target.closest(".pick").querySelector("input"); if (inp && FABRICS[inp.value]) tip.textContent = `${FABRICS[inp.value].name}：${FABRICS[inp.value].desc}`; };
+    const restore = () => { tip.textContent = FABRICS[state.fabric].desc; };
+    shelf.addEventListener("pointerover", e => { if (e.pointerType === "mouse") preview(e); });
+    shelf.addEventListener("pointerleave", restore);
+    shelf.addEventListener("focusin", preview); shelf.addEventListener("focusout", restore);
+  }
 }
 
 /* 細部設定：以實物呈現 */
@@ -1928,7 +1952,7 @@ function setOpt(key, raw) {
   if (state.busy) return;
   if (isNew(raw)) { markSeen(raw); }   // 第一次點新材料：拿掉 NEW
   if (isLocked(raw)) { renderSettings(); showLockBubble(raw); return; }   // 還沒解鎖：在旁邊顯示提示
-  if (["core", "fold", "board", "stitch", "style", "group"].includes(key)) state.lastOpt = { tool: state.tool, key: key === "core" ? "core_" + raw : key === "fold" ? "fold_" + raw : key === "group" ? ARASHI_STYLES[raw][0][0] : raw };   // 下方說明跟著剛點的選項
+  if (["core", "fold", "board", "stitch", "style", "group"].includes(key) || (key === "bands" && state.tool === "itajime")) state.lastOpt = { tool: state.tool, key: key === "core" ? "core_" + raw : key === "fold" ? "fold_" + raw : key === "group" ? ARASHI_STYLES[raw][0][0] : key === "bands" ? "ita_bands" : raw };   // 下方說明跟著剛點的選項
   if (state.tool === "itajime" && (key === "fold" || key === "bands")) {
     state.ita[key] = key === "bands" ? +raw : raw;
     renderSettings(); updateBind(); return;
@@ -3013,6 +3037,7 @@ function showResult(skipGuide) {
   document.getElementById("afterReveal").hidden = false;
   fillInfo(state.work, { name: "resultName", rare: "rareBadge", serial: "serial", facts: "facts", dips: "resultDips" });
   document.getElementById("redyeBtn").hidden = !canRedye(state.work);
+  const rn = document.getElementById("rName"); rn.value = state.work.name || ""; resultNameSync();
   const rl = document.getElementById("redyeLeft"); rl.hidden = !canRedye(state.work); if (!rl.hidden) rl.textContent = redyeLeftText(state.work);
   say(state.rare && !state.prev ? "出現了罕見的紋樣！" : "");
   document.querySelectorAll("#steps button").forEach(b => { b.disabled = true; b.classList.remove("done", "current"); b.classList.add("past"); });   // 拆完布：整條都染好了
@@ -3522,7 +3547,7 @@ document.getElementById("skipHang").onclick = skipHang;
 document.getElementById("backWork").onclick = () => {
   const v = state.viewing; setCardMode(false);
   if (v) { clearStage(); sctx.drawImage(v.cloth, 0, 0); fillInfo(v, { name: "vName", rare: "vRare", serial: "vSerial", facts: "vFacts", dips: "vDips" }); document.getElementById("vRedye").hidden = !canRedye(v); renderRack(); }   // 分享時換過作品：回到那塊布
-  else if (state.work) fillInfo(state.work, { name: "resultName", rare: "rareBadge", serial: "serial", facts: "facts", dips: "resultDips" });   // 名字可能剛取好
+  else if (state.work) { fillInfo(state.work, { name: "resultName", rare: "rareBadge", serial: "serial", facts: "facts", dips: "resultDips" }); document.getElementById("rName").value = state.work.name || ""; resultNameSync(); }   // 名字可能剛取好
 };
 document.getElementById("steps").addEventListener("click", e => { const b = e.target.closest("button"); if (b && !b.disabled) show(+b.dataset.go); });
 [fTitle, fMsg, fSign].forEach(el => el.addEventListener("input", queueCard));
@@ -3536,16 +3561,40 @@ document.getElementById("printDl").onclick = downloadPrint;
   dlg.addEventListener("click", e => { if (e.target === dlg) close(); });
   dlg.addEventListener("keydown", e => { if (e.key === "Escape") close(); });
 }
+/* 拆布後先命名：命名後才能分享、重新加工、染新的一塊 */
+function setWorkName(w, t) {
+  if (!w || w.name === t) return;
+  w.name = t;
+  if (state.work && state.work.id === w.id) state.work.name = t;
+  if (state.viewing && state.viewing.id === w.id) state.viewing.name = t;
+  const it = rack.find(x => x.id === w.id);
+  if (it) { it.name = t; clearTimeout(rackSaveTimer); rackSaveTimer = setTimeout(() => { saveRack(); renderRack(); }, 600); }
+}
+function resultNameSync() {
+  const t = document.getElementById("rName").value.trim();
+  setWorkName(state.work, t);
+  for (const id of ["resultActs", "redyeWrap"]) document.getElementById(id).classList.toggle("need-name", !t);
+  document.getElementById("rRand").classList.toggle("pulse", !t);
+}
+function resultNeedName() {
+  const el = document.getElementById("rName");
+  if (el.value.trim()) return false;
+  toast("先幫作品取個名字");
+  el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash"); el.focus({ preventScroll: true });
+  return true;
+}
+document.getElementById("rName").addEventListener("input", resultNameSync);
+document.getElementById("rName").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); e.target.blur(); } });
+document.getElementById("rRand").onclick = () => {
+  const el = document.getElementById("rName"), pool = Object.values(NAMES).flat().filter(n => n !== el.value.trim());
+  el.value = pool[Math.floor(Math.random() * pool.length)]; resultNameSync();
+};
+for (const id of ["resultActs", "redyeWrap"]) document.getElementById(id).addEventListener("click", e => { if (e.target.closest("button") && resultNeedName()) { e.stopImmediatePropagation(); e.preventDefault(); } }, true);
 /* 作品名稱：一定要填；填好的名字跟著作品存起來 */
 let rackSaveTimer = 0;
 function syncName() {
   const w = src(), t = fTitle.value.trim();
-  if (w && w.name !== t) {
-    w.name = t;
-    if (state.work && state.work.id === w.id) state.work.name = t;
-    const it = rack.find(x => x.id === w.id);
-    if (it) { it.name = t; clearTimeout(rackSaveTimer); rackSaveTimer = setTimeout(() => { saveRack(); renderRack(); }, 600); }
-  }
+  setWorkName(w, t);
   document.getElementById("shareActs").classList.toggle("need-name", !t);
   document.getElementById("randQuote").classList.toggle("pulse", !t);   // 還沒取名：輕輕提示可以點
 }
