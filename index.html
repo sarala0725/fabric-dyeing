@@ -232,7 +232,29 @@ a { color: var(--indigo); }
 .strips.mini .strip i { bottom: 6px; font-size: 10px; letter-spacing: -.02em; }
 .dip-rec .label { margin: 0; font-size: 12px; color: var(--muted); }
 .dip-rec[hidden] { display: none; }
-.redye-left { margin: 6px 0 0; font-size: 12px; color: var(--muted); text-align: center; }
+.dip-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.redye-left { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.redye-left[hidden] { display: none; }
+.redye-row { display: flex; justify-content: flex-end; margin: -4px 0 14px; }
+.redye-row .btn { border-width: 1px; }
+.actions.pair { display: flex; flex-wrap: nowrap; gap: 10px; }
+.actions.pair .btn { flex: 1 1 0; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.btn.wide-full { display: block; width: 100%; min-height: 46px; }
+.text-acts { display: flex; align-items: center; justify-content: center; margin-top: 6px; }
+.text-acts .text-btn { flex: 1 1 0; }
+.text-acts .text-btn:only-child { flex: none; }
+.text-acts .sep { flex: none; width: 1px; height: 16px; background: var(--line); }
+.text-btn { padding: 10px 6px; border: 0; background: none; color: var(--ink); font: 500 14px var(--font-body); text-decoration: underline; text-decoration-color: rgba(241,239,230,.45); text-underline-offset: 4px; cursor: pointer; }
+.text-btn:hover { text-decoration-color: currentColor; }
+.text-btn:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
+.text-btn.del { color: var(--muted); }
+.text-btn.del:hover { color: #f3a08f; }
+.text-btn.armed { color: #f3a08f; font-weight: 700; text-decoration-color: currentColor; }
+.strip.add { grid-column: span 2; padding: 0; background: transparent; border: 1.5px dashed rgba(241,239,230,.5); border-top: 3px solid #a07a45; border-radius: 0 0 3px 3px; cursor: pointer; font: inherit; color: var(--ink); }
+.strip.add i { --ink: #f1efe6; white-space: nowrap; }
+.strip.add:hover { background: rgba(244,213,141,.12); border-color: #f4d58d; border-top-color: #a07a45; }
+.strip.add:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+#vNote:empty { display: none; }
 .dip-end { margin: 10px 0 0; padding: 8px 12px; border-radius: 8px; background: var(--indigo); color: var(--on-indigo); font-size: 14px; text-align: center; }
 .dip-end.last { background: transparent; color: var(--ink); border: 1px dashed var(--muted); }
 .strip.done { box-shadow: 0 3px 6px rgba(0,0,0,.3); }
@@ -336,9 +358,15 @@ a { color: var(--indigo); }
 .toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 18px; border-radius: 999px; font-size: 14px; z-index: 10; max-width: calc(100% - 32px); text-align: center; }
 
 /* ---------- 進度條：一條染布，染過的段落是深藍 ---------- */
-.steps { gap: 0; border-radius: 6px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,.35), inset 0 0 0 1px rgba(0,0,0,.15);
+.steps { gap: 0; border-radius: 6px; overflow: visible; box-shadow: 0 4px 12px rgba(0,0,0,.35), inset 0 0 0 1px rgba(0,0,0,.15);
   background: repeating-linear-gradient(90deg, rgba(0,0,0,.035) 0 1px, transparent 1px 4px), repeating-linear-gradient(0deg, rgba(0,0,0,.03) 0 1px, transparent 1px 4px), #ece8dc; }
 .steps li { position: relative; display: block; }
+.steps li:first-child button[data-go] { border-radius: 6px 0 0 6px; } .steps li:last-child button[data-go] { border-radius: 0 6px 6px 0; }
+.steps .step-help { position: absolute; display: block; letter-spacing: 0; top: -8px; right: -6px; z-index: 3; width: 18px; height: 18px; padding: 0; border: 0; border-radius: 50%; background: #f4d58d; color: #1a2340; font: 700 11px/18px var(--font-body); text-align: center; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,.45); }
+.steps .step-help::before { content: ""; position: absolute; inset: -8px; }   /* 手指好點一點 */
+.steps .step-help:hover { background: #fbe5ad; }
+.steps .step-help:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+@media (max-width: 900px) { .steps .step-help { width: 16px; height: 16px; font-size: 10px; line-height: 16px; top: -7px; right: -4px; } }
 .steps li + li button { box-shadow: inset 1px 0 0 rgba(0,0,0,.04); }
 .steps li + li::before { content: ""; position: absolute; left: 0; top: 4px; bottom: 4px; border-left: 1.5px dashed rgba(110,84,48,.45); z-index: 1; pointer-events: none; }   /* 段與段之間的縫線 */
 .steps button { display: block; position: relative; height: 28px; padding: 0 4px; border: 0; text-align: center; font-size: 13px; letter-spacing: .12em; color: #6f6a5e; background: transparent; transition: background-color .6s, color .4s; }
@@ -527,11 +555,8 @@ a { color: var(--indigo); }
 .result-name.unnamed { color: var(--muted); }
 #afterReveal:not(.saved) .post { display: none !important; }
 #afterReveal.saved .pre { display: none !important; }
-.pre { display: grid; gap: 8px; margin-top: 6px; }
-.save-btn { width: 100%; box-shadow: 0 0 0 0 rgba(244,213,141,.5); animation: saveGlow 2s ease-in-out 3 .8s; }
+.save-btn { box-shadow: 0 0 0 0 rgba(244,213,141,.5); animation: saveGlow 2s ease-in-out 3 .8s; }
 @keyframes saveGlow { 0%, 100% { box-shadow: 0 0 0 0 rgba(244,213,141,0); } 50% { box-shadow: 0 0 0 7px rgba(244,213,141,.45); } }
-.pre .btn.small { justify-self: center; }
-.link-del.armed { color: #f3a08f; font-weight: 700; }
 .praise { margin: 2px 0 12px; font: 700 20px/1.5 var(--font-display); letter-spacing: .04em; color: var(--ink); animation: nameIn .6s ease .3s both; }
 .badge.rare-gold { padding: 4px 14px; font-size: 14px; border: 0; color: #3b2a06; background: linear-gradient(110deg, #e9c46a 0%, #f8e7a8 40%, #d4a238 60%, #f3d37d 100%); background-size: 220% 100%; box-shadow: 0 2px 10px rgba(233,196,106,.45); animation: goldShine 2.6s linear infinite; }
 @keyframes goldShine { from { background-position: 100% 0; } to { background-position: -120% 0; } }
@@ -542,7 +567,7 @@ a { color: var(--indigo); }
 .name-row input::placeholder { color: var(--muted); font-weight: 400; font-size: 20px; }
 .name-row input:focus { outline: 3px solid var(--focus); outline-offset: 1px; border-style: solid; }
 .name-row .ce-rand { right: 8px; top: 50%; transform: translateY(-50%); height: 32px; font-size: 13px; }
-.need-name-wrap.need-name .btn { opacity: .45; }
+#afterReveal.saved .need-name-wrap.need-name .btn, #afterReveal.saved .need-name-wrap.need-name .text-btn:not(.del), #afterReveal.saved .need-name-wrap.need-name .strip.add { opacity: .45; }
 .name-row input.flash { animation: ceFlash .9s ease 2; }
 .name-next { margin: 0 0 10px; font-size: 14px; color: #f4d58d; letter-spacing: .03em; visibility: hidden; }   /* 先留好位置：提示出現時按鈕不會移動，避免點分享時點空 */
 .name-next.on { visibility: visible; animation: nameIn .4s ease; }
@@ -578,6 +603,8 @@ a { color: var(--indigo); }
 .unlock-acts { display: grid; gap: 8px; margin-top: 16px; }
 .unlock-acts .btn.wide { background: var(--on-indigo); color: var(--indigo); }
 .unlock-acts .btn.ghost { color: var(--on-indigo); border-color: rgba(19,33,63,.4); }
+.unlock-acts .text-btn { color: var(--on-indigo); text-decoration-color: rgba(19,33,63,.45); }
+.unlock-acts .text-btn:hover { color: #b0412b; text-decoration-color: currentColor; }
 .pick label .new-tag { position: absolute; top: -6px; right: -4px; z-index: 2; padding: 1px 6px; border-radius: 999px; background: #d23c2f; color: #fff; font: 700 10px/1.5 var(--font-data); letter-spacing: .06em; box-shadow: 0 1px 3px rgba(0,0,0,.35); }
 .tray-detail .pick label, .picks.tools .pick label { position: relative; }
 .picks.tools .pick label.has-new::after { content: ""; position: absolute; top: 6px; right: 8px; width: 8px; height: 8px; border-radius: 50%; background: #d23c2f; box-shadow: 0 0 0 2px rgba(255,255,255,.75); }
@@ -993,19 +1020,18 @@ html.guide-lock, html.guide-lock body { overflow: hidden; overscroll-behavior: n
           <p class="name-next post" id="nameNext" role="status">取好名字了！做成小卡分享給朋友吧</p>
           <p class="serial" id="serial"></p>
           <ul class="facts" id="facts"></ul>
-          <div class="dip-rec"><p class="label">浸染紀錄</p><div class="strips mini" id="resultDips"></div></div>
+          <div class="dip-rec">
+            <div class="dip-head"><p class="label">浸染紀錄</p><span class="redye-left" id="redyeLeft" hidden></span></div>
+            <div class="strips mini need-name-wrap" id="resultDips"></div>
+          </div>
           <div class="pre" id="preSave">
-            <button class="btn big save-btn" type="button" id="saveWork">保存染布</button>
-            <button class="btn ghost small" type="button" id="preRedye">重新加工</button>
-            <button type="button" class="link-del" id="discardWork">不保存，染新的一塊</button>
+            <button class="btn wide-full save-btn" type="button" id="saveWork">保存染布</button>
+            <div class="text-acts"><button class="text-btn" type="button" id="discardWork">不保存，染新的一塊</button></div>
           </div>
-          <div class="actions need-name-wrap post" id="resultActs">
-            <button class="btn wide" type="button" id="toCard">分享</button>
-            <button class="btn ghost" type="button" id="again">染新的一塊</button>
+          <div class="need-name-wrap post" id="resultActs">
+            <button class="btn wide-full" type="button" id="toCard">分享</button>
+            <div class="text-acts"><button class="text-btn" type="button" id="again">染新的一塊</button><span class="sep" aria-hidden="true"></span><button class="text-btn del" type="button" id="delWork">刪除作品</button></div>
           </div>
-          <div class="need-name-wrap post" id="redyeWrap"><button class="btn ghost small" type="button" id="redyeBtn" hidden>重新加工</button></div>
-          <p class="redye-left post" id="redyeLeft" hidden></p>
-          <button type="button" class="link-del post" id="delWork">刪除作品</button>
         </div>
       </section>
 
@@ -1014,14 +1040,13 @@ html.guide-lock, html.guide-lock body { overflow: hidden; overscroll-behavior: n
         <p class="result-name" id="vName"></p>
         <p class="serial" id="vSerial"></p>
         <ul class="facts" id="vFacts"></ul>
-        <div class="dip-rec" id="vDipRec"><p class="label">浸染紀錄</p><div class="strips mini" id="vDips"></div></div>
-        <div class="actions">
-          <button class="btn wide" type="button" id="vCard">分享</button>
-          <button class="btn ghost" type="button" id="vBack">回到染布</button>
+        <div class="dip-rec" id="vDipRec">
+          <div class="dip-head"><p class="label">浸染紀錄</p><span class="redye-left" id="vRedyeLeft" hidden></span></div>
+          <div class="strips mini" id="vDips"></div>
         </div>
-        <button class="btn ghost small" type="button" id="vRedye" hidden>重新加工</button>
         <p class="tip" id="vNote"></p>
-        <button type="button" class="link-del" id="vDelWork">刪除作品</button>
+        <button class="btn wide-full" type="button" id="vCard">分享</button>
+        <div class="text-acts"><button class="text-btn" type="button" id="vBack">回到染布</button><span class="sep" aria-hidden="true"></span><button class="text-btn del" type="button" id="vDelWork">刪除作品</button></div>
       </section>
 
       <form class="form share" id="cardForm" autocomplete="off" hidden>
@@ -1071,6 +1096,13 @@ html.guide-lock, html.guide-lock body { overflow: hidden; overscroll-behavior: n
       <button class="btn ghost" type="button" id="printClose">關閉</button>
     </div>
     <p class="print-note">1200×1800 像素 JPG，印成 4×6 吋剛好是 300dpi。紙張與價格以門市機台為準。</p>
+  </div>
+</div>
+<div class="unlock" id="discardDlg" hidden>
+  <div class="unlock-card" role="dialog" aria-modal="true" aria-labelledby="discardTitle" aria-describedby="discardDesc">
+    <h3 id="discardTitle">不保存這塊布？</h3>
+    <p id="discardDesc">這塊布還沒晾上晾布架，不保存的話就找不回來了。</p>
+    <div class="unlock-acts"><button type="button" class="btn wide" id="discardSave">保存染布</button><button type="button" class="text-btn" id="discardYes">不保存，染新的一塊</button></div>
   </div>
 </div>
 <div class="unlock" id="unlock" hidden>
@@ -1216,10 +1248,11 @@ const MESSAGES = ["把一缸藍染成的布送給你，願你日子平順。", "
 const LAYOUTS = { portrait: { name: "直式", w: 1080, h: 1350 }, square: { name: "方形", w: 1080, h: 1080 }, story: { name: "限動", w: 1080, h: 1920 } };
 
 /* ---------- 狀態 ---------- */
+function defaultOpts() { return { kumo: { bands: 1, core: "none" }, itajime: { board: "circle" }, nui: { stitch: "hira" }, arashi: { group: "rope", style: "marble" } }; }   // 綁布選項：預設都是第一個
 const state = {
   step: 1, fabric: "cotton", tool: "kumo", marks: [], sel: -1,
-  opts: { kumo: { bands: 3, core: "none" }, itajime: { board: "circle" }, nui: { stitch: "hira" }, arashi: { group: "rope", style: "marble" } },
-  ita: { fold: "sq3", bands: 0 },   // 夾染：整塊布的摺法與橡皮筋
+  opts: defaultOpts(),
+  ita: { fold: "sq2", bands: 0 },   // 夾染：整塊布的摺法與橡皮筋
   dye: "indigo", strength: "mid", dips: [], seed: 0, rare: false,
   prev: null,              // 再染時：之前幾回的資料
   work: null, viewing: null, revealed: false, layout: "portrait", product: "card", busy: false, cardMode: false
@@ -2901,7 +2934,7 @@ const canGo = n => !state.busy && !state.revealed && (state.dips.length === 0 ||
 function show(step) {
   state.step = step;
   updateRail();
-  document.querySelectorAll("#steps button").forEach(b => {
+  document.querySelectorAll("#steps button[data-go]").forEach(b => {
     const n = +b.dataset.go, ok = n < step && canGo(n);
     b.classList.toggle("current", n === step); b.classList.toggle("done", ok); b.classList.toggle("past", n < step); b.disabled = !ok;
     if (n === step) b.setAttribute("aria-current", "step"); else b.removeAttribute("aria-current");
@@ -2915,6 +2948,7 @@ function show(step) {
   if (step === 2) { renderSettings(); updateBind(); }
   if (step === 3) { drawDyeScene(outerColor(state.dips), 330, 0); updateMeter(); drawRaw(); say(state.dips.length ? "" : "點一下布，浸入染缸"); }
   if (step === 4) { clearStage(); if (state.work) sctx.drawImage(state.work.cloth, 0, 0); else drawCustomBundle(sctx, outerColor(state.dips)); }
+  placeStepHelp();
 }
 
 /* ---------- 綁布：細部設定 ---------- */
@@ -3078,19 +3112,18 @@ function showResult(skipGuide) {
   document.getElementById("rareBadge").hidden = !(state.work.rare && !state.prev);
   state.workSaved = false; document.getElementById("afterReveal").classList.remove("saved");
   document.getElementById("praise").textContent = praiseFor(state.work);
-  document.getElementById("preRedye").hidden = !canRedye(state.work);
-  discardArm(false);
-  document.getElementById("redyeBtn").hidden = !canRedye(state.work);
+  addRedyeCell("resultDips", canRedye(state.work));
   const rn = document.getElementById("rName"); rn.value = state.work.name || ""; resultNameSync(); nameDone(false);
   const rl = document.getElementById("redyeLeft"); rl.hidden = !canRedye(state.work); if (!rl.hidden) rl.textContent = redyeLeftText(state.work);
   say(state.rare && !state.prev ? "出現了罕見的紋樣！" : "");
-  document.querySelectorAll("#steps button").forEach(b => { b.disabled = true; b.classList.remove("done", "current"); b.classList.add("past"); });   // 拆完布：整條都染好了
+  document.querySelectorAll("#steps button[data-go]").forEach(b => { b.disabled = true; b.classList.remove("done", "current"); b.classList.add("past"); });   // 拆完布：整條都染好了
   // 分享和晾布架的引導：改成第一次取好名字後才出現（見 nameDone）
+  placeStepHelp();
 }
 
 let cardSrcId = null;
 function setCardMode(on) {
-  state.cardMode = on;
+  state.cardMode = on; setTimeout(placeStepHelp, 0);
   document.getElementById("cardImg").hidden = !on;
   document.getElementById("cardEdit").hidden = true;
   document.querySelector(".top h1").hidden = on; document.getElementById("backWork").hidden = !on;   // 分享時，左上角換成「回到作品」
@@ -3180,16 +3213,17 @@ function openView(id) {
     stageBox.classList.remove("drawing");
     fillInfo(state.viewing, { name: "vName", rare: "vRare", serial: "vSerial", facts: "vFacts", dips: "vDips" });
     const ok = canRedye(it);
-    document.getElementById("vRedye").hidden = !ok;
-    document.getElementById("vNote").textContent = !it.recipe ? "這塊是舊版作品，沒有保存染製配方，所以不能重新加工。" : ok ? redyeLeftText(it) : `這塊布已經加工到上限（最多 ${MAX_ROUNDS} 回、浸 ${MAX_DIPS} 次）。`;
-    updateRail(); renderRack(); say("晾布架上的作品");
+    addRedyeCell("vDips", ok);
+    const vl = document.getElementById("vRedyeLeft"); vl.hidden = !ok; vl.textContent = ok ? redyeLeftText(it) : "";
+    document.getElementById("vNote").textContent = !it.recipe ? "這塊是舊版作品，沒有保存染製配方，所以不能重新加工。" : ok ? "" : `這塊布已經加工到上限（最多 ${MAX_ROUNDS} 回、浸 ${MAX_DIPS} 次）。`;
+    updateRail(); renderRack(); say("晾布架上的作品"); placeStepHelp();
     window.scrollTo({ top: 0, behavior: REDUCED ? "auto" : "smooth" });
   });
 }
 function closeView() {
   state.viewing = null;
   if (state.cardMode) setCardMode(false);
-  updateRail(); renderRack(); show(state.step);
+  updateRail(); renderRack(); show(state.step); placeStepHelp();
   if (state.step === 4 && state.revealed) say("");
 }
 // 再染一回：把配方載回來，在染好的布上繼續
@@ -3197,7 +3231,7 @@ function startRedye(it) {
   if (state.busy || !canRedye(it)) return;
   const r = it.recipe;
   setCardMode(false);
-  Object.assign(state, { fabric: r.fabric, seed: r.seed, rare: r.rare, marks: [], dips: [], sel: -1, work: null, viewing: null, revealed: false, ita: { fold: "sq3", bands: 0 }, tool: "kumo" }); clearSnap = null;
+  Object.assign(state, { fabric: r.fabric, seed: r.seed, rare: r.rare, marks: [], dips: [], sel: -1, work: null, viewing: null, revealed: false, ita: { fold: "sq2", bands: 0 }, tool: "kumo" }); clearSnap = null;
   { const te = document.getElementById("tool-kumo"); if (te) te.checked = true; }
   state.prev = { id: it.id, name: it.name, rounds: r.rounds, baseImg: renderCloth(r) };
   document.getElementById("beforeReveal").hidden = false;
@@ -3211,7 +3245,7 @@ function startRedye(it) {
 function resetAll() {
   if (state.busy) return;
   setCardMode(false);
-  Object.assign(state, { dips: [], marks: [], sel: -1, seed: newSeed(), work: null, viewing: null, revealed: false, prev: null, ita: { fold: "sq3", bands: 0 }, tool: "kumo", strength: "light" });
+  Object.assign(state, { dips: [], marks: [], sel: -1, seed: newSeed(), work: null, viewing: null, revealed: false, prev: null, ita: { fold: "sq2", bands: 0 }, tool: "kumo", strength: "light", opts: defaultOpts(), lastOpt: null });   // 染新的一塊：綁布選項都回到第一個
   { const te = document.getElementById("tool-kumo"); if (te) te.checked = true; }
   { const se = document.getElementById("st-light"); if (se) se.checked = true; }   // 染新的一塊：濃淡從「淡」開始
   clearSnap = null;
@@ -3597,18 +3631,22 @@ document.getElementById("clearBtn").onclick = () => { if (state.busy) return; if
 document.getElementById("dipBtn").onclick = dip;
 document.getElementById("to4").onclick = () => { if (state.busy) return; show(4); reveal(); };
 document.getElementById("again").onclick = resetAll;
-document.getElementById("redyeBtn").onclick = () => { if (state.work) startRedye(state.work); };
+function addRedyeCell(boxId, ok) {   // 浸染紀錄最後面的虛線格：還能加工時才出現
+  const box = document.getElementById(boxId), old = box.querySelector(".strip.add"); if (old) old.remove();
+  if (ok) box.insertAdjacentHTML("beforeend", `<button type="button" class="strip add" aria-label="重新加工：在這塊布上再綁再染"><i>＋ 再加工</i></button>`);
+}
+document.getElementById("resultDips").addEventListener("click", e => { if (e.target.closest(".strip.add") && state.work) startRedye(state.work); });
 document.getElementById("toCard").onclick = () => setCardMode(true);
 document.getElementById("vCard").onclick = () => setCardMode(true);
 document.getElementById("vBack").onclick = closeView;
-document.getElementById("vRedye").onclick = () => { const it = rack.find(x => x.id === state.viewing.id); if (it) startRedye(it); };
+document.getElementById("vDips").addEventListener("click", e => { if (!e.target.closest(".strip.add") || !state.viewing) return; const it = rack.find(x => x.id === state.viewing.id); if (it) startRedye(it); });
 document.getElementById("slots").addEventListener("click", e => { const b = e.target.closest("button.cloth"); if (b) openView(b.dataset.id); });
 document.getElementById("backWork").onclick = () => {
   const v = state.viewing; setCardMode(false);
-  if (v) { clearStage(); sctx.drawImage(v.cloth, 0, 0); fillInfo(v, { name: "vName", rare: "vRare", serial: "vSerial", facts: "vFacts", dips: "vDips" }); document.getElementById("vRedye").hidden = !canRedye(v); renderRack(); }   // 分享時換過作品：回到那塊布
-  else if (state.work) { fillInfo(state.work, { name: "resultName", rare: "rareBadge", serial: "serial", facts: "facts", dips: "resultDips" }); document.getElementById("rName").value = state.work.name || ""; resultNameSync(); }   // 名字可能剛取好
+  if (v) { clearStage(); sctx.drawImage(v.cloth, 0, 0); fillInfo(v, { name: "vName", rare: "vRare", serial: "vSerial", facts: "vFacts", dips: "vDips" }); addRedyeCell("vDips", canRedye(v)); renderRack(); }   // 分享時換過作品：回到那塊布
+  else if (state.work) { fillInfo(state.work, { name: "resultName", rare: "rareBadge", serial: "serial", facts: "facts", dips: "resultDips" }); addRedyeCell("resultDips", canRedye(state.work)); document.getElementById("rName").value = state.work.name || ""; resultNameSync(); }   // 名字可能剛取好
 };
-document.getElementById("steps").addEventListener("click", e => { const b = e.target.closest("button"); if (b && !b.disabled) show(+b.dataset.go); });
+document.getElementById("steps").addEventListener("click", e => { const b = e.target.closest("button[data-go]"); if (b && !b.disabled) show(+b.dataset.go); });
 [fTitle, fMsg, fSign].forEach(el => el.addEventListener("input", queueCard));
 
 document.getElementById("dlBtn").onclick = download;
@@ -3662,20 +3700,22 @@ function flyToRack(w) {   // 保存：布縮小飛進晾布架最前面
 document.getElementById("saveWork").onclick = () => {
   if (!state.work || state.workSaved || state.busy) return;
   addToRack(state.work, !!state.prev); state.workSaved = true;
-  document.getElementById("afterReveal").classList.add("saved");
+  document.getElementById("afterReveal").classList.add("saved"); placeStepHelp();
   flyToRack(state.work);
   toast(state.prev ? "晾布架上的布已經更新" : "已晾上晾布架");
   const rn = document.getElementById("rName"); rn.value = state.work.name || ""; resultNameSync(); nameDone(false);
   if (!rn.value) setTimeout(() => rn.focus({ preventScroll: true }), REDUCED ? 0 : 950);
 };
-document.getElementById("preRedye").onclick = () => { if (state.work) startRedye(state.work); };   // 還沒保存也可以先重新加工
-let discardTimer = 0;
-function discardArm(on) {   // 不保存：按第一次先確認，3 秒內再按一次才丟掉
-  const b = document.getElementById("discardWork"); clearTimeout(discardTimer);
-  b.classList.toggle("armed", on); b.textContent = on ? "確定不保存？再按一次" : "不保存，染新的一塊";
-  if (on) discardTimer = setTimeout(() => discardArm(false), 3000);
+/* 不保存：跳出視窗確認（主要按鈕是保存，下方才是真的不要） */
+{
+  const dlg = document.getElementById("discardDlg"), open = () => { dlg.hidden = false; document.getElementById("discardSave").focus(); };
+  const close = back => { dlg.hidden = true; if (back) document.getElementById("discardWork").focus({ preventScroll: true }); };
+  document.getElementById("discardWork").onclick = () => { if (state.work && !state.workSaved && !state.busy) open(); };
+  document.getElementById("discardSave").onclick = () => { close(false); document.getElementById("saveWork").click(); };
+  document.getElementById("discardYes").onclick = () => { close(false); resetAll(); };
+  dlg.addEventListener("click", e => { if (e.target === dlg) close(true); });
+  dlg.addEventListener("keydown", e => { if (e.key === "Escape") close(true); });
 }
-document.getElementById("discardWork").onclick = e => { if (e.currentTarget.classList.contains("armed")) { discardArm(false); resetAll(); } else discardArm(true); };
 /* 拆布後先命名：命名後才能分享、重新加工、染新的一塊 */
 function setWorkName(w, t) {
   if (!w || w.name === t) return;
@@ -3688,7 +3728,7 @@ function setWorkName(w, t) {
 function resultNameSync() {
   const t = document.getElementById("rName").value.trim();
   setWorkName(state.work, t);
-  for (const id of ["resultActs", "redyeWrap"]) document.getElementById(id).classList.toggle("need-name", !t);
+  for (const id of ["resultActs", "resultDips"]) document.getElementById(id).classList.toggle("need-name", !t);
   document.getElementById("rRand").classList.toggle("pulse", !t);
 }
 function nameDone(byUser) {   // 名字取好了：提示下一步，「分享」發亮
@@ -3705,14 +3745,14 @@ function resultNeedName() {
   el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash"); el.focus({ preventScroll: true });
   return true;
 }
-document.getElementById("rName").addEventListener("input", () => { resultNameSync(); if (!document.getElementById("rName").value.trim()) document.getElementById("nameNext").classList.remove("on"); });
+document.getElementById("rName").addEventListener("input", () => { resultNameSync(); placeStepHelp(); if (!document.getElementById("rName").value.trim()) document.getElementById("nameNext").classList.remove("on"); });
 document.getElementById("rName").addEventListener("change", () => nameDone(true));   // 按 Enter 或點到別處時才算取好
 document.getElementById("rName").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); e.target.blur(); } });
 document.getElementById("rRand").onclick = () => {
   const el = document.getElementById("rName"), pool = Object.values(NAMES).flat().filter(n => n !== el.value.trim());
   el.value = pool[Math.floor(Math.random() * pool.length)]; resultNameSync(); nameDone(true);
 };
-for (const id of ["resultActs", "redyeWrap"]) document.getElementById(id).addEventListener("click", e => { if (e.target.closest("button") && resultNeedName()) { e.stopImmediatePropagation(); e.preventDefault(); } }, true);
+for (const id of ["resultActs", "resultDips"]) document.getElementById(id).addEventListener("click", e => { if (state.workSaved && e.target.closest("button:not(#delWork)") && resultNeedName()) { e.stopImmediatePropagation(); e.preventDefault(); } }, true);
 /* 作品名稱：一定要填；填好的名字跟著作品存起來 */
 let rackSaveTimer = 0;
 function syncName() {
@@ -3837,6 +3877,7 @@ const GUIDES = {
   3: [{ el: "#stageBox", t: "選缸、選濃淡", p: "點旁邊的缸或轉盤上的箭頭換染料；左邊的杓子決定濃淡，杓數越多染液越濃。" },
       { el: "#stageBox", t: "點布，浸一次", p: "直接點畫面上吊著的布就會浸進染缸。點越多次顏色越深。" },
       { el: "#to4", t: "拆開看看", p: "顏色夠了就拆布，看看染出什麼花樣。" }],
+  "4pre": [{ el: "#saveWork", t: "保存你的作品", p: "喜歡這塊布就按「保存染布」，晾上晾布架、取個名字之後就能分享。想再加工，可以點浸染紀錄後面的「＋ 再加工」。" }],
   4: [{ el: "#toCard", t: "分享你的作品", p: "做成小卡、杯墊、束口袋或 T 恤的樣子，存下來傳給朋友。" },
       { el: ".rack-sec", t: "晾布架", p: "保存的布會晾在這裡，最新的在最左邊，作品多時可以左右滑動。點一塊布可以再看一次，或拿去重新加工；不清楚時點標題旁的問號。" }]
 };
@@ -3847,6 +3888,23 @@ function guideMaybe(step) {
   const seen = guideSeen();
   if (seen.skip || seen[step] || guide.open || state.viewing) return;
   setTimeout(() => { if (state.step === step || step === 4) guideStart(step); }, step === 1 ? 300 : 650);
+}
+function stepGuideKey() {   // 目前這一步要看哪一段教學
+  if (state.cardMode || state.viewing || state.busy) return null;
+  if (state.step !== 4) return GUIDES[state.step] ? state.step : null;
+  if (document.getElementById("afterReveal").hidden) return null;
+  return state.workSaved ? (document.getElementById("rName").value.trim() ? 4 : null) : "4pre";
+}
+function placeStepHelp() {   // 進度條上「目前這一步」旁邊的問號，點了重看這一步的教學
+  let b = document.getElementById("stepHelp");
+  if (!b) {
+    b = document.createElement("button"); b.type = "button"; b.id = "stepHelp"; b.className = "step-help"; b.textContent = "?";
+    b.onclick = e => { e.stopPropagation(); const k = stepGuideKey(); if (k != null && !guide.open) guideStart(k); };
+  }
+  const k = stepGuideKey(), cur = document.querySelector(`#steps button[data-go="${state.step}"]`);
+  if (k == null || !cur || guide.open) { b.remove(); return; }
+  b.setAttribute("aria-label", `再看一次「${cur.textContent}」的教學`);
+  if (b.parentNode !== cur.parentNode) cur.parentNode.appendChild(b);
 }
 function guideStart(step) {
   if (!GUIDES[step] || guide.open) return;
@@ -3889,7 +3947,7 @@ function guidePos(el) {   // 依目標目前的位置擺框框和說明卡
   card.style.left = left + "px"; card.style.top = top + "px";
 }
 function guideClose(all) {
-  guide.open = false; document.getElementById("guide").hidden = true;
+  guide.open = false; document.getElementById("guide").hidden = true; placeStepHelp();
   document.documentElement.classList.remove("guide-lock");
   guideMark(all ? { skip: true } : { [guide.step]: true });
   if (guide.last && guide.last.focus) guide.last.focus({ preventScroll: true });
