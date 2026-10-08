@@ -250,9 +250,11 @@ a { color: var(--indigo); }
 .text-btn.del { color: var(--muted); }
 .text-btn.del:hover { color: #f3a08f; }
 .text-btn.armed { color: #f3a08f; font-weight: 700; text-decoration-color: currentColor; }
-.strip.add { grid-column: span 2; padding: 0; background: transparent; border: 1.5px dashed rgba(241,239,230,.5); border-top: 3px solid #a07a45; border-radius: 0 0 3px 3px; cursor: pointer; font: inherit; color: var(--ink); }
-.strip.add i { --ink: #f1efe6; white-space: nowrap; }
-.strip.add:hover { background: rgba(244,213,141,.12); border-color: #f4d58d; border-top-color: #a07a45; }
+.strip.add { grid-column: span 2; padding: 2px 4px; background: #f4d58d; border: 0; border-top: 5px solid #a07a45; border-radius: 0 0 3px 3px; cursor: pointer; font: inherit; color: #1d2b4a; display: flex; flex-direction: row; gap: 4px; align-items: center; justify-content: center; line-height: 1; transition: background .15s; }
+.strip.add i, .strips.mini .strip.add i { position: static; font-style: normal; letter-spacing: 0; font-weight: 700; font-size: 13px; white-space: nowrap; color: #1d2b4a; }
+.strip.add b { position: static; font-family: var(--font-body); font-weight: 700; font-size: 16px; line-height: 1; color: #1d2b4a; }
+.strips.mini .strip.add { border-top-width: 3px; }
+.strip.add:hover { background: #e8c46e; }
 .strip.add:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 #vNote:empty { display: none; }
 .dip-end { margin: 10px 0 0; padding: 8px 12px; border-radius: 8px; background: var(--indigo); color: var(--on-indigo); font-size: 14px; text-align: center; }
@@ -563,7 +565,7 @@ a { color: var(--indigo); }
 #afterReveal.saved .pre { display: none !important; }
 .save-btn { box-shadow: 0 0 0 0 rgba(244,213,141,.5); animation: saveGlow 2s ease-in-out 3 .8s; }
 @keyframes saveGlow { 0%, 100% { box-shadow: 0 0 0 0 rgba(244,213,141,0); } 50% { box-shadow: 0 0 0 7px rgba(244,213,141,.45); } }
-.praise { margin: 2px 0 12px; font: 700 20px/1.5 var(--font-display); letter-spacing: .04em; color: var(--ink); animation: nameIn .6s ease .3s both; }
+.praise { margin: 2px 0 12px; font: 700 20px/1.5 var(--font-body); letter-spacing: .04em; color: var(--ink); animation: nameIn .6s ease .3s both; }
 .badge.rare-gold { padding: 4px 14px; font-size: 14px; border: 0; color: #3b2a06; background: linear-gradient(110deg, #e9c46a 0%, #f8e7a8 40%, #d4a238 60%, #f3d37d 100%); background-size: 220% 100%; box-shadow: 0 2px 10px rgba(233,196,106,.45); animation: goldShine 2.6s linear infinite; }
 @keyframes goldShine { from { background-position: 100% 0; } to { background-position: -120% 0; } }
 .fly-cloth { position: fixed; z-index: 30; pointer-events: none; object-fit: cover; border-radius: 4px; box-shadow: 0 10px 30px rgba(0,0,0,.45); transform-origin: 50% 50%; }
@@ -3656,7 +3658,7 @@ document.getElementById("to4").onclick = () => { if (state.busy) return; show(4)
 document.getElementById("again").onclick = resetAll;
 function addRedyeCell(boxId, ok) {   // 浸染紀錄最後面的虛線格：還能加工時才出現
   const box = document.getElementById(boxId), old = box.querySelector(".strip.add"); if (old) old.remove();
-  if (ok) box.insertAdjacentHTML("beforeend", `<button type="button" class="strip add" aria-label="重新加工：在這塊布上再綁再染"><i>＋ 再加工</i></button>`);
+  if (ok) box.insertAdjacentHTML("beforeend", `<button type="button" class="strip add" aria-label="重新加工：在這塊布上再綁再染"><b aria-hidden="true">＋</b><i>再加工</i></button>`);
 }
 document.getElementById("resultDips").addEventListener("click", e => { if (e.target.closest(".strip.add") && state.work) startRedye(state.work); });
 document.getElementById("toCard").onclick = () => setCardMode(true);
