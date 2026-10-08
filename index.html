@@ -402,6 +402,9 @@ a { color: var(--indigo); }
 .tray-detail .pick label:hover { background: rgba(80,52,22,.18); }
 .tray-detail .pick input:checked + label { background: rgba(255,250,236,.85); border-color: #fff; }
 .tray .detail + .detail { margin-top: 2px; }
+.tray-detail .detail.pegs .picks { flex-wrap: nowrap; } .tray-detail .pick.peg { flex: 1 1 0; min-width: 0; } .tray-detail .pick.peg img { width: 100%; max-width: 40px; }   /* 橡皮筋：五個排成一排 */
+.pick.peg label { flex-direction: column; gap: 0; } .pick.peg label span { font-size: 11px; line-height: 1.2; color: var(--w-muted, #4e3820); white-space: nowrap; }
+.pick.peg input:checked + label span { color: var(--w-ink, #2a1c0e); font-weight: 700; }
 .tray-detail .detail.rings .picks { flex-wrap: nowrap; } .tray-detail .pick.ring { flex: 1 1 0; } .tray-detail .pick.ring img { width: 100%; max-width: 40px; }   /* 綁幾圈：五個圈排成一排 */
 @media (max-width: 900px) {
   .picks.tools .pick label { font-size: 13px; padding: 7px 2px; }
@@ -450,6 +453,9 @@ a { color: var(--indigo); }
 #bindTip .opt-desc { display: block; font-size: 14px; font-weight: 700; color: var(--ink); }
 #bindTip .opt-desc:empty { display: none; }
 #bindTip .how { display: block; color: var(--muted); }
+#bindTip .warn { display: block; margin-top: 4px; color: #f4d58d; font-weight: 700; }
+#bindTip .warn:empty { display: none; }
+#bindTip .warn i { display: inline-block; margin-right: 6px; padding: 0 6px; border-radius: 4px; background: #f4d58d; color: #3b2a06; font: 700 11px/1.6 var(--font-body); font-style: normal; vertical-align: 1px; }
 #bindTip img { flex: none; width: 34px; height: auto; margin-top: -2px; }
 .sr-only { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .dip-hint { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0; font-size: 14px; color: var(--ink); }
@@ -1199,7 +1205,7 @@ const PROG_KEY = "jinglan-progress-v1";
 const UNLOCKS = [
   { key: "button", kind: "core", need: 1, name: "鈕扣", desc: "包進捆紮裡，染出扁圓和一圈細環，四個小洞會滲進一點藍。" },
   { key: "star", kind: "board", need: 3, name: "星星壓克力", desc: "夾在摺好的布上，攤開會出現好幾顆對稱的星星。" },
-  { key: "ripple", kind: "style", need: 6, name: "木棍水波紋", desc: "把布捲在木棍上輕輕推擠，紋路像水波。" }
+  { key: "pole", kind: "group", need: 6, name: "木棍", desc: "把布捲在木棍上推擠，可以染出嵐絞、木紋、水波紋三種紋樣。" }
 ];
 function madeCount() { try { return (JSON.parse(localStorage.getItem(PROG_KEY) || "{}").made) || 0; } catch (e) { return 0; } }
 function bumpMade() {   // 回傳這次剛解鎖的材料
@@ -1238,7 +1244,7 @@ function newSeen() { try { return JSON.parse(localStorage.getItem(NEWSEEN_KEY) |
 function isNew(v) { const u = UNLOCKS.find(x => x.key === v); return !!u && !isLocked(v) && !newSeen().includes(v); }
 function markSeen(v) { if (!isNew(v)) return; try { localStorage.setItem(NEWSEEN_KEY, JSON.stringify(newSeen().concat([v]))); } catch (e) { /* 略過 */ } }
 function updateToolDots() {   // 有新材料的工具頁籤加小圓點
-  const has = { kumo: UNLOCKS.some(u => u.kind === "core" && isNew(u.key)), itajime: UNLOCKS.some(u => u.kind === "board" && isNew(u.key)), arashi: UNLOCKS.some(u => u.kind === "style" && isNew(u.key)) };
+  const has = { kumo: UNLOCKS.some(u => u.kind === "core" && isNew(u.key)), itajime: UNLOCKS.some(u => u.kind === "board" && isNew(u.key)), arashi: UNLOCKS.some(u => (u.kind === "style" || u.kind === "group") && isNew(u.key)) };
   for (const t of ["kumo", "nui", "itajime", "arashi"]) { const l = document.querySelector(`label[for="tool-${t}"]`); if (l) l.classList.toggle("has-new", !!has[t]); }
 }
 function lockBadge(v) { if (isNew(v)) return `<span class="new-tag" aria-label="新的">NEW</span>`; if (!isLocked(v)) return ""; const u = UNLOCKS.find(x => x.key === v), left = u.need - madeCount(); return `<img class="lock" src="${ICON.lock}" alt="未解鎖：染滿 ${u.need} 塊布就能解鎖">`; }
@@ -1925,7 +1931,7 @@ function buildIcons() {
   });
   ICON.peg = n => makeIcon(120, 110, c => {
     c.fillStyle = "#6f5a3e"; c.beginPath(); c.arc(60, 22, 7, 0, Math.PI * 2); c.fill(); c.fillRect(57, 22, 6, 18);
-    if (!n) { c.fillStyle = "#3b2a17"; c.font = '600 18px "Noto Sans TC", sans-serif'; c.textAlign = "center"; c.fillText("不綁", 60, 80); return; }
+    if (!n) { c.strokeStyle = "rgba(111,90,62,0.55)"; c.lineWidth = 4; c.setLineDash([7, 6]); c.beginPath(); c.ellipse(60, 63, 22, 26, 0, 0, Math.PI * 2); c.stroke(); c.setLineDash([]); return; }   // 不綁：空的虛線圈
     for (let i = 0; i < n; i++) { c.strokeStyle = ["#c9a07a", "#b98b62", "#d6b08c", "#a8784e"][i]; c.lineWidth = 5; c.beginPath(); c.ellipse(60 + (i - (n - 1) / 2) * 6, 60 + i * 3, 22, 26, 0, 0, Math.PI * 2); c.stroke(); }
   });
   ICON.pegs = [0, 1, 2, 3, 4].map(ICON.peg);
@@ -2022,9 +2028,9 @@ function renderSettings() {
     const ita = state.ita, pickI = (key, v, inner, cls) => radioHTML("opt-" + key, v, `opt-${key}-${v}`, inner, String(ita[key]) === String(v), cls).replace("<input ", `<input data-key="${key}" `);
     html += group("摺法", "整塊布一起摺", ["sq2", "sq3", "sq4", "tri"].map(v => pickI("fold", v, `<img src="${ICON.fold[v]}" alt=""><span>${FOLD_NAME[v]}</span>${recTag("fold", v)}`, "board")).join(""));
     html += group("夾板", "從中心往外拉", ["circle", "square", "tri", "carved", "star"].map(v => pick("board", v, `<img src="${ICON.board[v]}" alt=""><span>${BOARD_NAME[v]}</span>${lockBadge(v)}`, "board")).join(""));
-    html += group("橡皮筋", `${ita.bands ? ita.bands + " 條" : "不綁"}`, [0, 1, 2, 3, 4].map(v => pickI("bands", v, `<img src="${ICON.pegs[v]}" alt="${v ? v + " 條" : "不綁"}">`, "peg")).join(""));
+    html += group("橡皮筋", `${ita.bands ? ita.bands + " 條" : "不綁"}`, [0, 1, 2, 3, 4].map(v => pickI("bands", v, `<img src="${ICON.pegs[v]}" alt=""><span>${v ? v + " 條" : "不綁"}</span>`, "peg")).join(""), "pegs");
   } else {
-    html += group("用什麼綁", "", ["rope", "net", "pole"].map(v => pick("group", v, `<img src="${ICON.group[v]}" alt=""><span>${{ rope: "繩子", net: "網袋／絲襪", pole: "木棍" }[v]}</span>`, "board")).join(""));
+    html += group("用什麼綁", "", ["rope", "net", "pole"].map(v => pick("group", v, `<img src="${ICON.group[v]}" alt=""><span>${{ rope: "繩子", net: "網袋／絲襪", pole: "木棍" }[v]}</span>${lockBadge(v)}`, "board")).join(""));
     html += group("紋樣", "", ARASHI_STYLES[o.group].map(([v, n]) => pick("style", v, `<img src="${ICON.style[v]}" alt=""><span>${n}</span>${lockBadge(v)}`, "board")).join(""));
   }
   el.innerHTML = html;
@@ -2976,12 +2982,13 @@ function updateBind() {
   document.getElementById("to3").disabled = !n && !state.ita.bands && !state.prev;
   const o = curOpts(), t = state.tool;
   const key = t === "kumo" ? "core_" + (o.core || "none") : t === "itajime" ? o.board : t === "nui" ? o.stitch : o.style;
-  const how = t === "arashi" && o.group === "pole" ? "在布上拉一條線，代表棍子的方向。一回只能捲一根棍子，新畫的線會取代舊的。"
+  const how = t === "arashi" && o.group === "pole" ? "在布上拉一條線，代表棍子的方向。"
     : t === "arashi" ? "塗出一塊區域，代表揉皺綁住的地方。重複塗同一處不會更深，可以換別的紋樣塗在其他地方。"
     : t === "itajime" ? "布已經摺好了：從中心往外拉出夾板。" : TECHS[t].tool;
   const shown = state.lastOpt && state.lastOpt.tool === t && OPT_TIPS[state.lastOpt.key] ? state.lastOpt.key : key;   // 剛點了哪個選項，就說明哪個
   const tipEl = document.getElementById("bindTip");   // 說明前面放這個工具的小圖示
-  tipEl.innerHTML = `<img src="${ICON.tool[t]}" alt=""><span><b class="opt-desc"></b><span class="how"></span></span>`;
+  tipEl.innerHTML = `<img src="${ICON.tool[t]}" alt=""><span><b class="opt-desc"></b><span class="how"></span><span class="warn"></span></span>`;
+  if (t === "arashi" && o.group === "pole" && state.sel < 0) tipEl.querySelector(".warn").innerHTML = `<i>注意</i>一回只能捲一根棍子，新畫的線會取代舊的。`;
   tipEl.querySelector(".opt-desc").textContent = state.sel >= 0 ? "" : (OPT_TIPS[shown] || "");
   tipEl.querySelector(".how").textContent = state.sel >= 0 ? "已選取：調整上面的設定，或刪除。" : how;
   document.getElementById("back1").hidden = !!state.prev;
@@ -3818,7 +3825,7 @@ async function init() {
 let unlockItem = null;
 function showUnlock(u) {
   unlockItem = u;
-  document.getElementById("unlockImg").src = (u.kind === "core" ? ICON.core : u.kind === "style" ? ICON.style : ICON.board)[u.key];
+  document.getElementById("unlockImg").src = (u.kind === "core" ? ICON.core : u.kind === "style" ? ICON.style : u.kind === "group" ? ICON.group : ICON.board)[u.key];
   document.getElementById("unlockName").textContent = u.name;
   document.getElementById("unlockDesc").textContent = u.desc;
   document.getElementById("unlock").hidden = false;
